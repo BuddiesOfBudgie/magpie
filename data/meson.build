@@ -1,19 +1,5 @@
 msgfmt = find_program('msgfmt')
 
-custom_target('magpie.desktop',
-  input: 'magpie.desktop.in',
-  output: 'magpie.desktop',
-  command: [
-    msgfmt,
-    '--desktop', '--template',
-    '@INPUT@',
-    '-d', join_paths(mutter_srcdir, 'po'),
-    '-o', '@OUTPUT@'
-  ],
-  install: true,
-  install_dir: join_paths(datadir, 'applications'),
-)
-
 # Unconditionally use this dir to avoid a circular dep with gnomecc
 gnome_keybindings_keysdir = join_paths(datadir, 'gnome-control-center/keybindings')
 
