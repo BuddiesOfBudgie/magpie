@@ -815,18 +815,6 @@ meta_frame_titlebar_event (MetaUIFrame        *frame,
 
   switch (action)
     {
-    case G_DESKTOP_TITLEBAR_ACTION_TOGGLE_SHADE:
-      {
-        if (flags & META_FRAME_ALLOWS_SHADE)
-          {
-            if (flags & META_FRAME_SHADED)
-              meta_window_unshade (frame->meta_window, evtime);
-            else
-              meta_window_shade (frame->meta_window, evtime);
-          }
-      }
-      break;
-
     case G_DESKTOP_TITLEBAR_ACTION_TOGGLE_MAXIMIZE:
       {
         if (flags & META_FRAME_ALLOWS_MAXIMIZE)

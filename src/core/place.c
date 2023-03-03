@@ -825,8 +825,7 @@ meta_window_place (MetaWindow        *window,
     }
 
   /* Find windows that matter (not minimized, on same workspace
-   * as placed window, may be shaded - if shaded we pretend it isn't
-   * for placement purposes)
+   * as placed window)
    */
   {
     GSList *all_windows;
