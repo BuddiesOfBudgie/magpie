@@ -1,0 +1,5 @@
+[org.buddiesofbudgie.magpie]
+overlay-key = /apps/magpie/general/overlay_key
+attach-modal-dialogs = /apps/magpie/general/attach_modal_dialogs
+workspaces-only-on-primary = /apps/magpie/general/workspaces_only_on_primary
+draggable-border-width = /apps/magpie/general/draggable_border_width

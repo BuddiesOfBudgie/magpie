@@ -20,7 +20,7 @@ cogl_pango_deps = [
   libmutter_cogl_dep,
 ]
 
-libmutter_cogl_pango = shared_library('mutter-cogl-pango-' + libmutter_api_version,
+libmutter_cogl_pango = shared_library('magpie-cogl-pango-' + libmutter_api_version,
   sources: [cogl_pango_sources, cogl_pango_public_headers],
   version: '0.0.0',
   soversion: 0,
@@ -69,7 +69,7 @@ install_headers(cogl_pango_public_headers, subdir: cogl_pango_includesubdir)
 
 pkg.generate(libmutter_cogl_pango,
   name: 'CoglPango',
-  filebase: 'mutter-cogl-pango-' + libmutter_api_version,
+  filebase: 'magpie-cogl-pango-' + libmutter_api_version,
   description: 'A text rendering for Cogl in mutter',
   subdirs: join_paths(pkgname, 'cogl'),
   requires: [cogl_pkg_deps, libmutter_cogl_name],

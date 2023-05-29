@@ -299,7 +299,7 @@ clutter_marshal = gnome.genmarshal('clutter-marshal',
 clutter_built_sources += clutter_marshal[0]
 clutter_built_headers += clutter_marshal[1]
 
-libmutter_clutter_name = 'mutter-clutter-' + libmutter_api_version
+libmutter_clutter_name = 'magpie-clutter-' + libmutter_api_version
 libmutter_clutter = shared_library(libmutter_clutter_name,
   sources: [
     clutter_sources,
@@ -398,9 +398,9 @@ install_headers(clutter_deprecated_headers,
   subdir: join_paths(clutter_clutter_includesubdir, 'deprecated'))
 
 pkg.generate(libmutter_clutter,
-  name: 'Mutters Clutter',
+  name: 'Magpie Clutter',
   filebase: libmutter_clutter_name,
-  description: 'Mutters Clutter Private Library',
+  description: 'Magpie Clutter Private Library',
   libraries: [m_dep],
   subdirs: join_paths(pkgname, 'clutter'),
   requires: [clutter_pkg_deps, libmutter_cogl_name],

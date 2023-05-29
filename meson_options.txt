@@ -35,7 +35,7 @@ option('glx',
 
 option('wayland',
   type: 'boolean',
-  value: true,
+  value: false,
   description: 'Enable Wayland support'
 )
 
@@ -59,7 +59,7 @@ option('remote_desktop',
 
 option('libgnome_desktop',
   type: 'boolean',
-  value: true,
+  value: false,
   description: 'Build with or without gnome-desktop'
 )
 
@@ -131,31 +131,31 @@ option('docs',
 
 option('cogl_tests',
   type: 'boolean',
-  value: true,
+  value: false,
   description: 'Enable cogl tests'
 )
 
 option('clutter_tests',
   type: 'boolean',
-  value: true,
+  value: false,
   description: 'Enable clutter tests'
 )
 
 option('core_tests',
   type: 'boolean',
-  value: true,
+  value: false,
   description: 'Enable mutter core tests'
 )
 
 option('native_tests',
   type: 'boolean',
-  value: true,
+  value: false,
   description: 'Enable mutter native backend tests'
 )
 
 option('tests',
   type: 'boolean',
-  value: true,
+  value: false,
   description: 'Enable tests globally. Specific test suites can be controlled with core_tests, clutter_tests, and cogl_tests'
 )
 
@@ -185,7 +185,7 @@ option('profiler',
 
 option('installed_tests',
   type: 'boolean',
-  value: true,
+  value: false,
   description: 'Enable mutter installed tests'
 )
 

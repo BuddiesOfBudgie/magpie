@@ -1,4 +1,4 @@
-project('mutter', 'c',
+project('magpie', 'c',
   version: '43.5',
   meson_version: '>= 0.55.0',
   license: 'GPLv2+'
@@ -95,7 +95,7 @@ pcdir = join_paths(libdir, 'pkgconfig')
 gettext_package = meson.project_name()
 localedir = join_paths(datadir, 'locale')
 
-libmutter_name = 'mutter-' + libmutter_api_version
+libmutter_name = 'magpie-' + libmutter_api_version
 
 mutter_installed_tests_datadir = join_paths(
   datadir, 'installed-tests', libmutter_name)
