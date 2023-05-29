@@ -218,3 +218,9 @@ option('catch',
   value: false,
   description: 'Use catch to catch backtraces'
 )
+
+option('with_shared_components',
+  type: 'boolean',
+  value: false,
+  description: 'Build components that are shared with Mutter'
+)

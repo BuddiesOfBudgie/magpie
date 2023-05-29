@@ -636,10 +636,12 @@ top_includepath = include_directories('.')
 
 subdir('cogl')
 subdir('clutter')
+have_shared_components=get_option('with_shared_components')
 subdir('data')
 subdir('tools')
 subdir('src')
 subdir('po')
+
 subdir('doc/man')
 if have_documentation
   subdir('doc/reference')
