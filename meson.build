@@ -42,8 +42,8 @@ udev_req = '>= 228'
 gudev_req = '>= 232'
 
 # wayland version requirements
-wayland_server_req = '>= 1.21'
-wayland_protocols_req = '>= 1.26'
+#wayland_server_req = '>= 1.21'
+#wayland_protocols_req = '>= 1.26'
 
 # native backend version requirements
 libinput_req = '>= 1.19.0'
@@ -128,7 +128,8 @@ dbus_dep = dependency('dbus-1')
 colord_dep = dependency('colord', version: colord_req)
 lcms2_dep = dependency('lcms2', version: lcms2_req)
 
-have_wayland = get_option('wayland')
+#have_wayland = get_option('wayland')
+have_wayland = false
 # For now always require X11 support
 have_x11 = true
 have_xwayland = have_wayland # for now default to have_wayland
@@ -259,7 +260,8 @@ endif
 
 have_egl_device = get_option('egl_device')
 
-have_wayland_eglstream = get_option('wayland_eglstream')
+#have_wayland_eglstream = get_option('wayland_eglstream')
+have_wayland_eglstream = false
 if have_wayland_eglstream
   wayland_eglstream_protocols_dep = dependency('wayland-eglstream-protocols')
   dl_dep = cc.find_library('dl', required: true)
@@ -311,7 +313,8 @@ if have_documentation
                             fallback: ['gi-docgen', 'dummy_dep'])
 endif
 
-have_tests = get_option('tests')
+#have_tests = get_option('tests')
+have_tests = false
 have_core_tests = false
 have_cogl_tests = false
 have_clutter_tests = false
@@ -613,7 +616,8 @@ foreach function : optional_functions
   endif
 endforeach
 
-xwayland_grab_default_access_rules = get_option('xwayland_grab_default_access_rules')
+#xwayland_grab_default_access_rules = get_option('xwayland_grab_default_access_rules')
+xwayland_grab_default_access_rules = ''
 cdata.set_quoted('XWAYLAND_GRAB_DEFAULT_ACCESS_RULES',
                  xwayland_grab_default_access_rules)
 
@@ -656,10 +660,10 @@ summary('GLES2', have_gles2, section: 'Rendering APIs')
 summary('EGL', have_egl, section: 'Rendering APIs')
 summary('GLX', have_glx, section: 'Rendering APIs')
 
-summary('Wayland', have_wayland, section: 'Options')
-summary('Wayland EGLStream', have_wayland_eglstream, section: 'Options')
+#summary('Wayland', have_wayland, section: 'Options')
+#summary('Wayland EGLStream', have_wayland_eglstream, section: 'Options')
 summary('X11', have_x11, section: 'Options')
-summary('XWayland', have_xwayland, section: 'Options')
+#summary('XWayland', have_xwayland, section: 'Options')
 summary('Native Backend', have_native_backend, section: 'Options')
 summary('EGL Device', have_egl_device, section: 'Options')
 summary('Remote desktop', have_remote_desktop, section: 'Options')
@@ -672,15 +676,15 @@ summary('Startup notification', have_startup_notification, section: 'Options')
 summary('Introspection', have_introspection, section: 'Options')
 summary('Documentation', have_documentation, section: 'Options')
 summary('Profiler', have_profiler, section: 'Options')
-summary('Xwayland initfd', have_xwayland_initfd, section: 'Options')
-summary('Xwayland listenfd', have_xwayland_listenfd, section: 'Options')
+#summary('Xwayland initfd', have_xwayland_initfd, section: 'Options')
+#summary('Xwayland listenfd', have_xwayland_listenfd, section: 'Options')
 summary('Safe X11 I/O errors', have_xsetioerrorexithandler, section: 'Options')
-summary('Xwayland terminate delay', have_xwayland_terminate_delay, section: 'Options')
+#summary('Xwayland terminate delay', have_xwayland_terminate_delay, section: 'Options')
 
-summary('Enabled', have_tests, section: 'Tests')
-summary('Core tests', have_core_tests, section: 'Tests')
-summary('Cogl tests', have_cogl_tests, section: 'Tests')
-summary('Clutter tests', have_clutter_tests, section: 'Tests')
-summary('KVM tests', get_option('kvm_tests'), section: 'Tests')
-summary('Installed tests', have_installed_tests, section: 'Tests')
-summary('Coverage', get_option('b_coverage'), section: 'Tests')
+#summary('Enabled', have_tests, section: 'Tests')
+#summary('Core tests', have_core_tests, section: 'Tests')
+#summary('Cogl tests', have_cogl_tests, section: 'Tests')
+#summary('Clutter tests', have_clutter_tests, section: 'Tests')
+#summary('KVM tests', get_option('kvm_tests'), section: 'Tests')
+#summary('Installed tests', have_installed_tests, section: 'Tests')
+#summary('Coverage', get_option('b_coverage'), section: 'Tests')
