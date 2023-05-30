@@ -40,3 +40,16 @@ clutter_frame_set_result (ClutterFrame       *frame,
   frame->result = result;
   frame->has_result = TRUE;
 }
+
+void
+clutter_frame_set_hint (ClutterFrame     *frame,
+                        ClutterFrameHint  hint)
+{
+  frame->hints |= hint;
+}
+
+ClutterFrameHint
+clutter_frame_get_hints (ClutterFrame *frame)
+{
+  return frame->hints;
+}

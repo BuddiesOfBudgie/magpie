@@ -24,6 +24,7 @@ struct _ClutterFrame
 {
   gboolean has_result;
   ClutterFrameResult result;
+  ClutterFrameHint hints;
 };
 
 #define CLUTTER_FRAME_INIT ((ClutterFrame) { 0 })

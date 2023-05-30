@@ -394,7 +394,7 @@ meta_crtc_kms_maybe_set_gamma (MetaCrtcKms   *crtc_kms,
   if (!gamma)
     return;
 
-  kms_update = meta_kms_ensure_pending_update (kms, kms_device);
+  kms_update = meta_kms_ensure_pending_update_for_crtc (kms, kms_crtc);
   meta_kms_update_set_crtc_gamma (kms_update,
                                   kms_crtc,
                                   gamma->size,

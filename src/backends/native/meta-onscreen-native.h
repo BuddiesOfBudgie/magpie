@@ -42,6 +42,8 @@ void meta_onscreen_native_finish_frame (CoglOnscreen *onscreen,
 
 void meta_onscreen_native_dummy_power_save_page_flip (CoglOnscreen *onscreen);
 
+void meta_onscreen_native_discard_pending_swaps (CoglOnscreen *onscreen);
+
 gboolean meta_onscreen_native_is_buffer_scanout_compatible (CoglOnscreen  *onscreen,
                                                             MetaDrmBuffer *fb);
 
