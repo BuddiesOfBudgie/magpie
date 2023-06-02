@@ -1,5 +1,5 @@
 project('magpie', 'c',
-  version: '43.5',
+  version: '0.9',
   meson_version: '>= 0.55.0',
   license: 'GPLv2+'
 )
