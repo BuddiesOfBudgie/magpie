@@ -1074,7 +1074,7 @@ libmutter = shared_library(libmutter_name,
   include_directories: mutter_includes,
   c_args: [
     mutter_c_args,
-    '-DG_LOG_DOMAIN="libmutter"',
+    '-DG_LOG_DOMAIN="libmagie"',
   ],
   dependencies: [
     libmutter_cogl_dep,
@@ -1096,21 +1096,21 @@ libmutter_dep = declare_dependency(
   ],
 )
 
-mutter = executable('mutter',
+mutter = executable('magpie',
   sources: [
     files('core/mutter.c'),
   ],
   include_directories: mutter_includes,
   c_args: [
     mutter_c_args,
-    '-DG_LOG_DOMAIN="mutter"',
+    '-DG_LOG_DOMAIN="magpie"',
   ],
   dependencies: [libmutter_dep],
   install_dir: bindir,
   install: true,
 )
 if have_x11
-  executable('mutter-restart-helper',
+  executable('magpie-restart-helper',
     sources: [
       files('core/restart-helper.c'),
     ],
@@ -1119,7 +1119,7 @@ if have_x11
     ],
     c_args: [
       mutter_c_args,
-      '-DG_LOG_DOMAIN="mutter-restart-helper"',
+      '-DG_LOG_DOMAIN="magpie-restart-helper"',
     ],
     dependencies: [
       x11_dep,
@@ -1171,15 +1171,15 @@ endif
 
 pkg.generate(libmutter,
   name: 'Meta',
-  filebase: 'libmutter-' + libmutter_api_version,
-  description: 'Mutter compositor and window manager library',
+  filebase: 'libmagpie-' + libmutter_api_version,
+  description: 'Magpie compositor and window manager library',
   subdirs: pkgname,
   requires: [mutter_pkg_deps, libmutter_clutter_name],
   version: meson.project_version(),
   variables: [
     'apiversion=' + libmutter_api_version,
-    'girdir=${libdir}/mutter-' + libmutter_api_version,
-    'typelibdir=${libdir}/mutter-' + libmutter_api_version,
+    'girdir=${libdir}/magpie-' + libmutter_api_version,
+    'typelibdir=${libdir}/magpie-' + libmutter_api_version,
   ],
   install_dir: pcdir,
 )

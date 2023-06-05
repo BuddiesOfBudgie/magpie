@@ -1204,7 +1204,11 @@ meta_kms_impl_device_init_mode_setting (MetaKmsImplDevice  *impl_device,
 void
 meta_kms_impl_device_prepare_shutdown (MetaKmsImplDevice *impl_device)
 {
+  MetaKmsImplDevicePrivate *priv =
+    meta_kms_impl_device_get_instance_private (impl_device);
   MetaKmsImplDeviceClass *klass = META_KMS_IMPL_DEVICE_GET_CLASS (impl_device);
+
+  g_list_foreach (priv->crtcs, (GFunc) meta_kms_crtc_release_buffers, NULL);
 
   if (klass->prepare_shutdown)
     klass->prepare_shutdown (impl_device);

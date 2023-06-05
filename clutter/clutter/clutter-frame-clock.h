@@ -34,6 +34,12 @@ typedef enum _ClutterFrameResult
   CLUTTER_FRAME_RESULT_IDLE,
 } ClutterFrameResult;
 
+typedef enum _ClutterFrameHint
+{
+  CLUTTER_FRAME_HINT_NONE = 0,
+  CLUTTER_FRAME_HINT_DIRECT_SCANOUT_ATTEMPTED = 1 << 0,
+} ClutterFrameHint;
+
 #define CLUTTER_TYPE_FRAME_CLOCK (clutter_frame_clock_get_type ())
 CLUTTER_EXPORT
 G_DECLARE_FINAL_TYPE (ClutterFrameClock, clutter_frame_clock,
@@ -90,8 +96,9 @@ void clutter_frame_clock_remove_timeline (ClutterFrameClock *frame_clock,
 CLUTTER_EXPORT
 float clutter_frame_clock_get_refresh_rate (ClutterFrameClock *frame_clock);
 
-void clutter_frame_clock_record_flip_time (ClutterFrameClock *frame_clock,
-                                           int64_t            flip_time_us);
+void clutter_frame_clock_record_flip (ClutterFrameClock *frame_clock,
+                                      int64_t            flip_time_us,
+                                      ClutterFrameHint   hints);
 
 GString * clutter_frame_clock_get_max_render_time_debug_info (ClutterFrameClock *frame_clock);
 

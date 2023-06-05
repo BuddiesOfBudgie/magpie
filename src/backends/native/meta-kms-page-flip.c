@@ -25,6 +25,7 @@
 #include "backends/native/meta-kms-impl.h"
 #include "backends/native/meta-kms-private.h"
 #include "backends/native/meta-kms-update.h"
+#include "backends/native/meta-kms-crtc.h"
 
 typedef struct _MetaKmsPageFlipClosure
 {
@@ -149,6 +150,8 @@ meta_kms_page_flip_data_flipped (MetaKms  *kms,
   GList *l;
 
   meta_assert_not_in_kms_impl (kms);
+
+  meta_kms_crtc_on_scanout_started (page_flip_data->crtc);
 
   for (l = page_flip_data->closures; l; l = l->next)
     {

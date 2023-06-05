@@ -486,6 +486,8 @@ process_mode_set (MetaKmsImplDevice  *impl_device,
       return FALSE;
     }
 
+  meta_kms_crtc_on_scanout_started (crtc);
+
   if (drm_mode)
     {
       g_hash_table_replace (impl_device_simple->cached_mode_sets,
@@ -550,7 +552,7 @@ is_timestamp_earlier_than (uint64_t ts1,
 typedef struct _RetryPageFlipData
 {
   MetaKmsCrtc *crtc;
-  uint32_t fb_id;
+  MetaDrmBuffer *fb;
   MetaKmsPageFlipData *page_flip_data;
   float refresh_rate;
   uint64_t retry_time_us;
@@ -563,6 +565,7 @@ retry_page_flip_data_free (RetryPageFlipData *retry_page_flip_data)
   g_assert (!retry_page_flip_data->page_flip_data);
   g_clear_pointer (&retry_page_flip_data->custom_page_flip,
                    meta_kms_custom_page_flip_free);
+  g_clear_object (&retry_page_flip_data->fb);
   g_free (retry_page_flip_data);
 }
 
@@ -630,16 +633,21 @@ retry_page_flips (gpointer user_data)
         }
       else
         {
+          uint32_t fb_id =
+            retry_page_flip_data->fb ?
+            meta_drm_buffer_get_fb_id (retry_page_flip_data->fb) :
+            0;
+
           meta_topic (META_DEBUG_KMS,
                       "[simple] Retrying page flip on CRTC %u (%s) with %u",
                       meta_kms_crtc_get_id (crtc),
                       meta_kms_impl_device_get_path (impl_device),
-                      retry_page_flip_data->fb_id);
+                      fb_id);
 
           fd = meta_kms_impl_device_get_fd (impl_device);
           ret = drmModePageFlip (fd,
                                  meta_kms_crtc_get_id (crtc),
-                                 retry_page_flip_data->fb_id,
+                                 fb_id,
                                  DRM_MODE_PAGE_FLIP_EVENT,
                                  retry_page_flip_data->page_flip_data);
         }
@@ -726,7 +734,7 @@ retry_page_flips (gpointer user_data)
 static void
 schedule_retry_page_flip (MetaKmsImplDeviceSimple *impl_device_simple,
                           MetaKmsCrtc             *crtc,
-                          uint32_t                 fb_id,
+                          MetaDrmBuffer           *fb,
                           float                    refresh_rate,
                           MetaKmsPageFlipData     *page_flip_data,
                           MetaKmsCustomPageFlip   *custom_page_flip)
@@ -741,7 +749,7 @@ schedule_retry_page_flip (MetaKmsImplDeviceSimple *impl_device_simple,
   retry_page_flip_data = g_new0 (RetryPageFlipData, 1);
   *retry_page_flip_data = (RetryPageFlipData) {
     .crtc = crtc,
-    .fb_id = fb_id,
+    .fb = fb ? g_object_ref (fb) : NULL,
     .page_flip_data = page_flip_data,
     .refresh_rate = refresh_rate,
     .retry_time_us = retry_time_us,
@@ -875,6 +883,8 @@ mode_set_fallback (MetaKmsImplDeviceSimple  *impl_device_simple,
       return FALSE;
     }
 
+  meta_kms_crtc_on_scanout_started (crtc);
+
   if (!impl_device_simple->mode_set_fallback_feedback_source)
     {
       GSource *source;
@@ -999,20 +1009,20 @@ dispatch_page_flip (MetaKmsImplDevice    *impl_device,
       cached_mode_set = get_cached_mode_set (impl_device_simple, crtc);
       if (cached_mode_set)
         {
-          uint32_t fb_id;
+          MetaDrmBuffer *fb;
           drmModeModeInfo *drm_mode;
           float refresh_rate;
 
           if (plane_assignment)
-            fb_id = meta_drm_buffer_get_fb_id (plane_assignment->buffer);
+            fb = plane_assignment->buffer;
           else
-            fb_id = 0;
+            fb = NULL;
           drm_mode = cached_mode_set->drm_mode;
           refresh_rate = meta_calculate_drm_mode_refresh_rate (drm_mode);
           meta_kms_impl_device_hold_fd (impl_device);
           schedule_retry_page_flip (impl_device_simple,
                                     crtc,
-                                    fb_id,
+                                    fb,
                                     refresh_rate,
                                     page_flip_data,
                                     g_steal_pointer (&custom_page_flip));
@@ -1302,7 +1312,7 @@ process_plane_assignment (MetaKmsImplDevice       *impl_device,
     {
     case META_KMS_PLANE_TYPE_PRIMARY:
       /* Handled as part of the mode-set and page flip. */
-      return TRUE;
+      goto assigned;
     case META_KMS_PLANE_TYPE_CURSOR:
       if (!process_cursor_plane_assignment (impl_device, update,
                                             plane_assignment,
@@ -1316,7 +1326,7 @@ process_plane_assignment (MetaKmsImplDevice       *impl_device,
         }
       else
         {
-          return TRUE;
+          goto assigned;
         }
     case META_KMS_PLANE_TYPE_OVERLAY:
       error = g_error_new_literal (G_IO_ERROR, G_IO_ERROR_FAILED,
@@ -1329,6 +1339,12 @@ process_plane_assignment (MetaKmsImplDevice       *impl_device,
     }
 
   g_assert_not_reached ();
+
+assigned:
+  meta_kms_crtc_remember_plane_buffer (plane_assignment->crtc,
+                                       meta_kms_plane_get_id (plane),
+                                       plane_assignment->buffer);
+  return TRUE;
 }
 
 static gboolean

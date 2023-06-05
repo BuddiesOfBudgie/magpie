@@ -1,8 +1,8 @@
 msgfmt = find_program('msgfmt')
 
-custom_target('mutter.desktop',
-  input: 'mutter.desktop.in',
-  output: 'mutter.desktop',
+custom_target('magpie.desktop',
+  input: 'magpie.desktop.in',
+  output: 'magpie.desktop',
   command: [
     msgfmt,
     '--desktop', '--template',
@@ -29,11 +29,13 @@ if have_wayland
   ]
 endif
 
-install_data(keybinding_xml_files,
-  install_dir: gnome_keybindings_keysdir,
-)
+if have_shared_components
+  install_data(keybinding_xml_files,
+    install_dir: gnome_keybindings_keysdir,
+  )
+endif
 
-xwayland_grab_default_access_rules = get_option('xwayland_grab_default_access_rules')
+#xwayland_grab_default_access_rules = get_option('xwayland_grab_default_access_rules')
 
 gschema_config = configuration_data()
 gschema_config.set('GETTEXT_DOMAIN', meson.project_name())
@@ -41,28 +43,30 @@ gschema_config.set('XWAYLAND_GRAB_DEFAULT_ACCESS_RULES',
                    xwayland_grab_default_access_rules)
 
 schemadir = join_paths(datadir, 'glib-2.0', 'schemas')
-configure_file(
-  input: 'org.gnome.mutter.gschema.xml.in',
-  output: 'org.gnome.mutter.gschema.xml',
-  configuration: gschema_config,
-  install_dir: schemadir
-)
-
-configure_file(
-  input: 'org.gnome.mutter.wayland.gschema.xml.in',
-  output: 'org.gnome.mutter.wayland.gschema.xml',
-  configuration: gschema_config,
-  install_dir: schemadir
-)
-
-install_data(['mutter-schemas.convert'],
-  install_dir: join_paths(datadir, 'GConf/gsettings'),
-)
-
-if have_libgudev
-  install_data(['61-mutter.rules'],
-    install_dir: join_paths(udev_dir, 'rules.d'),
+if have_shared_components
+  configure_file(
+    input: 'org.gnome.mutter.gschema.xml.in',
+    output: 'org.gnome.mutter.gschema.xml',
+    configuration: gschema_config,
+    install_dir: schemadir
   )
+
+  configure_file(
+    input: 'org.gnome.mutter.wayland.gschema.xml.in',
+    output: 'org.gnome.mutter.wayland.gschema.xml',
+    configuration: gschema_config,
+    install_dir: schemadir
+  )
+
+  install_data(['mutter-schemas.convert'],
+    install_dir: join_paths(datadir, 'GConf/gsettings'),
+  )
+
+  if have_libgudev
+    install_data(['61-magpie.rules'],
+      install_dir: join_paths(udev_dir, 'rules.d'),
+    )
+  endif
 endif
 
 subdir('dbus-interfaces')

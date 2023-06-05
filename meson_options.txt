@@ -33,11 +33,11 @@ option('glx',
   description: 'Enable GLX support'
 )
 
-option('wayland',
-  type: 'boolean',
-  value: true,
-  description: 'Enable Wayland support'
-)
+#option('wayland',
+#  type: 'boolean',
+#  value: false,
+#  description: 'Enable Wayland support'
+#)
 
 option('systemd',
   type: 'boolean',
@@ -59,7 +59,7 @@ option('remote_desktop',
 
 option('libgnome_desktop',
   type: 'boolean',
-  value: true,
+  value: false,
   description: 'Build with or without gnome-desktop'
 )
 
@@ -69,11 +69,11 @@ option('egl_device',
   description: 'Enable EGLDevice and EGLStream renderer support'
 )
 
-option('wayland_eglstream',
-  type: 'boolean',
-  value: false,
-  description: 'Enable Wayland EGLStream support client support'
-)
+#option('wayland_eglstream',
+#  type: 'boolean',
+#  value: false,
+#  description: 'Enable Wayland EGLStream support client support'
+#)
 
 option('udev',
   type: 'boolean',
@@ -129,53 +129,53 @@ option('docs',
   description: 'Enable gi-docgen documentation'
 )
 
-option('cogl_tests',
-  type: 'boolean',
-  value: true,
-  description: 'Enable cogl tests'
-)
+#option('cogl_tests',
+#  type: 'boolean',
+#  value: false,
+#  description: 'Enable cogl tests'
+#)
 
-option('clutter_tests',
-  type: 'boolean',
-  value: true,
-  description: 'Enable clutter tests'
-)
+#option('clutter_tests',
+#  type: 'boolean',
+#  value: false,
+#  description: 'Enable clutter tests'
+#)
 
-option('core_tests',
-  type: 'boolean',
-  value: true,
-  description: 'Enable mutter core tests'
-)
+#option('core_tests',
+#  type: 'boolean',
+#  value: false,
+#  description: 'Enable mutter core tests'
+#)
 
-option('native_tests',
-  type: 'boolean',
-  value: true,
-  description: 'Enable mutter native backend tests'
-)
+#option('native_tests',
+#  type: 'boolean',
+#  value: false,
+#  description: 'Enable mutter native backend tests'
+#)
 
-option('tests',
-  type: 'boolean',
-  value: true,
-  description: 'Enable tests globally. Specific test suites can be controlled with core_tests, clutter_tests, and cogl_tests'
-)
+#option('tests',
+#  type: 'boolean',
+#  value: false,
+#  description: 'Enable tests globally. Specific test suites can be controlled with core_tests, clutter_tests, and cogl_tests'
+#)
 
-option('kvm_tests',
-  type: 'boolean',
-  value: false,
-  description: 'Enable running certain tests in a virtual machine with a custom built kernel'
-)
+#option('kvm_tests',
+#  type: 'boolean',
+#  value: false,
+#  description: 'Enable running certain tests in a virtual machine with a custom built kernel'
+#)
 
-option('kvm_kernel_image',
-  type: 'string',
-  value: '',
-  description: 'Path to a Linux kernel image to be used for KVM testing'
-)
+#option('kvm_kernel_image',
+#  type: 'string',
+#  value: '',
+#  description: 'Path to a Linux kernel image to be used for KVM testing'
+#)
 
-option('tty_tests',
-  type: 'boolean',
-  value: false,
-  description: 'Enable tests that must be run on a TTY (KMS tests without KVM)'
-)
+#option('tty_tests',
+#  type: 'boolean',
+#  value: false,
+#  description: 'Enable tests that must be run on a TTY (KMS tests without KVM)'
+#)
 
 option('profiler',
   type: 'boolean',
@@ -183,11 +183,11 @@ option('profiler',
   description: 'Enable Sysprof tracing'
 )
 
-option('installed_tests',
-  type: 'boolean',
-  value: true,
-  description: 'Enable mutter installed tests'
-)
+#option('installed_tests',
+#  type: 'boolean',
+#  value: false,
+#  description: 'Enable mutter installed tests'
+#)
 
 option('verbose',
   type: 'boolean',
@@ -195,26 +195,32 @@ option('verbose',
   description: 'Enable verbose logging ability'
 )
 
-option('xwayland_path',
-  type: 'string',
-  value: '',
-  description: 'Path to Xwayland executable'
-)
+#option('xwayland_path',
+#  type: 'string',
+#  value: '',
+#  description: 'Path to Xwayland executable'
+#)
 
-option('xwayland_grab_default_access_rules',
-  type: 'string',
-  value: 'gnome-boxes,remote-viewer,virt-viewer,virt-manager,vinagre,vncviewer,Xephyr',
-  description: 'Comma delimited list of applications resources or class allowed to issue X11 grabs in Xwayland'
-)
+#option('xwayland_grab_default_access_rules',
+#  type: 'string',
+#  value: 'gnome-boxes,remote-viewer,virt-viewer,virt-manager,vinagre,vncviewer,Xephyr',
+#  description: 'Comma delimited list of applications resources or class allowed to issue X11 grabs in Xwayland'
+#)
 
-option('xwayland_initfd',
-  type: 'feature',
-  value: 'auto',
-  description: 'Whether -initfd argument is passed to Xwayland to guarantee services (e.g. gsd-xsettings) startup before applications'
-)
+#option('xwayland_initfd',
+#  type: 'feature',
+#  value: 'auto',
+#  description: 'Whether -initfd argument is passed to Xwayland to guarantee services (e.g. gsd-xsettings) startup before applications'
+#)
 
 option('catch',
   type: 'boolean',
   value: false,
   description: 'Use catch to catch backtraces'
+)
+
+option('with_shared_components',
+  type: 'boolean',
+  value: false,
+  description: 'Build components that are shared with Mutter'
 )

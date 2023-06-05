@@ -36,6 +36,8 @@
 #include "tests/meta-wayland-test-driver.h"
 #include "tests/meta-wayland-test-utils.h"
 
+#define N_FRAMES_PER_TEST 10
+
 typedef struct
 {
   int number_of_frames_left;
@@ -43,7 +45,9 @@ typedef struct
 
   struct {
     int n_paints;
-    uint32_t fb_id;
+    int n_presentations;
+    int n_direct_scanouts;
+    GList *fb_ids;
   } scanout;
 
   gboolean wait_for_scanout;
@@ -72,7 +76,7 @@ meta_test_kms_render_basic (void)
   gulong handler_id;
 
   test = (KmsRenderingTest) {
-    .number_of_frames_left = 10,
+    .number_of_frames_left = N_FRAMES_PER_TEST,
     .loop = g_main_loop_new (NULL, FALSE),
   };
   handler_id = g_signal_connect (stage, "after-update",
@@ -93,7 +97,6 @@ on_scanout_before_update (ClutterStage     *stage,
                           KmsRenderingTest *test)
 {
   test->scanout.n_paints = 0;
-  test->scanout.fb_id = 0;
 }
 
 static void
@@ -103,6 +106,7 @@ on_scanout_before_paint (ClutterStage     *stage,
 {
   CoglScanout *scanout;
   MetaDrmBuffer *buffer;
+  uint32_t fb_id;
 
   scanout = clutter_stage_view_peek_scanout (stage_view);
   if (!scanout)
@@ -110,8 +114,14 @@ on_scanout_before_paint (ClutterStage     *stage,
 
   g_assert_true (META_IS_DRM_BUFFER (scanout));
   buffer = META_DRM_BUFFER (scanout);
-  test->scanout.fb_id = meta_drm_buffer_get_fb_id (buffer);
-  g_assert_cmpuint (test->scanout.fb_id, >, 0);
+
+  fb_id = meta_drm_buffer_get_fb_id (buffer);
+  g_assert_cmpuint (fb_id, >, 0);
+  test->scanout.fb_ids = g_list_append (test->scanout.fb_ids,
+                                        GUINT_TO_POINTER (fb_id));
+
+  /* Triple buffering, but no higher */
+  g_assert_cmpuint (g_list_length (test->scanout.fb_ids), <=, 2);
 }
 
 static void
@@ -138,12 +148,12 @@ on_scanout_presented (ClutterStage     *stage,
   MetaDeviceFile *device_file;
   GError *error = NULL;
   drmModeCrtc *drm_crtc;
+  uint32_t first_fb_id_expected;
 
-  if (test->scanout.n_paints > 0)
+  if (test->wait_for_scanout && test->scanout.fb_ids == NULL)
     return;
 
-  if (test->wait_for_scanout && test->scanout.fb_id == 0)
-    return;
+  test->scanout.n_presentations++;
 
   device_pool = meta_backend_native_get_device_pool (backend_native);
 
@@ -162,15 +172,41 @@ on_scanout_presented (ClutterStage     *stage,
   drm_crtc = drmModeGetCrtc (meta_device_file_get_fd (device_file),
                              meta_kms_crtc_get_id (kms_crtc));
   g_assert_nonnull (drm_crtc);
-  if (test->scanout.fb_id == 0)
-    g_assert_cmpuint (drm_crtc->buffer_id, !=, test->scanout.fb_id);
+
+  if (test->scanout.fb_ids)
+    {
+      test->scanout.n_direct_scanouts++;
+      first_fb_id_expected = GPOINTER_TO_UINT (test->scanout.fb_ids->data);
+      test->scanout.fb_ids = g_list_delete_link (test->scanout.fb_ids,
+                                                 test->scanout.fb_ids);
+    }
   else
-    g_assert_cmpuint (drm_crtc->buffer_id, ==, test->scanout.fb_id);
+    {
+      first_fb_id_expected = 0;
+    }
+
+  /* The buffer ID won't match on the first frame because switching from
+   * triple buffered compositing to double buffered direct scanout takes
+   * an extra frame to drain the queue. Thereafter we are in direct scanout
+   * mode and expect the buffer IDs to match.
+   */
+  if (test->scanout.n_presentations > 1)
+    {
+      if (first_fb_id_expected == 0)
+        g_assert_cmpuint (drm_crtc->buffer_id, !=, first_fb_id_expected);
+      else
+        g_assert_cmpuint (drm_crtc->buffer_id, ==, first_fb_id_expected);
+    }
+
   drmModeFreeCrtc (drm_crtc);
 
   meta_device_file_release (device_file);
 
-  g_main_loop_quit (test->loop);
+  test->number_of_frames_left--;
+  if (test->number_of_frames_left <= 0)
+    g_main_loop_quit (test->loop);
+  else
+    clutter_actor_queue_redraw (CLUTTER_ACTOR (stage));
 }
 
 typedef enum
@@ -209,7 +245,9 @@ meta_test_kms_render_client_scanout (void)
   g_assert_nonnull (wayland_test_client);
 
   test = (KmsRenderingTest) {
+    .number_of_frames_left = N_FRAMES_PER_TEST,
     .loop = g_main_loop_new (NULL, FALSE),
+    .scanout = {0},
     .wait_for_scanout = TRUE,
   };
 
@@ -235,7 +273,8 @@ meta_test_kms_render_client_scanout (void)
   clutter_actor_queue_redraw (CLUTTER_ACTOR (stage));
   g_main_loop_run (test.loop);
 
-  g_assert_cmpuint (test.scanout.fb_id, >, 0);
+  g_assert_cmpint (test.scanout.n_presentations, ==, N_FRAMES_PER_TEST);
+  g_assert_cmpint (test.scanout.n_direct_scanouts, ==, N_FRAMES_PER_TEST);
 
   g_debug ("Unmake fullscreen");
   window = meta_find_window_from_title (test_context, "dma-buf-scanout-test");
@@ -257,10 +296,15 @@ meta_test_kms_render_client_scanout (void)
   g_assert_cmpint (buffer_rect.y, ==, 10);
 
   test.wait_for_scanout = FALSE;
+  test.number_of_frames_left = N_FRAMES_PER_TEST;
+  test.scanout.n_presentations = 0;
+  test.scanout.n_direct_scanouts = 0;
+
   clutter_actor_queue_redraw (CLUTTER_ACTOR (stage));
   g_main_loop_run (test.loop);
 
-  g_assert_cmpuint (test.scanout.fb_id, ==, 0);
+  g_assert_cmpint (test.scanout.n_presentations, ==, N_FRAMES_PER_TEST);
+  g_assert_cmpint (test.scanout.n_direct_scanouts, ==, 0);
 
   g_debug ("Moving back to 0, 0");
   meta_window_move_frame (window, TRUE, 0, 0);
@@ -272,10 +316,15 @@ meta_test_kms_render_client_scanout (void)
   g_assert_cmpint (buffer_rect.y, ==, 0);
 
   test.wait_for_scanout = TRUE;
+  test.number_of_frames_left = N_FRAMES_PER_TEST;
+  test.scanout.n_presentations = 0;
+  test.scanout.n_direct_scanouts = 0;
+
   clutter_actor_queue_redraw (CLUTTER_ACTOR (stage));
   g_main_loop_run (test.loop);
 
-  g_assert_cmpuint (test.scanout.fb_id, >, 0);
+  g_assert_cmpint (test.scanout.n_presentations, ==, N_FRAMES_PER_TEST);
+  g_assert_cmpint (test.scanout.n_direct_scanouts, ==, N_FRAMES_PER_TEST);
 
   g_signal_handler_disconnect (stage, before_update_handler_id);
   g_signal_handler_disconnect (stage, before_paint_handler_id);

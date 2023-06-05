@@ -1,13 +1,6 @@
-# Mutter
+# Magpie
 
-Mutter is a Wayland display server and X11 window manager and compositor library.
-
-When used as a Wayland display server, it runs on top of KMS and libinput. It
-implements the compositor side of the Wayland core protocol as well as various
-protocol extensions. It also has functionality related to running X11
-applications using Xwayland.
-
-When used on top of Xorg it acts as a X11 window manager and compositing manager.
+Magpie is a X11 window manager and compositor library.
 
 It contains functionality related to, among other things, window management,
 window compositing, focus tracking, workspace management, keybindings and
@@ -17,14 +10,25 @@ Internally it uses a fork of Cogl, a hardware acceleration abstraction library
 used to simplify usage of OpenGL pipelines, as well as a fork of Clutter, a
 scene graph and user interface toolkit.
 
-Mutter is used by, for example, GNOME Shell, the GNOME core user interface, and
-by  Gala, elementary OS's window manager. It can also be run standalone, using
-the  command "mutter", but just running plain mutter is only intended for
+Magpie is a soft-fork of GNOME's mutter at version 43 tailored to the requirements of the Budgie Desktop 10 series (from v10.8 and later).  Magpie allows mutter based desktops such as GNOME Shell to co-exist since the key-components such as libmagpie are separated by both name and file-system install location.  Magpie shares some Mutter shared files; therefore these need to be delivered/installed as part of the distribution from its mutter package.  Alternatively these files can be delivered using the meson option "with_shared_components" where budgie-desktop is not required to co-exist with any mutter based desktops.
+
+/lib/udev/rules.d/61-mutter.rules
+/usr/share/GConf/gsettings/mutter-schemas.convert
+/usr/share/glib-2.0/schemas/org.gnome.mutter.gschema.xml
+/usr/share/glib-2.0/schemas/org.gnome.mutter.wayland.gschema.xml
+/usr/share/glib-2.0/schemas/org.gnome.mutter.x11.gschema.xml
+/usr/share/gnome-control-center/keybindings/50-mutter-navigation.xml
+/usr/share/gnome-control-center/keybindings/50-mutter-system.xml
+/usr/share/gnome-control-center/keybindings/50-mutter-wayland.xml
+/usr/share/gnome-control-center/keybindings/50-mutter-windows.xml
+
+Magpie is used by the Budgie Desktop as its window manager. It can also be run standalone, using
+the  command "magpie", but just running plain magpie is only intended for
 debugging purposes.
 
 ## Contributing
 
-To contribute, open merge requests at https://gitlab.gnome.org/GNOME/mutter.
+To contribute, open merge requests at https://github.com/buddiesofbudgie/magpie
 
 It can be useful to look at the documentation available at the
 [Wiki](https://gitlab.gnome.org/GNOME/mutter/-/wikis/home).
@@ -51,21 +55,13 @@ message body than too little.
 
 ## Default branch
 
-The default development branch is `main`. If you still have a local
-checkout under the old name, use:
-```sh
-git checkout master
-git branch -m master main
-git fetch
-git branch --unset-upstream
-git branch -u origin/main
-git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+The default development branch is `main`. 
 ```
 
 ## License
 
-Mutter is distributed under the terms of the GNU General Public License,
+Magpie is distributed under the terms of the GNU General Public License,
 version 2 or later. See the [COPYING][license] file for detalis.
 
-[bug-tracker]: https://gitlab.gnome.org/GNOME/mutter/issues
+[bug-tracker]: https://github.com/buddiesofbudgie/magpie/issues
 [license]: COPYING

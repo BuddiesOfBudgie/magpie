@@ -426,7 +426,7 @@ cogl_headers_all = [
   cogl_deprecated_headers,
 ]
 
-libmutter_cogl_name = 'mutter-cogl-' + libmutter_api_version
+libmutter_cogl_name = 'magpie-cogl-' + libmutter_api_version
 libmutter_cogl = shared_library(libmutter_cogl_name,
   sources: [cogl_sources, cogl_headers_all],
   version: '0.0.0',
@@ -483,7 +483,7 @@ install_headers(cogl_gl_prototype_headers,
 pkg.generate(libmutter_cogl,
   name: 'Cogl',
   filebase: libmutter_cogl_name,
-  description: 'An object oriented GL/GLES Abstraction/Utility Layer in mutter',
+  description: 'An object oriented GL/GLES Abstraction/Utility Layer in magpie',
   libraries: [m_dep],
   subdirs: join_paths(pkgname, 'cogl'),
   requires: [cogl_pkg_deps],

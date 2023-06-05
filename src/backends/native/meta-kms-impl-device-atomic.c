@@ -457,6 +457,7 @@ process_plane_assignment (MetaKmsImplDevice  *impl_device,
 {
   MetaKmsPlaneAssignment *plane_assignment = update_entry;
   MetaKmsPlane *plane = plane_assignment->plane;
+  MetaKmsUpdateFlag flags = (MetaKmsUpdateFlag) user_data;
   MetaDrmBuffer *buffer;
   MetaKmsFbDamage *fb_damage;
   uint32_t prop_id;
@@ -609,6 +610,12 @@ process_plane_assignment (MetaKmsImplDevice  *impl_device,
                                error))
         return FALSE;
     }
+
+  if (!(flags & META_KMS_UPDATE_FLAG_TEST_ONLY))
+    meta_kms_crtc_remember_plane_buffer (plane_assignment->crtc,
+                                         meta_kms_plane_get_id (plane),
+                                         buffer);
+
   return TRUE;
 }
 
@@ -986,7 +993,7 @@ meta_kms_impl_device_atomic_process_update (MetaKmsImplDevice *impl_device,
                         req,
                         blob_ids,
                         meta_kms_update_get_plane_assignments (update),
-                        NULL,
+                        GUINT_TO_POINTER (flags),
                         process_plane_assignment,
                         &error))
     goto err;
