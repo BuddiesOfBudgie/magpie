@@ -12,6 +12,7 @@ scene graph and user interface toolkit.
 
 Magpie is a soft-fork of GNOME's mutter at version 43 tailored to the requirements of the Budgie Desktop 10 series (from v10.8 and later).  Magpie allows mutter based desktops such as GNOME Shell to co-exist since the key-components such as libmagpie are separated by both name and file-system install location.  Magpie shares some Mutter shared files; therefore these need to be delivered/installed as part of the distribution from its mutter package.  Alternatively these files can be delivered using the meson option "with_shared_components" where budgie-desktop is not required to co-exist with any mutter based desktops.
 
+```
 /lib/udev/rules.d/61-mutter.rules
 /usr/share/GConf/gsettings/mutter-schemas.convert
 /usr/share/glib-2.0/schemas/org.gnome.mutter.gschema.xml
@@ -21,6 +22,7 @@ Magpie is a soft-fork of GNOME's mutter at version 43 tailored to the requiremen
 /usr/share/gnome-control-center/keybindings/50-mutter-system.xml
 /usr/share/gnome-control-center/keybindings/50-mutter-wayland.xml
 /usr/share/gnome-control-center/keybindings/50-mutter-windows.xml
+```
 
 Magpie is used by the Budgie Desktop as its window manager. It can also be run standalone, using
 the  command "magpie", but just running plain magpie is only intended for
