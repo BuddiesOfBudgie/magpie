@@ -137,7 +137,7 @@ meta_restart (const char  *message,
   int helper_out_fd;
 
   static const char * const helper_argv[] = {
-    MUTTER_LIBEXECDIR "/mutter-restart-helper", NULL
+    MUTTER_LIBEXECDIR "/magpie-restart-helper", NULL
   };
 
   g_return_if_fail (META_IS_CONTEXT (context));
