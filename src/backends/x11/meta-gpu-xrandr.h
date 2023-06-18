@@ -33,6 +33,10 @@ G_DECLARE_FINAL_TYPE (MetaGpuXrandr, meta_gpu_xrandr, META, GPU_XRANDR, MetaGpu)
 
 XRRScreenResources * meta_gpu_xrandr_get_resources (MetaGpuXrandr *gpu_xrandr);
 
+void meta_gpu_xrandr_get_min_screen_size (MetaGpuXrandr *gpu_xrandr,
+                                          int           *min_width,
+                                          int           *min_height);
+
 void meta_gpu_xrandr_get_max_screen_size (MetaGpuXrandr *gpu_xrandr,
                                           int           *max_width,
                                           int           *max_height);

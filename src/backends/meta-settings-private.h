@@ -32,9 +32,10 @@ typedef enum _MetaExperimentalFeature
 {
   META_EXPERIMENTAL_FEATURE_NONE = 0,
   META_EXPERIMENTAL_FEATURE_SCALE_MONITOR_FRAMEBUFFER = (1 << 0),
-  META_EXPERIMENTAL_FEATURE_KMS_MODIFIERS  = (1 << 1),
+  META_EXPERIMENTAL_FEATURE_KMS_MODIFIERS = (1 << 1),
   META_EXPERIMENTAL_FEATURE_RT_SCHEDULER = (1 << 2),
-  META_EXPERIMENTAL_FEATURE_AUTOCLOSE_XWAYLAND  = (1 << 3),
+  META_EXPERIMENTAL_FEATURE_AUTOCLOSE_XWAYLAND = (1 << 3),
+  META_EXPERIMENTAL_FEATURE_X11_RANDR_FRACTIONAL_SCALING  = (1 << 4),
 } MetaExperimentalFeature;
 
 typedef enum _MetaXwaylandExtension
@@ -42,6 +43,13 @@ typedef enum _MetaXwaylandExtension
   META_XWAYLAND_EXTENSION_SECURITY = (1 << 0),
   META_XWAYLAND_EXTENSION_XTEST = (1 << 1),
 } MetaXwaylandExtension;
+
+typedef enum _MetaX11ScaleMode
+{
+  META_X11_SCALE_MODE_NONE = 0,
+  META_X11_SCALE_MODE_UP = 1,
+  META_X11_SCALE_MODE_UI_DOWN = 2,
+} MetaX11ScaleMode;
 
 #define META_TYPE_SETTINGS (meta_settings_get_type ())
 G_DECLARE_FINAL_TYPE (MetaSettings, meta_settings,
@@ -81,5 +89,10 @@ gboolean meta_settings_is_privacy_screen_enabled (MetaSettings *settings);
 
 void meta_settings_set_privacy_screen_enabled (MetaSettings *settings,
                                                gboolean      enabled);
+
+MetaX11ScaleMode meta_settings_get_x11_scale_mode (MetaSettings *settings);
+
+void meta_settings_enable_x11_fractional_scaling (MetaSettings *settings,
+                                                  gboolean      enabled);
 
 #endif /* META_SETTINGS_PRIVATE_H */

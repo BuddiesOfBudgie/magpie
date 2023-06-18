@@ -413,6 +413,11 @@
 			     using the logical monitor scale.
 	    * 2 : physical - the dimension of a logical monitor is derived from
 			     the monitor modes associated with it.
+	    * 3 : logical with ui scaling - the dimension of a logical monitor
+			     is derived from the monitor modes associated with it,
+			     then scaled using the logical monitor scale that is also
+			     scaled by the global UI scaling (computed using the maximum
+			     ceiled scaling value across the displays).
 	* "supports-changing-layout-mode" (b): True if the layout mode can be
 					       changed. Absence of this means the
 					       layout mode cannot be changed.

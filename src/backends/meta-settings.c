@@ -40,6 +40,7 @@ enum
   UI_SCALING_FACTOR_CHANGED,
   GLOBAL_SCALING_FACTOR_CHANGED,
   FONT_DPI_CHANGED,
+  X11_SCALE_MODE_CHANGED,
   EXPERIMENTAL_FEATURES_CHANGED,
   PRIVACY_SCREEN_CHANGED,
 
@@ -58,6 +59,7 @@ struct _MetaSettings
   GSettings *mutter_settings;
   GSettings *privacy_settings;
   GSettings *wayland_settings;
+  GSettings *x11_settings;
 
   int ui_scaling_factor;
   int global_scaling_factor;
@@ -75,6 +77,8 @@ struct _MetaSettings
 
   /* A bitmask of MetaXwaylandExtension enum */
   int xwayland_disable_extensions;
+
+  MetaX11ScaleMode x11_scale_mode;
 };
 
 G_DEFINE_TYPE (MetaSettings, meta_settings, G_TYPE_OBJECT)
@@ -84,14 +88,39 @@ calculate_ui_scaling_factor (MetaSettings *settings)
 {
   MetaMonitorManager *monitor_manager =
     meta_backend_get_monitor_manager (settings->backend);
-  MetaLogicalMonitor *primary_logical_monitor;
 
-  primary_logical_monitor =
-    meta_monitor_manager_get_primary_logical_monitor (monitor_manager);
-  if (!primary_logical_monitor)
-    return 1;
+  if (!meta_is_wayland_compositor () &&
+      monitor_manager &&
+      (meta_monitor_manager_get_capabilities (monitor_manager) &
+       META_MONITOR_MANAGER_CAPABILITY_LAYOUT_MODE))
+    {
+      MetaLogicalMonitorLayoutMode layout_mode =
+        meta_monitor_manager_get_default_layout_mode (monitor_manager);
 
-  return (int) meta_logical_monitor_get_scale (primary_logical_monitor);
+      if (layout_mode == META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL)
+        {
+          return
+              ceilf (meta_monitor_manager_get_maximum_crtc_scale (monitor_manager));
+        }
+      else if (layout_mode == META_LOGICAL_MONITOR_LAYOUT_MODE_LOGICAL)
+        {
+          return 1.0f;
+        }
+    }
+
+  if (monitor_manager)
+    {
+      MetaLogicalMonitor *primary_logical_monitor;
+
+      primary_logical_monitor =
+        meta_monitor_manager_get_primary_logical_monitor (monitor_manager);
+      if (!primary_logical_monitor)
+        return 1;
+
+      return (int) meta_logical_monitor_get_scale (primary_logical_monitor);
+    }
+
+  return 1;
 }
 
 static gboolean
@@ -258,6 +287,76 @@ meta_settings_override_experimental_features (MetaSettings *settings)
   settings->experimental_features_overridden = TRUE;
 }
 
+static gboolean
+update_x11_scale_mode (MetaSettings *settings)
+{
+  MetaX11ScaleMode scale_mode;
+
+  if (!(settings->experimental_features &
+        META_EXPERIMENTAL_FEATURE_X11_RANDR_FRACTIONAL_SCALING))
+    {
+      scale_mode = META_X11_SCALE_MODE_NONE;
+    }
+  else
+    {
+      scale_mode =
+        g_settings_get_enum (settings->x11_settings, "fractional-scale-mode");
+    }
+
+  if (settings->x11_scale_mode != scale_mode)
+    {
+      settings->x11_scale_mode = scale_mode;
+      return TRUE;
+    }
+
+  return FALSE;
+}
+
+void meta_settings_enable_x11_fractional_scaling (MetaSettings *settings,
+                                                  gboolean      enable)
+{
+  g_auto(GStrv) existing_features = NULL;
+  gboolean have_fractional_scaling = FALSE;
+  g_autoptr(GVariantBuilder) builder = NULL;
+  MetaExperimentalFeature old_experimental_features;
+
+  if (enable == meta_settings_is_experimental_feature_enabled (settings,
+        META_EXPERIMENTAL_FEATURE_X11_RANDR_FRACTIONAL_SCALING))
+    return;
+
+  /* Change the internal value now, as we don't want to wait for gsettings */
+  old_experimental_features = settings->experimental_features;
+  settings->experimental_features |=
+    META_EXPERIMENTAL_FEATURE_X11_RANDR_FRACTIONAL_SCALING;
+
+  update_x11_scale_mode (settings);
+
+  g_signal_emit (settings, signals[EXPERIMENTAL_FEATURES_CHANGED], 0,
+                   (unsigned int) old_experimental_features);
+
+  /* Add or remove the fractional scaling feature from mutter */
+  existing_features = g_settings_get_strv (settings->mutter_settings,
+                                           "experimental-features");
+  builder = g_variant_builder_new (G_VARIANT_TYPE ("as"));
+  for (int i = 0; existing_features[i] != NULL; i++)
+    {
+      if (g_strcmp0 (existing_features[i], "x11-randr-fractional-scaling") == 0)
+        {
+          if (enable)
+            have_fractional_scaling = TRUE;
+          else
+            continue;
+        }
+
+      g_variant_builder_add (builder, "s", existing_features[i]);
+    }
+  if (enable && !have_fractional_scaling)
+    g_variant_builder_add (builder, "s", "x11-randr-fractional-scaling");
+
+  g_settings_set_value (settings->mutter_settings, "experimental-features",
+                        g_variant_builder_end (builder));
+}
+
 void
 meta_settings_enable_experimental_feature (MetaSettings           *settings,
                                            MetaExperimentalFeature feature)
@@ -265,6 +364,9 @@ meta_settings_enable_experimental_feature (MetaSettings           *settings,
   g_assert (settings->experimental_features_overridden);
 
   settings->experimental_features |= feature;
+
+  if (update_x11_scale_mode (settings))
+    g_signal_emit (settings, signals[X11_SCALE_MODE_CHANGED], 0, NULL);
 }
 
 static gboolean
@@ -296,6 +398,8 @@ experimental_features_handler (GVariant *features_variant,
         feature = META_EXPERIMENTAL_FEATURE_RT_SCHEDULER;
       else if (g_str_equal (feature_str, "autoclose-xwayland"))
         feature = META_EXPERIMENTAL_FEATURE_AUTOCLOSE_XWAYLAND;
+      else if (g_str_equal (feature_str, "x11-randr-fractional-scaling"))
+        feature = META_EXPERIMENTAL_FEATURE_X11_RANDR_FRACTIONAL_SCALING;
 
       if (feature)
         g_message ("Enabling experimental feature '%s'", feature_str);
@@ -308,6 +412,7 @@ experimental_features_handler (GVariant *features_variant,
   if (features != settings->experimental_features)
     {
       settings->experimental_features = features;
+      update_x11_scale_mode (settings);
       *result = GINT_TO_POINTER (TRUE);
     }
   else
@@ -449,6 +554,18 @@ wayland_settings_changed (GSettings    *wayland_settings,
     }
 }
 
+static void
+x11_settings_changed (GSettings    *wayland_settings,
+                      gchar        *key,
+                      MetaSettings *settings)
+{
+  if (g_str_equal (key, "fractional-scale-mode"))
+    {
+      if (update_x11_scale_mode (settings))
+        g_signal_emit (settings, signals[X11_SCALE_MODE_CHANGED], 0, NULL);
+    }
+}
+
 void
 meta_settings_get_xwayland_grab_patterns (MetaSettings  *settings,
                                           GPtrArray    **allow_list_patterns,
@@ -488,6 +605,12 @@ meta_settings_set_privacy_screen_enabled (MetaSettings *settings,
                           enabled);
 }
 
+MetaX11ScaleMode
+meta_settings_get_x11_scale_mode (MetaSettings *settings)
+{
+  return settings->x11_scale_mode;
+}
+
 MetaSettings *
 meta_settings_new (MetaBackend *backend)
 {
@@ -508,6 +631,7 @@ meta_settings_dispose (GObject *object)
   g_clear_object (&settings->interface_settings);
   g_clear_object (&settings->privacy_settings);
   g_clear_object (&settings->wayland_settings);
+  g_clear_object (&settings->x11_settings);
   g_clear_pointer (&settings->xwayland_grab_allow_list_patterns,
                    g_ptr_array_unref);
   g_clear_pointer (&settings->xwayland_grab_deny_list_patterns,
@@ -534,6 +658,10 @@ meta_settings_init (MetaSettings *settings)
   settings->wayland_settings = g_settings_new ("org.gnome.mutter.wayland");
   g_signal_connect (settings->wayland_settings, "changed",
                     G_CALLBACK (wayland_settings_changed),
+                    settings);
+  settings->x11_settings = g_settings_new ("org.gnome.mutter.x11");
+  g_signal_connect (settings->x11_settings, "changed",
+                    G_CALLBACK (x11_settings_changed),
                     settings);
 
   /* Chain up inter-dependent settings. */
@@ -596,6 +724,14 @@ meta_settings_class_init (MetaSettingsClass *klass)
 
   signals[FONT_DPI_CHANGED] =
     g_signal_new ("font-dpi-changed",
+                  G_TYPE_FROM_CLASS (object_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL, NULL,
+                  G_TYPE_NONE, 0);
+
+  signals[X11_SCALE_MODE_CHANGED] =
+    g_signal_new ("x11-scale-mode-changed",
                   G_TYPE_FROM_CLASS (object_class),
                   G_SIGNAL_RUN_LAST,
                   0,

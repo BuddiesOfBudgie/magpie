@@ -218,6 +218,18 @@ assign_monitor_crtc (MetaMonitor         *monitor,
   else
     crtc_hw_transform = META_MONITOR_TRANSFORM_NORMAL;
 
+  scale = data->logical_monitor_config->scale;
+  if (!meta_monitor_manager_is_scale_supported (data->monitor_manager,
+                                                data->config->layout_mode,
+                                                monitor, mode, scale))
+    {
+      scale = roundf (scale);
+      if (!meta_monitor_manager_is_scale_supported (data->monitor_manager,
+                                                    data->config->layout_mode,
+                                                    monitor, mode, scale))
+        scale = 1.0;
+    }
+
   meta_monitor_calculate_crtc_pos (monitor, mode, output, crtc_transform,
                                    &crtc_x, &crtc_y);
 
@@ -231,6 +243,8 @@ assign_monitor_crtc (MetaMonitor         *monitor,
       break;
     case META_LOGICAL_MONITOR_LAYOUT_MODE_PHYSICAL:
       scale = 1.0;
+      break;
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL:
       break;
     }
 
@@ -259,6 +273,7 @@ assign_monitor_crtc (MetaMonitor         *monitor,
     .mode = crtc_mode,
     .layout = crtc_layout,
     .transform = crtc_hw_transform,
+    .scale = scale,
     .outputs = g_ptr_array_new ()
   };
   g_ptr_array_add (crtc_assignment->outputs, output);
@@ -724,6 +739,7 @@ get_monitor_transform (MetaMonitorManager *monitor_manager,
 static void
 scale_logical_monitor_width (MetaLogicalMonitorLayoutMode  layout_mode,
                              float                         scale,
+                             float                         max_scale,
                              int                           mode_width,
                              int                           mode_height,
                              int                          *width,
@@ -735,6 +751,13 @@ scale_logical_monitor_width (MetaLogicalMonitorLayoutMode  layout_mode,
       *width = (int) roundf (mode_width / scale);
       *height = (int) roundf (mode_height / scale);
       return;
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL:
+      {
+        float ui_scale = scale / ceilf (max_scale);
+        *width = (int) roundf (mode_width / ui_scale);
+        *height = (int) roundf (mode_height / ui_scale);
+      }
+      return;
     case META_LOGICAL_MONITOR_LAYOUT_MODE_PHYSICAL:
       *width = mode_width;
       *height = mode_height;
@@ -744,12 +767,37 @@ scale_logical_monitor_width (MetaLogicalMonitorLayoutMode  layout_mode,
   g_assert_not_reached ();
 }
 
+static float
+get_preferred_preferred_max_scale (MetaMonitorManager           *monitor_manager,
+                                   GList                        *monitors,
+                                   MetaLogicalMonitorLayoutMode  layout_mode)
+{
+  float scale = 1.0;
+  GList *l;
+
+  for (l = monitors; l; l = l->next)
+    {
+      float s;
+      MetaMonitor *monitor = l->data;
+      MetaMonitorMode *mode = meta_monitor_get_preferred_mode (monitor);
+
+      s = meta_monitor_manager_calculate_monitor_mode_scale (monitor_manager,
+                                                             layout_mode,
+                                                             monitor,
+                                                             mode);
+      scale = MAX (scale, s);
+    }
+
+  return scale;
+}
+
 static MetaLogicalMonitorConfig *
 create_preferred_logical_monitor_config (MetaMonitorManager          *monitor_manager,
                                          MetaMonitor                 *monitor,
                                          int                          x,
                                          int                          y,
                                          float                        scale,
+                                         float                        max_scale,
                                          MetaLogicalMonitorLayoutMode layout_mode)
 {
   MetaMonitorMode *mode;
@@ -760,7 +808,7 @@ create_preferred_logical_monitor_config (MetaMonitorManager          *monitor_ma
 
   mode = meta_monitor_get_preferred_mode (monitor);
   meta_monitor_mode_get_resolution (mode, &width, &height);
-  scale_logical_monitor_width (layout_mode, scale,
+  scale_logical_monitor_width (layout_mode, scale, max_scale,
                                width, height, &width, &height);
 
   monitor_config = create_monitor_config (monitor, mode);
@@ -939,6 +987,7 @@ create_monitors_config (MetaMonitorConfigManager *config_manager,
   MetaMonitor *primary_monitor;
   MetaLogicalMonitorLayoutMode layout_mode;
   float scale;
+  float max_scale = 1.0;
   GList *l;
   int x, y;
 
@@ -957,6 +1006,10 @@ create_monitors_config (MetaMonitorConfigManager *config_manager,
    * linear positioning to be correct.
    */
   monitors = g_list_prepend (monitors, primary_monitor);
+
+  if (layout_mode == META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL)
+    max_scale = get_preferred_preferred_max_scale (monitor_manager, monitors,
+                                                   layout_mode);
 
   for (l = monitors; l; l = l->next)
     {
@@ -981,6 +1034,7 @@ create_monitors_config (MetaMonitorConfigManager *config_manager,
         create_preferred_logical_monitor_config (monitor_manager,
                                                  monitor,
                                                  x, y, scale,
+                                                 max_scale,
                                                  layout_mode);
       logical_monitor_config->is_primary = (monitor == primary_monitor);
       logical_monitor_configs = g_list_append (logical_monitor_configs,
@@ -1226,6 +1280,39 @@ meta_monitor_config_manager_create_for_rotate_monitor (MetaMonitorConfigManager 
                                               META_MONITOR_TRANSFORM_NORMAL);
 }
 
+MetaMonitorsConfig *
+meta_monitor_config_manager_create_for_layout (MetaMonitorConfigManager     *config_manager,
+                                               MetaMonitorsConfig           *config,
+                                               MetaLogicalMonitorLayoutMode  layout_mode)
+{
+  MetaMonitorManager *monitor_manager = config_manager->monitor_manager;
+  GList *logical_monitor_configs;
+  GList *l;
+
+  if (!config)
+    return NULL;
+
+  if (config->layout_mode == layout_mode)
+    return g_object_ref (config);
+
+  logical_monitor_configs =
+    clone_logical_monitor_config_list (config->logical_monitor_configs);
+
+  if (layout_mode == META_LOGICAL_MONITOR_LAYOUT_MODE_PHYSICAL)
+    {
+      for (l = logical_monitor_configs; l; l = l->next)
+        {
+          MetaLogicalMonitorConfig *monitor_config = l->data;
+          monitor_config->scale = roundf (monitor_config->scale);
+        }
+    }
+
+  return meta_monitors_config_new (monitor_manager,
+                                   logical_monitor_configs,
+                                   layout_mode,
+                                   META_MONITORS_CONFIG_FLAG_NONE);
+}
+
 static MetaMonitorsConfig *
 create_monitors_switch_config (MetaMonitorConfigManager    *config_manager,
                                MonitorMatchRule             match_rule,
@@ -1256,6 +1343,7 @@ create_for_switch_config_all_mirror (MetaMonitorConfigManager *config_manager)
   GList *monitor_configs = NULL;
   gint common_mode_w = 0, common_mode_h = 0;
   float best_scale = 1.0;
+  float max_scale = 1.0;
   MetaMonitor *monitor;
   GList *modes;
   GList *monitors;
@@ -1347,7 +1435,11 @@ create_for_switch_config_all_mirror (MetaMonitorConfigManager *config_manager)
       monitor_configs = g_list_prepend (monitor_configs, create_monitor_config (monitor, mode));
     }
 
-  scale_logical_monitor_width (layout_mode, best_scale,
+  if (layout_mode == META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL)
+    max_scale = get_preferred_preferred_max_scale (monitor_manager, monitors,
+                                                   layout_mode);
+
+  scale_logical_monitor_width (layout_mode, best_scale, max_scale,
                                common_mode_w, common_mode_h,
                                &width, &height);
 
@@ -1822,6 +1914,7 @@ gboolean
 meta_verify_logical_monitor_config (MetaLogicalMonitorConfig    *logical_monitor_config,
                                     MetaLogicalMonitorLayoutMode layout_mode,
                                     MetaMonitorManager          *monitor_manager,
+                                    float                        max_scale,
                                     GError                     **error)
 {
   GList *l;
@@ -1858,6 +1951,10 @@ meta_verify_logical_monitor_config (MetaLogicalMonitorConfig    *logical_monitor
 
   switch (layout_mode)
     {
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL:
+      expected_mode_width /= ceilf (max_scale);
+      expected_mode_height /= ceilf (max_scale);
+      /* fall through! */
     case META_LOGICAL_MONITOR_LAYOUT_MODE_LOGICAL:
       expected_mode_width = roundf (expected_mode_width *
                                     logical_monitor_config->scale);

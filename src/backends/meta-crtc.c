@@ -117,6 +117,7 @@ meta_crtc_set_config (MetaCrtc             *crtc,
   config->layout = *layout;
   config->mode = mode;
   config->transform = transform;
+  config->scale = 1.0f;
 
   priv->config = config;
 }
@@ -163,6 +164,26 @@ meta_gamma_lut_free (MetaGammaLut *lut)
   g_free (lut->green);
   g_free (lut->blue);
   g_free (lut);
+}
+
+void
+meta_crtc_set_config_scale (MetaCrtc *crtc,
+                            float    scale)
+{
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
+
+  g_return_if_fail (scale > 0);
+
+  if (priv->config)
+    priv->config->scale = scale;
+}
+
+float
+meta_crtc_get_config_scale (MetaCrtc *crtc)
+{
+  MetaCrtcPrivate *priv = meta_crtc_get_instance_private (crtc);
+
+  return priv->config ? priv->config->scale : 1.0f;
 }
 
 static void

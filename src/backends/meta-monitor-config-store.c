@@ -650,6 +650,7 @@ handle_start_element (GMarkupParseContext  *context,
 static gboolean
 derive_logical_monitor_layout (MetaLogicalMonitorConfig    *logical_monitor_config,
                                MetaLogicalMonitorLayoutMode layout_mode,
+                               float                        max_scale,
                                GError                     **error)
 {
   MetaMonitorConfig *monitor_config;
@@ -687,6 +688,10 @@ derive_logical_monitor_layout (MetaLogicalMonitorConfig    *logical_monitor_conf
 
   switch (layout_mode)
     {
+    case META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL:
+      width *= ceilf (max_scale);
+      height *= ceilf (max_scale);
+      /* fall through! */
     case META_LOGICAL_MONITOR_LAYOUT_MODE_LOGICAL:
       width = roundf (width / logical_monitor_config->scale);
       height = roundf (height / logical_monitor_config->scale);
@@ -902,6 +907,7 @@ handle_end_element (GMarkupParseContext  *context,
         GList *l;
         MetaLogicalMonitorLayoutMode layout_mode;
         MetaMonitorsConfigFlag config_flags = META_MONITORS_CONFIG_FLAG_NONE;
+        float max_scale = 1.0f;
 
         g_assert (g_str_equal (element_name, "configuration"));
 
@@ -911,18 +917,29 @@ handle_end_element (GMarkupParseContext  *context,
           layout_mode =
             meta_monitor_manager_get_default_layout_mode (store->monitor_manager);
 
+        if (layout_mode == META_LOGICAL_MONITOR_LAYOUT_MODE_GLOBAL_UI_LOGICAL)
+          {
+            for (l = parser->current_logical_monitor_configs; l; l = l->next)
+              {
+                MetaLogicalMonitorConfig *logical_monitor_config = l->data;
+                max_scale = MAX (max_scale, logical_monitor_config->scale);
+              }
+          }
+
         for (l = parser->current_logical_monitor_configs; l; l = l->next)
           {
             MetaLogicalMonitorConfig *logical_monitor_config = l->data;
 
             if (!derive_logical_monitor_layout (logical_monitor_config,
                                                 layout_mode,
+                                                max_scale,
                                                 error))
               return;
 
             if (!meta_verify_logical_monitor_config (logical_monitor_config,
                                                      layout_mode,
                                                      store->monitor_manager,
+                                                     max_scale,
                                                      error))
               return;
           }

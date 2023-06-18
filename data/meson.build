@@ -55,4 +55,12 @@ if have_shared_components
   endif
 endif
 
+configure_file(
+  input: 'org.gnome.mutter.x11.gschema.xml.in',
+  output: 'org.gnome.mutter.x11.gschema.xml',
+  configuration: gschema_config,
+  install_dir: schemadir
+)
+
+
 subdir('dbus-interfaces')
