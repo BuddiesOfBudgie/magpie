@@ -4,7 +4,7 @@ set -e
 git submodule init
 git submodule update
 
-VERSION="0.9.1"
+VERSION="0.9.2"
 NAME="magpie"
 git-archive-all.sh --format tar --prefix ${NAME}-${VERSION}/ --verbose -t HEAD ${NAME}-${VERSION}.tar
 xz -9 "${NAME}-${VERSION}.tar"
