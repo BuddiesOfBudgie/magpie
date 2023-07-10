@@ -224,3 +224,9 @@ option('with_shared_components',
   value: false,
   description: 'Build components that are shared with Mutter'
 )
+
+option('with_example_wm',
+  type: 'boolean',
+  value: false,
+  description: 'Build example window manager'
+)

@@ -135,6 +135,8 @@ have_x11 = true
 have_xwayland = have_wayland # for now default to have_wayland
 have_x11_client = have_x11 or have_xwayland
 
+example_wm = get_option('with_example_wm')
+
 if have_xwayland and not have_wayland
   error('XWayland support requires Wayland support enabled')
 endif
@@ -642,7 +644,9 @@ subdir('tools')
 subdir('src')
 subdir('po')
 
-subdir('doc/man')
+if example_wm
+  subdir('doc/man')
+endif
 if have_documentation
   subdir('doc/reference')
 endif
