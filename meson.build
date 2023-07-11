@@ -651,7 +651,7 @@ if have_documentation
   subdir('doc/reference')
 endif
 
-meson.add_install_script('meson/meson-postinstall.sh')
+meson.add_install_script('scripts/mesonPostInstall.sh')
 
 summary('prefix', prefix, section: 'Directories')
 summary('libexecdir', libexecdir, section: 'Directories')
