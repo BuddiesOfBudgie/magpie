@@ -58,12 +58,11 @@ message body than too little.
 ## Default branch
 
 The default development branch is `main`. 
-```
 
 ## License
 
 Magpie is distributed under the terms of the GNU General Public License,
-version 2 or later. See the [COPYING][license] file for detalis.
+version 2 or later. See the [COPYING][license] file for details.
 
 [bug-tracker]: https://github.com/buddiesofbudgie/magpie/issues
 [license]: COPYING
