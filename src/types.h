@@ -16,6 +16,8 @@ typedef struct magpie_output magpie_output_t;
 typedef struct magpie_xwayland magpie_xwayland_t;
 
 typedef struct magpie_surface magpie_surface_t;
+typedef struct magpie_layer magpie_layer_t;
+typedef struct magpie_layer_subsurface magpie_layer_subsurface_t;
 typedef struct magpie_popup magpie_popup_t;
 typedef struct magpie_view magpie_view_t;
 typedef struct magpie_xdg_view magpie_xdg_view_t;

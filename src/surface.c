@@ -1,4 +1,5 @@
 #include "surface.h"
+#include "layer.h"
 #include "popup.h"
 #include "types.h"
 #include "view.h"
@@ -10,6 +11,15 @@ magpie_surface_t* new_magpie_surface_from_view(magpie_view_t* view) {
     surface->server = view->server;
     surface->view = view;
     surface->scene_tree = view->scene_tree;
+    return surface;
+}
+
+magpie_surface_t* new_magpie_surface_from_layer(magpie_layer_t* layer) {
+    magpie_surface_t* surface = calloc(1, sizeof(magpie_surface_t));
+    surface->type = MAGPIE_SURFACE_TYPE_LAYER;
+    surface->server = layer->server;
+    surface->layer = layer;
+    surface->scene_tree = layer->scene_layer_surface->tree;
     return surface;
 }
 

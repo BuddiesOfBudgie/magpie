@@ -1,5 +1,6 @@
 #include "server.h"
 #include "input.h"
+#include "layer.h"
 #include "output.h"
 #include "popup.h"
 #include "surface.h"
@@ -19,13 +20,14 @@
 #include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_idle_inhibit_v1.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
-#include <wlr/types/wlr_xdg_output_v1.h>
+#include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_single_pixel_buffer_v1.h>
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_viewporter.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_activation_v1.h>
+#include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/xwayland.h>
 
 void focus_view(magpie_view_t* view, struct wlr_surface* surface) {
@@ -161,6 +163,14 @@ static void new_xdg_surface_notify(struct wl_listener* listener, void* data) {
     }
 }
 
+static void new_layer_surface_notify(struct wl_listener* listener, void* data) {
+    magpie_server_t* server = wl_container_of(listener, server, new_layer_surface);
+    struct wlr_layer_surface_v1* layer_surface = data;
+
+    /* Allocate a magpie_view_t for this surface */
+    new_magpie_layer(server, layer_surface);
+}
+
 static void request_activation_notify(struct wl_listener* listener, void* data) {
     magpie_server_t* server = wl_container_of(listener, server, request_activation);
     struct wlr_xdg_activation_v1_request_activate_event* event = data;
@@ -240,6 +250,11 @@ magpie_server_t* new_magpie_server(void) {
      */
     server->scene = wlr_scene_create();
     assert(server->scene);
+    for (int idx = 0; idx < MAGPIE_SCENE_LAYER_MAX; idx++) {
+        server->scene_layers[idx] = wlr_scene_tree_create(&server->scene->tree);
+        wlr_scene_node_raise_to_top(&server->scene_layers[idx]->node);
+    }
+
     wlr_scene_attach_output_layout(server->scene, server->output_layout);
 
     /* Set up xdg-shell version 3. The xdg-shell is a Wayland protocol which is
@@ -252,6 +267,11 @@ magpie_server_t* new_magpie_server(void) {
     server->xdg_shell = wlr_xdg_shell_create(server->wl_display, 5);
     server->new_xdg_surface.notify = new_xdg_surface_notify;
     wl_signal_add(&server->xdg_shell->events.new_surface, &server->new_xdg_surface);
+
+    wl_list_init(&server->layers);
+    server->layer_shell = wlr_layer_shell_v1_create(server->wl_display);
+    server->new_layer_surface.notify = new_layer_surface_notify;
+    wl_signal_add(&server->layer_shell->events.new_surface, &server->new_layer_surface);
 
     server->xdg_activation = wlr_xdg_activation_v1_create(server->wl_display);
     server->request_activation.notify = request_activation_notify;

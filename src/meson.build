@@ -1,6 +1,7 @@
 magpie_sources = [
     'main.c',
     'input.c',
+    'layer.c',
     'output.c',
     'popup.c',
     'server.c',
@@ -9,6 +10,7 @@ magpie_sources = [
     'xwayland.c',
     'xwayland_view.c',
     xdg_shell_protocol,
+    wlr_layer_shell_protocol,
 ]
 
 exe = executable(
