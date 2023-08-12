@@ -6,18 +6,18 @@
 #include <wayland-server-core.h>
 
 struct magpie_popup {
-    magpie_server_t* server;
-    
-    magpie_surface_t* parent;
+	magpie_server_t* server;
 
-    struct wlr_xdg_popup* xdg_popup;
-    struct wlr_scene_tree* scene_tree;
+	magpie_surface_t* parent;
 
-    struct wl_listener map;
-    struct wl_listener unmap;
-    struct wl_listener destroy;
-    struct wl_listener commit;
-    struct wl_listener new_popup;
+	struct wlr_xdg_popup* xdg_popup;
+	struct wlr_scene_tree* scene_tree;
+
+	struct wl_listener map;
+	struct wl_listener unmap;
+	struct wl_listener destroy;
+	struct wl_listener commit;
+	struct wl_listener new_popup;
 };
 
 magpie_popup_t* new_magpie_popup(magpie_surface_t* parent_surface, struct wlr_xdg_popup* xdg_popup);

@@ -4,14 +4,14 @@
 #include "types.h"
 
 struct magpie_keyboard {
-    magpie_server_t* server;
+	magpie_server_t* server;
 
-    struct wl_list link;
-    struct wlr_keyboard* wlr_keyboard;
+	struct wl_list link;
+	struct wlr_keyboard* wlr_keyboard;
 
-    struct wl_listener modifiers;
-    struct wl_listener key;
-    struct wl_listener destroy;
+	struct wl_listener modifiers;
+	struct wl_listener key;
+	struct wl_listener destroy;
 };
 
 typedef enum { MAGPIE_CURSOR_PASSTHROUGH, MAGPIE_CURSOR_MOVE, MAGPIE_CURSOR_RESIZE } magpie_cursor_mode_t;
