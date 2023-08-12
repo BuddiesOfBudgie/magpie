@@ -8,17 +8,6 @@
 #include <unistd.h>
 #include <wlr/util/log.h>
 
-#define WLR_USE_UNSTABLE
-#include <wlr/render/allocator.h>
-#include <wlr/render/wlr_renderer.h>
-#include <wlr/types/wlr_cursor.h>
-#include <wlr/types/wlr_data_device.h>
-#include <wlr/types/wlr_output_layout.h>
-#include <wlr/types/wlr_single_pixel_buffer_v1.h>
-#include <wlr/types/wlr_subcompositor.h>
-#include <wlr/types/wlr_viewporter.h>
-#include <wlr/types/wlr_xcursor_manager.h>
-
 int main(int argc, char** argv) {
     char* startup_cmd = NULL;
     int c;
