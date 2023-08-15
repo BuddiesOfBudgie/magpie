@@ -230,3 +230,9 @@ option('with_example_wm',
   value: false,
   description: 'Build example window manager'
 )
+
+option('default_driver',
+  type: 'combo',
+  choices: ['auto', 'gl', 'gl3', 'gles2', 'nop'],
+  value: 'auto'
+)

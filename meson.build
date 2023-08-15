@@ -273,6 +273,8 @@ if have_wayland_eglstream
   endif
 endif
 
+default_driver = get_option('default_driver')
+
 have_sm = get_option('sm')
 if have_sm
   sm_dep = dependency('sm')
@@ -671,6 +673,7 @@ summary('X11', have_x11, section: 'Options')
 #summary('XWayland', have_xwayland, section: 'Options')
 summary('Native Backend', have_native_backend, section: 'Options')
 summary('EGL Device', have_egl_device, section: 'Options')
+summary('Default driver', default_driver, section: 'Options')
 summary('Remote desktop', have_remote_desktop, section: 'Options')
 summary('libgnome-desktop', have_gnome_desktop, section: 'Options')
 summary('Sound player', have_sound_player, section: 'Options')
