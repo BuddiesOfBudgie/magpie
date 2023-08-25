@@ -1,27 +1,31 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "xwayland.h"
-#include "server.h"
-#include "types.h"
-#include "view.h"
-#include <stdlib.h>
+#include "xwayland.hpp"
+#include "server.hpp"
+#include "types.hpp"
+#include "view.hpp"
+
+#include <cstdlib>
 #include <string.h>
 #include <wayland-server-core.h>
+
+#include "wlr-wrap-start.hpp"
 #include <wlr/util/log.h>
 #include <wlr/xwayland.h>
+#include "wlr-wrap-end.hpp"
 
 static const char* atom_map[ATOM_LAST] = {
-	[NET_WM_WINDOW_TYPE_NORMAL] = "_NET_WM_WINDOW_TYPE_NORMAL",
-	[NET_WM_WINDOW_TYPE_DIALOG] = "_NET_WM_WINDOW_TYPE_DIALOG",
-	[NET_WM_WINDOW_TYPE_UTILITY] = "_NET_WM_WINDOW_TYPE_UTILITY",
-	[NET_WM_WINDOW_TYPE_TOOLBAR] = "_NET_WM_WINDOW_TYPE_TOOLBAR",
-	[NET_WM_WINDOW_TYPE_SPLASH] = "_NET_WM_WINDOW_TYPE_SPLASH",
-	[NET_WM_WINDOW_TYPE_MENU] = "_NET_WM_WINDOW_TYPE_MENU",
-	[NET_WM_WINDOW_TYPE_DROPDOWN_MENU] = "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU",
-	[NET_WM_WINDOW_TYPE_POPUP_MENU] = "_NET_WM_WINDOW_TYPE_POPUP_MENU",
-	[NET_WM_WINDOW_TYPE_TOOLTIP] = "_NET_WM_WINDOW_TYPE_TOOLTIP",
-	[NET_WM_WINDOW_TYPE_NOTIFICATION] = "_NET_WM_WINDOW_TYPE_NOTIFICATION",
-	[NET_WM_STATE_MODAL] = "_NET_WM_STATE_MODAL",
+	"_NET_WM_WINDOW_TYPE_NORMAL",
+	"_NET_WM_WINDOW_TYPE_DIALOG",
+	"_NET_WM_WINDOW_TYPE_UTILITY",
+	"_NET_WM_WINDOW_TYPE_TOOLBAR",
+	"_NET_WM_WINDOW_TYPE_SPLASH",
+	"_NET_WM_WINDOW_TYPE_MENU",
+	"_NET_WM_WINDOW_TYPE_DROPDOWN_MENU",
+	"_NET_WM_WINDOW_TYPE_POPUP_MENU",
+	"_NET_WM_WINDOW_TYPE_TOOLTIP",
+	"_NET_WM_WINDOW_TYPE_NOTIFICATION",
+	"_NET_WM_STATE_MODAL",
 };
 
 static void ready_notify(struct wl_listener* listener, void* data) {
@@ -61,13 +65,13 @@ static void ready_notify(struct wl_listener* listener, void* data) {
 
 static void new_surface_notify(struct wl_listener* listener, void* data) {
 	magpie_xwayland_t* xwayland = wl_container_of(listener, xwayland, new_surface);
-	struct wlr_xwayland_surface* xwayland_surface = data;
+	struct wlr_xwayland_surface* xwayland_surface = static_cast<struct wlr_xwayland_surface*>(data);
 
 	new_magpie_xwayland_view(xwayland->server, xwayland_surface);
 }
 
 magpie_xwayland_t* new_magpie_xwayland(magpie_server_t* server) {
-	magpie_xwayland_t* xwayland = calloc(1, sizeof(magpie_xwayland_t));
+	magpie_xwayland_t* xwayland = (magpie_xwayland_t*) std::calloc(1, sizeof(magpie_xwayland_t));
 	xwayland->server = server;
 	xwayland->wlr_xwayland = wlr_xwayland_create(server->wl_display, server->compositor, true);
 

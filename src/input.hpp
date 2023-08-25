@@ -1,7 +1,7 @@
-#ifndef MAGPIE_INPUT_H
-#define MAGPIE_INPUT_H
+#ifndef MAGPIE_INPUT_HPP
+#define MAGPIE_INPUT_HPP
 
-#include "types.h"
+#include "types.hpp"
 
 struct magpie_keyboard {
 	magpie_server_t* server;

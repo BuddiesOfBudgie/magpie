@@ -1,12 +1,16 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "server.h"
+#include "server.hpp"
 
-#include <assert.h>
+#include <cstdlib>
+#include <cstdio>
 #include <getopt.h>
-#include <stdlib.h>
 #include <unistd.h>
+
+#include "wlr-wrap-start.hpp"
+#include <wlr/backend.h>
 #include <wlr/util/log.h>
+#include "wlr-wrap-end.hpp"
 
 int main(int argc, char** argv) {
 	char* startup_cmd = NULL;
@@ -17,7 +21,7 @@ int main(int argc, char** argv) {
 				startup_cmd = optarg;
 				break;
 			default:
-				printf("Usage: %s [-s startup command]\n", argv[0]);
+				std::printf("Usage: %s [-s startup command]\n", argv[0]);
 				return 0;
 		}
 	}

@@ -1,15 +1,20 @@
-#include "layer.h"
-#include "output.h"
-#include "popup.h"
-#include "server.h"
-#include "surface.h"
-#include "types.h"
+#include "layer.hpp"
+#include "output.hpp"
+#include "popup.hpp"
+#include "server.hpp"
+#include "surface.hpp"
+#include "types.hpp"
 #include "xdg-shell-protocol.h"
 
-#include <stdlib.h>
+#include <cstdlib>
+
+#include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_layer_shell_v1.h>
+#include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_subcompositor.h>
+#include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
+#include "wlr-wrap-end.hpp"
 
 static magpie_scene_layer_t magpie_layer_from_wlr_layer(enum zwlr_layer_shell_v1_layer layer) {
 	switch (layer) {
@@ -47,7 +52,7 @@ static void update_layer_layout(magpie_server_t* server) {
 				continue;
 			}
 
-			magpie_surface_t* magpie_surface = child->data;
+			magpie_surface_t* magpie_surface = static_cast<magpie_surface_t*>(child->data);
 			if (magpie_surface->type != MAGPIE_SURFACE_TYPE_LAYER) {
 				continue;
 			}
@@ -73,7 +78,7 @@ static void subsurface_destroy_notify(struct wl_listener* listener, void* data) 
 }
 
 static void new_subsurface(magpie_layer_t* parent_layer, struct wlr_subsurface* wlr_subsurface) {
-	magpie_layer_subsurface_t* subsurface = calloc(1, sizeof(magpie_layer_subsurface_t));
+	magpie_layer_subsurface_t* subsurface = (magpie_layer_subsurface_t*) std::calloc(1, sizeof(magpie_layer_subsurface_t));
 	assert(parent_layer != NULL);
 	assert(wlr_subsurface != NULL);
 
@@ -142,12 +147,12 @@ static void wlr_layer_surface_v1_commit_notify(struct wl_listener* listener, voi
 
 static void wlr_layer_surface_v1_new_popup_notify(struct wl_listener* listener, void* data) {
 	magpie_layer_t* layer = wl_container_of(listener, layer, new_popup);
-	new_magpie_popup(layer->layer_surface->surface->data, data);
+	new_magpie_popup(static_cast<magpie_surface_t*>(layer->layer_surface->surface->data), static_cast<struct wlr_xdg_popup*>(data));
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(struct wl_listener* listener, void* data) {
 	magpie_layer_t* layer = wl_container_of(listener, layer, new_popup);
-	struct wlr_subsurface* subsurface = data;
+	struct wlr_subsurface* subsurface = static_cast<struct wlr_subsurface*>(data);
 	new_subsurface(layer, subsurface);
 }
 
@@ -162,7 +167,7 @@ static void wlr_layer_surface_v1_output_destroy_notify(struct wl_listener* liste
 
 magpie_layer_t* new_magpie_layer(magpie_server_t* server, struct wlr_layer_surface_v1* surface) {
 	/* Allocate a magpie_layer_t for this surface */
-	magpie_layer_t* layer = calloc(1, sizeof(magpie_layer_t));
+	magpie_layer_t* layer = (magpie_layer_t*) std::calloc(1, sizeof(magpie_layer_t));
 	wl_list_init(&layer->subsurfaces);
 	layer->server = server;
 	layer->layer_surface = surface;
@@ -171,7 +176,7 @@ magpie_layer_t* new_magpie_layer(magpie_server_t* server, struct wlr_layer_surfa
 		magpie_output_t* output = wl_container_of(server->outputs.next, output, link);
 		surface->output = output->wlr_output;
 	}
-	layer->output = surface->output->data;
+	layer->output = static_cast<magpie_output_t*>(surface->output->data);
 
 	magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface->current.layer);
 	if (chosen_layer == MAGPIE_SCENE_LAYER_MAX) {

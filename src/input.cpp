@@ -1,18 +1,25 @@
-#include "input.h"
-#include "server.h"
-#include "surface.h"
-#include "types.h"
-#include "view.h"
+#include "input.hpp"
+#include "server.hpp"
+#include "surface.hpp"
+#include "types.hpp"
+#include "view.hpp"
 
-#include <stdlib.h>
+#include <cstdlib>
+
+#include "wlr-wrap-start.hpp"
 #include <wlr/backend/libinput.h>
 #include <wlr/backend/multi.h>
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
+#define static
+#include <wlr/types/wlr_scene.h>
+#undef static
 #include <wlr/types/wlr_xcursor_manager.h>
+#include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
+#include "wlr-wrap-end.hpp"
 
 static void process_cursor_resize(magpie_server_t* server, uint32_t time) {
 	(void) time;
@@ -195,7 +202,7 @@ static void keyboard_handle_key(struct wl_listener* listener, void* data) {
 	/* This event is raised when a key is pressed or released. */
 	magpie_keyboard_t* keyboard = wl_container_of(listener, keyboard, key);
 	magpie_server_t* server = keyboard->server;
-	struct wlr_keyboard_key_event* event = data;
+	struct wlr_keyboard_key_event* event = static_cast<struct wlr_keyboard_key_event*>(data);
 	struct wlr_seat* seat = server->seat;
 
 	wlr_idle_notifier_v1_notify_activity(server->idle_notifier, seat);
@@ -249,7 +256,7 @@ static void new_pointer(magpie_server_t* server, struct wlr_input_device* device
 static void new_keyboard(magpie_server_t* server, struct wlr_input_device* device) {
 	struct wlr_keyboard* wlr_keyboard = wlr_keyboard_from_input_device(device);
 
-	magpie_keyboard_t* keyboard = calloc(1, sizeof(magpie_keyboard_t));
+	magpie_keyboard_t* keyboard = (magpie_keyboard_t*) std::calloc(1, sizeof(magpie_keyboard_t));
 	keyboard->server = server;
 	keyboard->wlr_keyboard = wlr_keyboard;
 
@@ -279,7 +286,7 @@ static void new_keyboard(magpie_server_t* server, struct wlr_input_device* devic
 
 void new_input_notify(struct wl_listener* listener, void* data) {
 	magpie_server_t* server = wl_container_of(listener, server, new_input);
-	struct wlr_input_device* device = data;
+	struct wlr_input_device* device = static_cast<struct wlr_input_device*>(data);
 	switch (device->type) {
 		case WLR_INPUT_DEVICE_KEYBOARD:
 			new_keyboard(server, device);
@@ -300,7 +307,7 @@ void new_input_notify(struct wl_listener* listener, void* data) {
 
 void request_cursor_notify(struct wl_listener* listener, void* data) {
 	magpie_server_t* server = wl_container_of(listener, server, request_cursor);
-	struct wlr_seat_pointer_request_set_cursor_event* event = data;
+	struct wlr_seat_pointer_request_set_cursor_event* event = static_cast<struct wlr_seat_pointer_request_set_cursor_event*>(data);
 	struct wlr_seat_client* focused_client = server->seat->pointer_state.focused_client;
 
 	if (focused_client == event->seat_client) {
@@ -318,7 +325,7 @@ void seat_request_set_selection(struct wl_listener* listener, void* data) {
 	 * ignore such requests if they so choose, but in magpie we always honor
 	 */
 	magpie_server_t* server = wl_container_of(listener, server, request_set_selection);
-	struct wlr_seat_request_set_selection_event* event = data;
+	struct wlr_seat_request_set_selection_event* event = static_cast<struct wlr_seat_request_set_selection_event*>(data);
 	wlr_seat_set_selection(server->seat, event->source, event->serial);
 }
 
@@ -326,7 +333,7 @@ void cursor_axis_notify(struct wl_listener* listener, void* data) {
 	/* This event is forwarded by the cursor when a pointer emits an axis event,
 	 * for example when you move the scroll wheel. */
 	magpie_server_t* server = wl_container_of(listener, server, cursor_axis);
-	struct wlr_pointer_axis_event* event = data;
+	struct wlr_pointer_axis_event* event = static_cast<struct wlr_pointer_axis_event*>(data);
 	/* Notify the client with pointer focus of the axis event. */
 	wlr_seat_pointer_notify_axis(
 		server->seat, event->time_msec, event->orientation, event->delta, event->delta_discrete, event->source);
@@ -352,7 +359,7 @@ void cursor_motion_absolute_notify(struct wl_listener* listener, void* data) {
 	 * so we have to warp the mouse there. There is also some hardware which
 	 * emits these events. */
 	magpie_server_t* server = wl_container_of(listener, server, cursor_motion_absolute);
-	struct wlr_pointer_motion_absolute_event* event = data;
+	struct wlr_pointer_motion_absolute_event* event = static_cast<struct wlr_pointer_motion_absolute_event*>(data);
 	wlr_cursor_warp_absolute(server->cursor, &event->pointer->base, event->x, event->y);
 	process_cursor_motion(server, event->time_msec);
 }
@@ -361,7 +368,7 @@ void cursor_button_notify(struct wl_listener* listener, void* data) {
 	/* This event is forwarded by the cursor when a pointer emits a button event.
 	 */
 	magpie_server_t* server = wl_container_of(listener, server, cursor_button);
-	struct wlr_pointer_button_event* event = data;
+	struct wlr_pointer_button_event* event = static_cast<struct wlr_pointer_button_event*>(data);
 	/* Notify the client with pointer focus that a button press has occurred */
 	wlr_seat_pointer_notify_button(server->seat, event->time_msec, event->button, event->state);
 	double sx, sy;
@@ -382,7 +389,7 @@ void cursor_motion_notify(struct wl_listener* listener, void* data) {
 	/* This event is forwarded by the cursor when a pointer emits a _relative_
 	 * pointer motion event (i.e. a delta) */
 	magpie_server_t* server = wl_container_of(listener, server, cursor_motion);
-	struct wlr_pointer_motion_event* event = data;
+	struct wlr_pointer_motion_event* event = static_cast<struct wlr_pointer_motion_event*>(data);
 
 	/* The cursor doesn't move unless we tell it to. The cursor automatically
 	 * handles constraining the motion to the output layout, as well as any

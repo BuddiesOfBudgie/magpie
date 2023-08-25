@@ -1,9 +1,12 @@
-#ifndef MAGPIE_POPUP_H
-#define MAGPIE_POPUP_H
+#ifndef MAGPIE_POPUP_HPP
+#define MAGPIE_POPUP_HPP
 
-#include "surface.h"
-#include "types.h"
+#include "surface.hpp"
+#include "types.hpp"
+
+#include "wlr-wrap-start.hpp"
 #include <wayland-server-core.h>
+#include "wlr-wrap-end.hpp"
 
 struct magpie_popup {
 	magpie_server_t* server;

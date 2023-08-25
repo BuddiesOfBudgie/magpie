@@ -1,6 +1,10 @@
-#include "output.h"
-#include "types.h"
-#include <stdlib.h>
+#include "output.hpp"
+#include "types.hpp"
+#include <cstdlib>
+
+#include <wlr-wrap-start.hpp>
+#include <wlr/types/wlr_scene.h>
+#include <wlr-wrap-end.hpp>
 
 static void output_frame_notify(struct wl_listener* listener, void* data) {
 	(void) data;
@@ -32,7 +36,7 @@ static void output_destroy_notify(struct wl_listener* listener, void* data) {
 }
 
 magpie_output_t* new_magpie_output(magpie_server_t* server, struct wlr_output* wlr_output) {
-	magpie_output_t* output = calloc(1, sizeof(magpie_output_t));
+	magpie_output_t* output = (magpie_output_t*) std::calloc(1, sizeof(magpie_output_t));
 	wlr_output->data = output;
 	output->wlr_output = wlr_output;
 	output->server = server;

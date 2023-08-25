@@ -1,8 +1,8 @@
-#ifndef MAGPIE_OUTPUT_H
-#define MAGPIE_OUTPUT_H
+#ifndef MAGPIE_OUTPUT_HPP
+#define MAGPIE_OUTPUT_HPP
 
-#include "server.h"
-#include "types.h"
+#include "server.hpp"
+#include "types.hpp"
 
 struct magpie_output {
 	magpie_server_t* server;

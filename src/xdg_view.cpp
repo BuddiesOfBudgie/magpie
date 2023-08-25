@@ -1,18 +1,19 @@
-#include "input.h"
-#include "output.h"
-#include "server.h"
-#include "surface.h"
-#include "types.h"
-#include "view.h"
+#include "input.hpp"
+#include "output.hpp"
+#include "server.hpp"
+#include "surface.hpp"
+#include "types.hpp"
+#include "view.hpp"
 
-#include <stdlib.h>
+#include <cstdlib>
+
+#include "wlr-wrap-start.hpp"
 #include <wlr/backend.h>
 #include <wlr/util/edges.h>
-
-#define WLR_USE_UNSTABLE
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include "wlr-wrap-end.hpp"
 
 static void xdg_toplevel_map_notify(struct wl_listener* listener, void* data) {
 	(void) data;
@@ -106,7 +107,7 @@ static void xdg_toplevel_request_resize_notify(struct wl_listener* listener, voi
 	 * decorations. Note that a more sophisticated compositor should check the
 	 * provided serial against a list of button press serials sent to this
 	 * client, to prevent the client from requesting this whenever they want. */
-	struct wlr_xdg_toplevel_resize_event* event = data;
+	struct wlr_xdg_toplevel_resize_event* event = static_cast<struct wlr_xdg_toplevel_resize_event*>(data);
 	magpie_xdg_view_t* xdg_view = wl_container_of(listener, xdg_view, request_resize);
 	wlr_xdg_toplevel_set_maximized(xdg_view->xdg_toplevel, false);
 	begin_interactive(xdg_view, MAGPIE_CURSOR_RESIZE, event->edges);
@@ -173,7 +174,7 @@ static void xdg_toplevel_request_maximize_notify(struct wl_listener* listener, v
 
 		// still nothing? use the first output in the list
 		if (best_output == NULL) {
-			best_output = wlr_output_layout_get_center_output(server->output_layout)->data;
+			best_output = static_cast<magpie_output_t*>(wlr_output_layout_get_center_output(server->output_layout)->data);
 		}
 
 		struct wlr_box output_box;
@@ -196,7 +197,7 @@ static void xdg_toplevel_request_fullscreen_notify(struct wl_listener* listener,
 }
 
 magpie_view_t* new_magpie_xdg_view(magpie_server_t* server, struct wlr_xdg_toplevel* toplevel) {
-	magpie_view_t* view = calloc(1, sizeof(magpie_xdg_view_t));
+	magpie_view_t* view = (magpie_view_t*) std::calloc(1, sizeof(magpie_xdg_view_t));
 	view->server = server;
 	view->scene_tree = wlr_scene_xdg_surface_create(&server->scene->tree, toplevel->base);
 	view->scene_node = &view->scene_tree->node;
@@ -209,7 +210,7 @@ magpie_view_t* new_magpie_xdg_view(magpie_server_t* server, struct wlr_xdg_tople
 	view->scene_node->data = surface;
 	toplevel->base->surface->data = surface;
 
-	magpie_xdg_view_t* xdg_view = calloc(1, sizeof(magpie_xdg_view_t));
+	magpie_xdg_view_t* xdg_view = (magpie_xdg_view_t*) std::calloc(1, sizeof(magpie_xdg_view_t));
 	xdg_view->base = view;
 	xdg_view->xdg_toplevel = toplevel;
 

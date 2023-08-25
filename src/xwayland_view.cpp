@@ -1,10 +1,16 @@
-#include "server.h"
-#include "types.h"
-#include "view.h"
-#include <stdlib.h>
+#include "server.hpp"
+#include "types.hpp"
+#include "view.hpp"
+
+#include <cstdlib>
 #include <wayland-server-core.h>
+
+#include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_scene.h>
+#include <wlr/types/wlr_seat.h>
 #include <wlr/util/edges.h>
+#include "wlr-wrap-end.hpp"
 
 static void xwayland_surface_map_notify(struct wl_listener* listener, void* data) {
 	(void) data;
@@ -61,10 +67,10 @@ static void xwayland_surface_destroy_notify(struct wl_listener* listener, void* 
 static void xwayland_surface_request_configure_notify(struct wl_listener* listener, void* data) {
 	magpie_xwayland_view_t* xwayland_view = wl_container_of(listener, xwayland_view, request_configure);
 	struct wlr_xwayland_surface* xwayland_surface = xwayland_view->xwayland_surface;
-	struct wlr_xwayland_surface_configure_event* event = data;
+	struct wlr_xwayland_surface_configure_event* event = static_cast<struct wlr_xwayland_surface_configure_event*>(data);
 
 	wlr_xwayland_surface_configure(xwayland_surface, event->x, event->y, event->width, event->height);
-	xwayland_view->base->current = (struct wlr_box){event->x, event->y, event->width, event->height};
+	xwayland_view->base->current = {event->x, event->y, event->width, event->height};
 
 	if (xwayland_surface->mapped) {
 		wlr_scene_node_set_position(&xwayland_view->base->scene_tree->node, event->x, event->y);
@@ -77,8 +83,7 @@ static void xwayland_surface_set_geometry_notify(struct wl_listener* listener, v
 	magpie_xwayland_view_t* xwayland_view = wl_container_of(listener, xwayland_view, set_geometry);
 	struct wlr_xwayland_surface* xwayland_surface = xwayland_view->xwayland_surface;
 
-	xwayland_view->base->current =
-		(struct wlr_box){xwayland_surface->x, xwayland_surface->y, xwayland_surface->width, xwayland_surface->height};
+	xwayland_view->base->current = {xwayland_surface->x, xwayland_surface->y, xwayland_surface->width, xwayland_surface->height};
 	if (xwayland_surface->mapped) {
 		wlr_scene_node_set_position(
 			&xwayland_view->base->scene_tree->node, xwayland_view->base->current.x, xwayland_view->base->current.y);
@@ -140,17 +145,17 @@ static void xwayland_surface_request_resize_notify(struct wl_listener* listener,
 	 * decorations. Note that a more sophisticated compositor should check the
 	 * provided serial against a list of button press serials sent to this
 	 * client, to prevent the client from requesting this whenever they want. */
-	struct wlr_xwayland_resize_event* event = data;
+	struct wlr_xwayland_resize_event* event = static_cast<struct wlr_xwayland_resize_event*>(data);
 	magpie_xwayland_view_t* xwayland_view = wl_container_of(listener, xwayland_view, request_resize);
 	wlr_xwayland_surface_set_maximized(xwayland_view->xwayland_surface, false);
 	begin_interactive(xwayland_view, MAGPIE_CURSOR_RESIZE, event->edges);
 }
 
 magpie_view_t* new_magpie_xwayland_view(magpie_server_t* server, struct wlr_xwayland_surface* xwayland_surface) {
-	magpie_view_t* view = calloc(1, sizeof(magpie_xwayland_view_t));
+	magpie_view_t* view = (magpie_view_t*) std::calloc(1, sizeof(magpie_xwayland_view_t));
 	view->server = server;
 
-	magpie_xwayland_view_t* xwayland_view = calloc(1, sizeof(magpie_xwayland_view_t));
+	magpie_xwayland_view_t* xwayland_view = (magpie_xwayland_view_t*) std::calloc(1, sizeof(magpie_xwayland_view_t));
 	xwayland_view->base = view;
 	xwayland_view->xwayland_surface = xwayland_surface;
 

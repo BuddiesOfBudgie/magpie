@@ -1,8 +1,11 @@
-#ifndef MAGPIE_VIEW_H
-#define MAGPIE_VIEW_H
+#ifndef MAGPIE_VIEW_HPP
+#define MAGPIE_VIEW_HPP
 
-#include "types.h"
+#include "types.hpp"
+
+#include "wlr-wrap-start.hpp"
 #include <wlr/xwayland.h>
+#include "wlr-wrap-end.hpp"
 
 typedef enum { MAGPIE_VIEW_TYPE_XDG, MAGPIE_VIEW_TYPE_XWAYLAND } magpie_view_type_t;
 

@@ -1,7 +1,7 @@
 #ifndef MAGPIE_XWAYLAND_H
 #define MAGPIE_XWAYLAND_H
 
-#include "types.h"
+#include "types.hpp"
 #include <wayland-server-core.h>
 #include <xcb/xproto.h>
 

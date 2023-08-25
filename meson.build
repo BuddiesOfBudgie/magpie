@@ -1,15 +1,15 @@
 project(
     'magpie',
-    ['c'],
+    ['cpp'],
     version: '1.0',
     license: 'Apache-2.0',
     default_options: [
-        'c_std=c2x',
+        'cpp_std=c++23',
         'warning_level=3'
     ],
 )
 
-dep_m = meson.get_compiler('c').find_library('m', required: false)
+dep_m = meson.get_compiler('cpp').find_library('m', required: false)
 
 dep_wayland_protocols = dependency('wayland-protocols', version: '>= 1.31')
 dep_wayland_scanner = dependency('wayland-scanner')

@@ -1,7 +1,7 @@
-#ifndef MAGPIE_SURFACE_H
-#define MAGPIE_SURFACE_H
+#ifndef MAGPIE_SURFACE_HPP
+#define MAGPIE_SURFACE_HPP
 
-#include "types.h"
+#include "types.hpp"
 
 typedef enum { MAGPIE_SURFACE_TYPE_VIEW, MAGPIE_SURFACE_TYPE_LAYER, MAGPIE_SURFACE_TYPE_POPUP } magpie_surface_type_t;
 

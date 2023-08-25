@@ -1,14 +1,12 @@
-#ifndef MAGPIE_TYPES_H
-#define MAGPIE_TYPES_H
+#ifndef MAGPIE_TYPES_HPP
+#define MAGPIE_TYPES_HPP
 
 #include <assert.h>
 #include <wayland-server-core.h>
-#include <wlr/util/box.h>
 
-#define WLR_USE_UNSTABLE
-#include <wlr/backend.h>
-#include <wlr/types/wlr_scene.h>
-#include <wlr/types/wlr_xdg_shell.h>
+#include "wlr-wrap-start.hpp"
+#include <wlr/util/box.h>
+#include "wlr-wrap-end.hpp"
 
 typedef struct magpie_server magpie_server_t;
 typedef struct magpie_output magpie_output_t;

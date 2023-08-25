@@ -1,18 +1,18 @@
-#include "server.h"
-#include "input.h"
-#include "layer.h"
-#include "output.h"
-#include "popup.h"
-#include "surface.h"
-#include "types.h"
-#include "view.h"
-#include "xwayland.h"
+#include "server.hpp"
+#include "input.hpp"
+#include "layer.hpp"
+#include "output.hpp"
+#include "popup.hpp"
+#include "surface.hpp"
+#include "types.hpp"
+#include "view.hpp"
+#include "xwayland.hpp"
 
-#include <stdlib.h>
+#include <cstdlib>
+
+#include "wlr-wrap-start.hpp"
 #include <wayland-server.h>
 #include <wlr/types/wlr_output_layout.h>
-
-#define WLR_USE_UNSTABLE
 #include <wlr/render/allocator.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_cursor.h>
@@ -22,13 +22,16 @@
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_single_pixel_buffer_v1.h>
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_viewporter.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_activation_v1.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
+#include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/xwayland.h>
+#include "wlr-wrap-end.hpp"
 
 void focus_view(magpie_view_t* view, struct wlr_surface* surface) {
 	/* Note: this function only deals with keyboard focus. */
@@ -103,14 +106,14 @@ magpie_surface_t* surface_at(
 	while (tree != NULL && tree->node.data == NULL) {
 		tree = tree->node.parent;
 	}
-	return tree->node.data;
+	return static_cast<magpie_surface_t*>(tree->node.data);
 }
 
 static void new_output_notify(struct wl_listener* listener, void* data) {
 	/* This event is raised by the backend when a new output (aka a display or
 	 * monitor) becomes available. */
 	magpie_server_t* server = wl_container_of(listener, server, new_output);
-	struct wlr_output* wlr_output = data;
+	struct wlr_output* wlr_output = static_cast<struct wlr_output*>(data);
 
 	/* Configures the output created by the backend to use our allocator
 	 * and our renderer. Must be done once, before commiting the output */
@@ -152,19 +155,19 @@ static void new_xdg_surface_notify(struct wl_listener* listener, void* data) {
 	/* This event is raised when wlr_xdg_shell receives a new xdg surface from a
 	 * client, either a toplevel (application window) or popup. */
 	magpie_server_t* server = wl_container_of(listener, server, new_xdg_surface);
-	struct wlr_xdg_surface* xdg_surface = data;
+	struct wlr_xdg_surface* xdg_surface = static_cast<struct wlr_xdg_surface*>(data);
 
 	if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
 		new_magpie_xdg_view(server, xdg_surface->toplevel);
 	} else if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
-		magpie_surface_t* surface = xdg_surface->popup->parent->data;
+		magpie_surface_t* surface = static_cast<magpie_surface_t*>(xdg_surface->popup->parent->data);
 		new_magpie_popup(surface, xdg_surface->popup);
 	}
 }
 
 static void new_layer_surface_notify(struct wl_listener* listener, void* data) {
 	magpie_server_t* server = wl_container_of(listener, server, new_layer_surface);
-	struct wlr_layer_surface_v1* layer_surface = data;
+	struct wlr_layer_surface_v1* layer_surface = static_cast<struct wlr_layer_surface_v1*>(data);
 
 	/* Allocate a magpie_view_t for this surface */
 	new_magpie_layer(server, layer_surface);
@@ -172,14 +175,14 @@ static void new_layer_surface_notify(struct wl_listener* listener, void* data) {
 
 static void request_activation_notify(struct wl_listener* listener, void* data) {
 	magpie_server_t* server = wl_container_of(listener, server, request_activation);
-	struct wlr_xdg_activation_v1_request_activate_event* event = data;
+	struct wlr_xdg_activation_v1_request_activate_event* event = static_cast<struct wlr_xdg_activation_v1_request_activate_event*>(data);
 
 	if (!wlr_surface_is_xdg_surface(event->surface)) {
 		return;
 	}
 
 	struct wlr_xdg_surface* xdg_surface = wlr_xdg_surface_from_wlr_surface(event->surface);
-	magpie_surface_t* surface = xdg_surface->surface->data;
+	magpie_surface_t* surface = static_cast<magpie_surface_t*>(xdg_surface->surface->data);
 	if (surface->type != MAGPIE_SURFACE_TYPE_VIEW || !xdg_surface->mapped) {
 		return;
 	}
@@ -188,7 +191,7 @@ static void request_activation_notify(struct wl_listener* listener, void* data) 
 }
 
 magpie_server_t* new_magpie_server(void) {
-	magpie_server_t* server = calloc(1, sizeof(magpie_server_t));
+	magpie_server_t* server = (magpie_server_t*) std::calloc(1, sizeof(magpie_server_t));
 
 	/* The Wayland display is managed by libwayland. It handles accepting
 	 * clients from the Unix socket, manging Wayland globals, and so on. */

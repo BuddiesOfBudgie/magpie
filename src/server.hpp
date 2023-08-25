@@ -1,9 +1,10 @@
-#ifndef MAGPIE_SERVER_H
-#define MAGPIE_SERVER_H
+#ifndef MAGPIE_SERVER_HPP
+#define MAGPIE_SERVER_HPP
 
-#include "input.h"
-#include "surface.h"
-#include "types.h"
+#include "input.hpp"
+#include "surface.hpp"
+#include "types.hpp"
+
 #include <wayland-server-core.h>
 
 typedef enum {
