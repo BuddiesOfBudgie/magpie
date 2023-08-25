@@ -9,17 +9,17 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
-static void popup_map_notify(struct wl_listener* listener, void* data) {
+static void popup_map_notify(wl_listener* listener, void* data) {
 	(void) listener;
 	(void) data;
 }
 
-static void popup_unmap_notify(struct wl_listener* listener, void* data) {
+static void popup_unmap_notify(wl_listener* listener, void* data) {
 	(void) listener;
 	(void) data;
 }
 
-static void popup_destroy_notify(struct wl_listener* listener, void* data) {
+static void popup_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	magpie_popup_t* popup = wl_container_of(listener, popup, destroy);
@@ -32,12 +32,12 @@ static void popup_destroy_notify(struct wl_listener* listener, void* data) {
 	free(popup);
 }
 
-static void popup_commit_notify(struct wl_listener* listener, void* data) {
+static void popup_commit_notify(wl_listener* listener, void* data) {
 	(void) listener;
 	(void) data;
 }
 
-static void popup_new_popup_notify(struct wl_listener* listener, void* data);
+static void popup_new_popup_notify(wl_listener* listener, void* data);
 
 magpie_popup_t* new_magpie_popup(magpie_surface_t* parent_surface, struct wlr_xdg_popup* xdg_popup) {
 	magpie_popup_t* popup = (magpie_popup_t*) std::calloc(1, sizeof(magpie_popup_t));
@@ -64,7 +64,7 @@ magpie_popup_t* new_magpie_popup(magpie_surface_t* parent_surface, struct wlr_xd
 	return popup;
 }
 
-static void popup_new_popup_notify(struct wl_listener* listener, void* data) {
+static void popup_new_popup_notify(wl_listener* listener, void* data) {
 	magpie_popup_t* popup = wl_container_of(listener, popup, new_popup);
 	new_magpie_popup(popup->parent, static_cast<wlr_xdg_popup*>(data));
 }

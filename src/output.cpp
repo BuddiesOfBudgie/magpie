@@ -6,7 +6,7 @@
 #include <wlr/types/wlr_scene.h>
 #include <wlr-wrap-end.hpp>
 
-static void output_frame_notify(struct wl_listener* listener, void* data) {
+static void output_frame_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* This function is called every time an output is ready to display a frame,
@@ -24,7 +24,7 @@ static void output_frame_notify(struct wl_listener* listener, void* data) {
 	wlr_scene_output_send_frame_done(scene_output, &now);
 }
 
-static void output_destroy_notify(struct wl_listener* listener, void* data) {
+static void output_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	magpie_output_t* output = wl_container_of(listener, output, destroy);

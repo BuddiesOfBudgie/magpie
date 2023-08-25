@@ -24,7 +24,7 @@ static const char* atom_map[ATOM_LAST] = {
 	"_NET_WM_STATE_MODAL",
 };
 
-static void ready_notify(struct wl_listener* listener, void* data) {
+static void ready_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	xwayland_listener_container* container = wl_container_of(listener, container, ready);
@@ -61,7 +61,7 @@ static void ready_notify(struct wl_listener* listener, void* data) {
 	xcb_disconnect(xcb_conn);
 }
 
-static void new_surface_notify(struct wl_listener* listener, void* data) {
+static void new_surface_notify(wl_listener* listener, void* data) {
 	xwayland_listener_container* container = wl_container_of(listener, container, new_surface);
 	XWayland& xwayland = *container->parent;
 
@@ -75,7 +75,7 @@ XWayland::XWayland(magpie_server_t* server) {
 	listeners->parent = this;
 
 	this->server = server;
-	wlr_xwayland = wlr_xwayland_create(server->wl_display, server->compositor, true);
+	wlr_xwayland = wlr_xwayland_create(server->display, server->compositor, true);
 
 	listeners->ready.notify = ready_notify;
 	wl_signal_add(&wlr_xwayland->events.ready, &listeners->ready);

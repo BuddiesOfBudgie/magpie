@@ -12,7 +12,7 @@
 #include <wlr/util/edges.h>
 #include "wlr-wrap-end.hpp"
 
-static void xwayland_surface_map_notify(struct wl_listener* listener, void* data) {
+static void xwayland_surface_map_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is mapped, or ready to display on-screen. */
@@ -30,7 +30,7 @@ static void xwayland_surface_map_notify(struct wl_listener* listener, void* data
 	focus_view(xwayland_view->base, xwayland_view->xwayland_surface->surface);
 }
 
-static void xwayland_surface_unmap_notify(struct wl_listener* listener, void* data) {
+static void xwayland_surface_unmap_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is unmapped, and should no longer be shown. */
@@ -51,7 +51,7 @@ static void xwayland_surface_unmap_notify(struct wl_listener* listener, void* da
 	wl_list_remove(&xwayland_view->base->link);
 }
 
-static void xwayland_surface_destroy_notify(struct wl_listener* listener, void* data) {
+static void xwayland_surface_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is destroyed and should never be shown again. */
@@ -64,7 +64,7 @@ static void xwayland_surface_destroy_notify(struct wl_listener* listener, void* 
 	free(xwayland_view);
 }
 
-static void xwayland_surface_request_configure_notify(struct wl_listener* listener, void* data) {
+static void xwayland_surface_request_configure_notify(wl_listener* listener, void* data) {
 	magpie_xwayland_view_t* xwayland_view = wl_container_of(listener, xwayland_view, request_configure);
 	struct wlr_xwayland_surface* xwayland_surface = xwayland_view->xwayland_surface;
 	struct wlr_xwayland_surface_configure_event* event = static_cast<struct wlr_xwayland_surface_configure_event*>(data);
@@ -77,7 +77,7 @@ static void xwayland_surface_request_configure_notify(struct wl_listener* listen
 	}
 }
 
-static void xwayland_surface_set_geometry_notify(struct wl_listener* listener, void* data) {
+static void xwayland_surface_set_geometry_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	magpie_xwayland_view_t* xwayland_view = wl_container_of(listener, xwayland_view, set_geometry);
@@ -127,7 +127,7 @@ static void begin_interactive(magpie_xwayland_view_t* xwayland_view, magpie_curs
 	}
 }
 
-static void xwayland_surface_request_move_notify(struct wl_listener* listener, void* data) {
+static void xwayland_surface_request_move_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* This event is raised when a client would like to begin an interactive
@@ -140,7 +140,7 @@ static void xwayland_surface_request_move_notify(struct wl_listener* listener, v
 	begin_interactive(xwayland_view, MAGPIE_CURSOR_MOVE, 0);
 }
 
-static void xwayland_surface_request_resize_notify(struct wl_listener* listener, void* data) {
+static void xwayland_surface_request_resize_notify(wl_listener* listener, void* data) {
 	/* This event is raised when a client would like to begin an interactive
 	 * resize, typically because the user clicked on their client-side
 	 * decorations. Note that a more sophisticated compositor should check the

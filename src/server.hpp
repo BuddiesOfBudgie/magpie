@@ -23,7 +23,7 @@ typedef enum {
 } magpie_scene_layer_t;
 
 struct magpie_server {
-	struct wl_display* wl_display;
+	wl_display* display;
 	struct wlr_backend* backend;
 	struct wlr_renderer* renderer;
 	struct wlr_allocator* allocator;
@@ -35,30 +35,30 @@ struct magpie_server {
 	struct wlr_scene_tree* scene_layers[MAGPIE_SCENE_LAYER_MAX];
 
 	struct wlr_xdg_shell* xdg_shell;
-	struct wl_listener new_xdg_surface;
+	wl_listener new_xdg_surface;
 
-	struct wl_list views;
+	wl_list views;
 
 	struct wlr_xdg_activation_v1* xdg_activation;
-	struct wl_listener request_activation;
+	wl_listener request_activation;
 
 	struct wlr_layer_shell_v1* layer_shell;
-	struct wl_listener new_layer_surface;
-	struct wl_list layers;
+	wl_listener new_layer_surface;
+	wl_list layers;
 
 	struct wlr_cursor* cursor;
 	struct wlr_xcursor_manager* cursor_mgr;
-	struct wl_listener cursor_motion;
-	struct wl_listener cursor_motion_absolute;
-	struct wl_listener cursor_button;
-	struct wl_listener cursor_axis;
-	struct wl_listener cursor_frame;
+	wl_listener cursor_motion;
+	wl_listener cursor_motion_absolute;
+	wl_listener cursor_button;
+	wl_listener cursor_axis;
+	wl_listener cursor_frame;
 
 	struct wlr_seat* seat;
-	struct wl_listener new_input;
-	struct wl_listener request_cursor;
-	struct wl_listener request_set_selection;
-	struct wl_list keyboards;
+	wl_listener new_input;
+	wl_listener request_cursor;
+	wl_listener request_set_selection;
+	wl_list keyboards;
 	magpie_cursor_mode_t cursor_mode;
 	magpie_view_t* grabbed_view;
 	double grab_x, grab_y;
@@ -67,8 +67,8 @@ struct magpie_server {
 
 	struct wlr_xdg_output_manager_v1* output_manager;
 	struct wlr_output_layout* output_layout;
-	struct wl_list outputs;
-	struct wl_listener new_output;
+	wl_list outputs;
+	wl_listener new_output;
 
 	struct wlr_idle_notifier_v1* idle_notifier;
 	struct wlr_idle_inhibit_manager_v1* idle_inhibit_manager;

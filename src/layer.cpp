@@ -70,7 +70,7 @@ static void update_layer_layout(magpie_server_t* server) {
 	}
 }
 
-static void subsurface_destroy_notify(struct wl_listener* listener, void* data) {
+static void subsurface_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	magpie_layer_subsurface_t* subsurface = wl_container_of(listener, subsurface, destroy);
@@ -90,7 +90,7 @@ static void new_subsurface(magpie_layer_t* parent_layer, struct wlr_subsurface* 
 	wl_signal_add(&wlr_subsurface->events.destroy, &subsurface->destroy);
 }
 
-static void wlr_layer_surface_v1_map_notify(struct wl_listener* listener, void* data) {
+static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is mapped, or ready to display on-screen. */
@@ -98,7 +98,7 @@ static void wlr_layer_surface_v1_map_notify(struct wl_listener* listener, void* 
 	wl_list_insert(&layer->server->layers, &layer->link);
 }
 
-static void wlr_layer_surface_v1_unmap_notify(struct wl_listener* listener, void* data) {
+static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is unmapped, and should no longer be shown. */
@@ -106,7 +106,7 @@ static void wlr_layer_surface_v1_unmap_notify(struct wl_listener* listener, void
 	wl_list_remove(&layer->link);
 }
 
-static void wlr_layer_surface_v1_destroy_notify(struct wl_listener* listener, void* data) {
+static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is destroyed and should never be shown again. */
@@ -122,7 +122,7 @@ static void wlr_layer_surface_v1_destroy_notify(struct wl_listener* listener, vo
 	free(view);
 }
 
-static void wlr_layer_surface_v1_commit_notify(struct wl_listener* listener, void* data) {
+static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	magpie_layer_t* layer = wl_container_of(listener, layer, commit);
@@ -146,19 +146,19 @@ static void wlr_layer_surface_v1_commit_notify(struct wl_listener* listener, voi
 	}
 }
 
-static void wlr_layer_surface_v1_new_popup_notify(struct wl_listener* listener, void* data) {
+static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* data) {
 	magpie_layer_t* layer = wl_container_of(listener, layer, new_popup);
 	new_magpie_popup(
 		static_cast<magpie_surface_t*>(layer->layer_surface->surface->data), static_cast<struct wlr_xdg_popup*>(data));
 }
 
-static void wlr_layer_surface_v1_new_subsurface_notify(struct wl_listener* listener, void* data) {
+static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, void* data) {
 	magpie_layer_t* layer = wl_container_of(listener, layer, new_popup);
 	struct wlr_subsurface* subsurface = static_cast<struct wlr_subsurface*>(data);
 	new_subsurface(layer, subsurface);
 }
 
-static void wlr_layer_surface_v1_output_destroy_notify(struct wl_listener* listener, void* data) {
+static void wlr_layer_surface_v1_output_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	magpie_layer_t* layer = wl_container_of(listener, layer, output_destroy);

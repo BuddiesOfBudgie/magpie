@@ -156,7 +156,7 @@ static bool handle_compositor_keybinding(magpie_keyboard_t* keyboard, uint32_t m
 	if (modifiers == WLR_MODIFIER_ALT) {
 		switch (sym) {
 			case XKB_KEY_Escape:
-				wl_display_terminate(server->wl_display);
+				wl_display_terminate(server->display);
 				return true;
 			case XKB_KEY_Tab:
 				/* Cycle to the next view */
@@ -181,7 +181,7 @@ static bool handle_compositor_keybinding(magpie_keyboard_t* keyboard, uint32_t m
 	return false;
 }
 
-static void keyboard_handle_destroy(struct wl_listener* listener, void* data) {
+static void keyboard_handle_destroy(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* This event is raised by the keyboard base wlr_input_device to signal
@@ -196,7 +196,7 @@ static void keyboard_handle_destroy(struct wl_listener* listener, void* data) {
 	free(keyboard);
 }
 
-static void keyboard_handle_key(struct wl_listener* listener, void* data) {
+static void keyboard_handle_key(wl_listener* listener, void* data) {
 	/* This event is raised when a key is pressed or released. */
 	magpie_keyboard_t* keyboard = wl_container_of(listener, keyboard, key);
 	magpie_server_t* server = keyboard->server;
@@ -230,7 +230,7 @@ static void keyboard_handle_key(struct wl_listener* listener, void* data) {
 	}
 }
 
-static void keyboard_handle_modifiers(struct wl_listener* listener, void* data) {
+static void keyboard_handle_modifiers(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* This event is raised when a modifier key, such as shift or alt, is
@@ -282,7 +282,7 @@ static void new_keyboard(magpie_server_t* server, struct wlr_input_device* devic
 	wl_list_insert(&server->keyboards, &keyboard->link);
 }
 
-void new_input_notify(struct wl_listener* listener, void* data) {
+void new_input_notify(wl_listener* listener, void* data) {
 	magpie_server_t* server = wl_container_of(listener, server, new_input);
 	struct wlr_input_device* device = static_cast<struct wlr_input_device*>(data);
 	switch (device->type) {
@@ -303,7 +303,7 @@ void new_input_notify(struct wl_listener* listener, void* data) {
 	wlr_seat_set_capabilities(server->seat, caps);
 }
 
-void request_cursor_notify(struct wl_listener* listener, void* data) {
+void request_cursor_notify(wl_listener* listener, void* data) {
 	magpie_server_t* server = wl_container_of(listener, server, request_cursor);
 	struct wlr_seat_pointer_request_set_cursor_event* event =
 		static_cast<struct wlr_seat_pointer_request_set_cursor_event*>(data);
@@ -318,7 +318,7 @@ void request_cursor_notify(struct wl_listener* listener, void* data) {
 	}
 }
 
-void seat_request_set_selection(struct wl_listener* listener, void* data) {
+void seat_request_set_selection(wl_listener* listener, void* data) {
 	/* This event is raised by the seat when a client wants to set the selection,
 	 * usually when the user copies something. wlroots allows compositors to
 	 * ignore such requests if they so choose, but in magpie we always honor
@@ -328,7 +328,7 @@ void seat_request_set_selection(struct wl_listener* listener, void* data) {
 	wlr_seat_set_selection(server->seat, event->source, event->serial);
 }
 
-void cursor_axis_notify(struct wl_listener* listener, void* data) {
+void cursor_axis_notify(wl_listener* listener, void* data) {
 	/* This event is forwarded by the cursor when a pointer emits an axis event,
 	 * for example when you move the scroll wheel. */
 	magpie_server_t* server = wl_container_of(listener, server, cursor_axis);
@@ -338,7 +338,7 @@ void cursor_axis_notify(struct wl_listener* listener, void* data) {
 		server->seat, event->time_msec, event->orientation, event->delta, event->delta_discrete, event->source);
 }
 
-void cursor_frame_notify(struct wl_listener* listener, void* data) {
+void cursor_frame_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* This event is forwarded by the cursor when a pointer emits an frame
@@ -350,7 +350,7 @@ void cursor_frame_notify(struct wl_listener* listener, void* data) {
 	wlr_seat_pointer_notify_frame(server->seat);
 }
 
-void cursor_motion_absolute_notify(struct wl_listener* listener, void* data) {
+void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
 	/* This event is forwarded by the cursor when a pointer emits an _absolute_
 	 * motion event, from 0..1 on each axis. This happens, for example, when
 	 * wlroots is running under a Wayland window rather than KMS+DRM, and you
@@ -363,7 +363,7 @@ void cursor_motion_absolute_notify(struct wl_listener* listener, void* data) {
 	process_cursor_motion(server, event->time_msec);
 }
 
-void cursor_button_notify(struct wl_listener* listener, void* data) {
+void cursor_button_notify(wl_listener* listener, void* data) {
 	/* This event is forwarded by the cursor when a pointer emits a button event.
 	 */
 	magpie_server_t* server = wl_container_of(listener, server, cursor_button);
@@ -384,7 +384,7 @@ void cursor_button_notify(struct wl_listener* listener, void* data) {
 	}
 }
 
-void cursor_motion_notify(struct wl_listener* listener, void* data) {
+void cursor_motion_notify(wl_listener* listener, void* data) {
 	/* This event is forwarded by the cursor when a pointer emits a _relative_
 	 * pointer motion event (i.e. a delta) */
 	magpie_server_t* server = wl_container_of(listener, server, cursor_motion);

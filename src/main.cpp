@@ -36,13 +36,13 @@ int main(int argc, char** argv) {
 	magpie_server_t server = *new_magpie_server();
 
 	/* Add a Unix socket to the Wayland display. */
-	const char* socket = wl_display_add_socket_auto(server.wl_display);
+	const char* socket = wl_display_add_socket_auto(server.display);
 	assert(socket);
 
 	/* Start the backend. This will enumerate outputs and inputs, become the DRM master, etc */
 	if (!wlr_backend_start(server.backend)) {
 		wlr_backend_destroy(server.backend);
-		wl_display_destroy(server.wl_display);
+		wl_display_destroy(server.display);
 		return 1;
 	}
 
@@ -60,9 +60,9 @@ int main(int argc, char** argv) {
 	 * loop configuration to listen to libinput events, DRM events, generate
 	 * frame events at the refresh rate, and so on. */
 	wlr_log(WLR_INFO, "Running Wayland compositor on WAYLAND_DISPLAY=%s", socket);
-	wl_display_run(server.wl_display);
-	wl_display_destroy_clients(server.wl_display);
-	wl_display_destroy(server.wl_display);
+	wl_display_run(server.display);
+	wl_display_destroy_clients(server.display);
+	wl_display_destroy(server.display);
 
 	return 0;
 }

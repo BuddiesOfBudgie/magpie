@@ -15,7 +15,7 @@
 #include <wlr/util/edges.h>
 #include "wlr-wrap-end.hpp"
 
-static void xdg_toplevel_map_notify(struct wl_listener* listener, void* data) {
+static void xdg_toplevel_map_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is mapped, or ready to display on-screen. */
@@ -24,7 +24,7 @@ static void xdg_toplevel_map_notify(struct wl_listener* listener, void* data) {
 	focus_view(xdg_view->base, xdg_view->xdg_toplevel->base->surface);
 }
 
-static void xdg_toplevel_unmap_notify(struct wl_listener* listener, void* data) {
+static void xdg_toplevel_unmap_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is unmapped, and should no longer be shown. */
@@ -38,7 +38,7 @@ static void xdg_toplevel_unmap_notify(struct wl_listener* listener, void* data) 
 	wl_list_remove(&xdg_view->base->link);
 }
 
-static void xdg_toplevel_destroy_notify(struct wl_listener* listener, void* data) {
+static void xdg_toplevel_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is destroyed and should never be shown again. */
@@ -88,7 +88,7 @@ static void begin_interactive(magpie_xdg_view_t* xdg_view, magpie_cursor_mode_t 
 	}
 }
 
-static void xdg_toplevel_request_move_notify(struct wl_listener* listener, void* data) {
+static void xdg_toplevel_request_move_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* This event is raised when a client would like to begin an interactive
@@ -101,7 +101,7 @@ static void xdg_toplevel_request_move_notify(struct wl_listener* listener, void*
 	begin_interactive(xdg_view, MAGPIE_CURSOR_MOVE, 0);
 }
 
-static void xdg_toplevel_request_resize_notify(struct wl_listener* listener, void* data) {
+static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data) {
 	/* This event is raised when a client would like to begin an interactive
 	 * resize, typically because the user clicked on their client-side
 	 * decorations. Note that a more sophisticated compositor should check the
@@ -113,7 +113,7 @@ static void xdg_toplevel_request_resize_notify(struct wl_listener* listener, voi
 	begin_interactive(xdg_view, MAGPIE_CURSOR_RESIZE, event->edges);
 }
 
-static void xdg_toplevel_request_maximize_notify(struct wl_listener* listener, void* data) {
+static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* This event is raised when a client would like to maximize itself,
@@ -188,7 +188,7 @@ static void xdg_toplevel_request_maximize_notify(struct wl_listener* listener, v
 	}
 }
 
-static void xdg_toplevel_request_fullscreen_notify(struct wl_listener* listener, void* data) {
+static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* We must send a configure here, even on a no-op. */

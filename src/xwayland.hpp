@@ -31,13 +31,13 @@ class XWayland {
 
  	XWayland(magpie_server_t* server);
 
- 	static XWayland& from_listener(struct wl_listener listener);
+ 	static XWayland& from_listener(wl_listener listener);
 };
 
 struct xwayland_listener_container {
 	XWayland* parent;
-	struct wl_listener ready;
-	struct wl_listener new_surface;
+	wl_listener ready;
+	wl_listener new_surface;
 };
 
 #endif

@@ -14,35 +14,35 @@ struct magpie_xdg_view {
 	magpie_view_t* base;
 
 	struct wlr_xdg_toplevel* xdg_toplevel;
-	struct wl_listener map;
-	struct wl_listener unmap;
-	struct wl_listener destroy;
-	struct wl_listener commit;
-	struct wl_listener request_move;
-	struct wl_listener request_resize;
-	struct wl_listener request_maximize;
-	struct wl_listener request_unmaximize;
-	struct wl_listener request_fullscreen;
+	wl_listener map;
+	wl_listener unmap;
+	wl_listener destroy;
+	wl_listener commit;
+	wl_listener request_move;
+	wl_listener request_resize;
+	wl_listener request_maximize;
+	wl_listener request_unmaximize;
+	wl_listener request_fullscreen;
 };
 
 struct magpie_xwayland_view {
 	magpie_view_t* base;
 
 	struct wlr_xwayland_surface* xwayland_surface;
-	struct wl_listener map;
-	struct wl_listener unmap;
-	struct wl_listener destroy;
-	struct wl_listener commit;
-	struct wl_listener request_configure;
-	struct wl_listener request_move;
-	struct wl_listener request_resize;
-	struct wl_listener set_geometry;
+	wl_listener map;
+	wl_listener unmap;
+	wl_listener destroy;
+	wl_listener commit;
+	wl_listener request_configure;
+	wl_listener request_move;
+	wl_listener request_resize;
+	wl_listener set_geometry;
 };
 
 struct magpie_view {
 	magpie_server_t* server;
 
-	struct wl_list link;
+	wl_list link;
 
 	magpie_view_type_t type;
 	struct wlr_box current;
