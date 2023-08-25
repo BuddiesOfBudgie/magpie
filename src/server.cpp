@@ -294,7 +294,7 @@ magpie_server_t* new_magpie_server(void) {
 	server->cursor_mgr = wlr_xcursor_manager_create(NULL, 24);
 	wlr_xcursor_manager_load(server->cursor_mgr, 1);
 
-	server->xwayland = new_magpie_xwayland(server);
+	server->xwayland = new XWayland(server);
 
 	/*
 	 * wlr_cursor *only* displays an image on screen. It does not move around

@@ -4,6 +4,7 @@
 #include "input.hpp"
 #include "surface.hpp"
 #include "types.hpp"
+#include "xwayland.hpp"
 
 #include <wayland-server-core.h>
 
@@ -28,7 +29,7 @@ struct magpie_server {
 	struct wlr_allocator* allocator;
 	struct wlr_compositor* compositor;
 
-	magpie_xwayland_t* xwayland;
+	XWayland* xwayland;
 
 	struct wlr_scene* scene;
 	struct wlr_scene_tree* scene_layers[MAGPIE_SCENE_LAYER_MAX];

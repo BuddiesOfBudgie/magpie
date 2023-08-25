@@ -5,10 +5,6 @@
 #include "types.hpp"
 #include "view.hpp"
 
-#include <cstdlib>
-#include <string.h>
-#include <wayland-server-core.h>
-
 #include "wlr-wrap-start.hpp"
 #include <wlr/util/log.h>
 #include <wlr/xwayland.h>
@@ -31,8 +27,10 @@ static const char* atom_map[ATOM_LAST] = {
 static void ready_notify(struct wl_listener* listener, void* data) {
 	(void) data;
 
-	magpie_xwayland_t* xwayland = wl_container_of(listener, xwayland, ready);
-	wlr_xwayland_set_seat(xwayland->wlr_xwayland, xwayland->server->seat);
+	xwayland_listener_container* container = wl_container_of(listener, container, ready);
+	XWayland& xwayland = *container->parent;
+
+	wlr_xwayland_set_seat(xwayland.wlr_xwayland, xwayland.server->seat);
 
 	xcb_connection_t* xcb_conn = xcb_connect(NULL, NULL);
 	int err = xcb_connection_has_error(xcb_conn);
@@ -49,7 +47,7 @@ static void ready_notify(struct wl_listener* listener, void* data) {
 		xcb_generic_error_t* error = NULL;
 		xcb_intern_atom_reply_t* reply = xcb_intern_atom_reply(xcb_conn, cookies[i], &error);
 		if (reply != NULL && error == NULL) {
-			xwayland->atoms[i] = reply->atom;
+			xwayland.atoms[i] = reply->atom;
 		}
 		free(reply);
 
@@ -64,23 +62,25 @@ static void ready_notify(struct wl_listener* listener, void* data) {
 }
 
 static void new_surface_notify(struct wl_listener* listener, void* data) {
-	magpie_xwayland_t* xwayland = wl_container_of(listener, xwayland, new_surface);
+	xwayland_listener_container* container = wl_container_of(listener, container, new_surface);
+	XWayland& xwayland = *container->parent;
+
 	struct wlr_xwayland_surface* xwayland_surface = static_cast<struct wlr_xwayland_surface*>(data);
 
-	new_magpie_xwayland_view(xwayland->server, xwayland_surface);
+	new_magpie_xwayland_view(xwayland.server, xwayland_surface);
 }
 
-magpie_xwayland_t* new_magpie_xwayland(magpie_server_t* server) {
-	magpie_xwayland_t* xwayland = (magpie_xwayland_t*) std::calloc(1, sizeof(magpie_xwayland_t));
-	xwayland->server = server;
-	xwayland->wlr_xwayland = wlr_xwayland_create(server->wl_display, server->compositor, true);
+XWayland::XWayland(magpie_server_t* server) {
+	listeners = {};
+	listeners->parent = this;
 
-	xwayland->ready.notify = ready_notify;
-	wl_signal_add(&xwayland->wlr_xwayland->events.ready, &xwayland->ready);
-	xwayland->new_surface.notify = new_surface_notify;
-	wl_signal_add(&xwayland->wlr_xwayland->events.new_surface, &xwayland->new_surface);
+	this->server = server;
+	wlr_xwayland = wlr_xwayland_create(server->wl_display, server->compositor, true);
 
-	setenv("DISPLAY", xwayland->wlr_xwayland->display_name, true);
+	listeners->ready.notify = ready_notify;
+	wl_signal_add(&wlr_xwayland->events.ready, &listeners->ready);
+	listeners->new_surface.notify = new_surface_notify;
+	wl_signal_add(&wlr_xwayland->events.new_surface, &listeners->new_surface);
 
-	return xwayland;
+	setenv("DISPLAY", wlr_xwayland->display_name, true);
 }

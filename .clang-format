@@ -39,7 +39,6 @@ PenaltyBreakString: 500
 PenaltyExcessCharacter: 10000
 PenaltyReturnTypeOnItsOwnLine: 600
 PointerAlignment: Left
-SortIncludes: Never
 SpaceAfterCStyleCast: true
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: ControlStatements
