@@ -8,6 +8,7 @@
 #include "view.hpp"
 #include "xwayland.hpp"
 
+#include <cassert>
 #include <cstdlib>
 
 #include "wlr-wrap-start.hpp"

@@ -3,9 +3,7 @@
 
 #include "types.hpp"
 
-#include "wlr-wrap-start.hpp"
 #include <wayland-server-core.h>
-#include "wlr-wrap-end.hpp"
 
 struct magpie_layer {
 	magpie_server_t* server;

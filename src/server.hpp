@@ -7,6 +7,10 @@
 
 #include <wayland-server-core.h>
 
+#include "wlr-wrap-start.hpp"
+#include <wlr/util/box.h>
+#include "wlr-wrap-end.hpp"
+
 typedef enum {
 	MAGPIE_SCENE_LAYER_BACKGROUND = 0,
 	MAGPIE_SCENE_LAYER_BOTTOM,

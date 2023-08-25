@@ -3,6 +3,8 @@
 
 #include "types.hpp"
 
+#include <wayland-server-core.h>
+
 struct magpie_keyboard {
 	magpie_server_t* server;
 

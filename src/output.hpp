@@ -4,6 +4,10 @@
 #include "server.hpp"
 #include "types.hpp"
 
+#include "wlr-wrap-start.hpp"
+#include <wlr/util/box.h>
+#include "wlr-wrap-end.hpp"
+
 struct magpie_output {
 	magpie_server_t* server;
 

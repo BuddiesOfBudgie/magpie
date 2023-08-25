@@ -6,6 +6,7 @@
 #include "types.hpp"
 #include "xdg-shell-protocol.h"
 
+#include <cassert>
 #include <cstdlib>
 
 #include "wlr-wrap-start.hpp"

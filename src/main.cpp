@@ -2,6 +2,7 @@
 
 #include "server.hpp"
 
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <getopt.h>

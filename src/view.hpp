@@ -5,6 +5,7 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/xwayland.h>
+#include <wlr/util/box.h>
 #include "wlr-wrap-end.hpp"
 
 typedef enum { MAGPIE_VIEW_TYPE_XDG, MAGPIE_VIEW_TYPE_XWAYLAND } magpie_view_type_t;
