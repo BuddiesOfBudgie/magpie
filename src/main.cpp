@@ -2,8 +2,8 @@
 
 #include "server.hpp"
 
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <getopt.h>
 #include <unistd.h>
 

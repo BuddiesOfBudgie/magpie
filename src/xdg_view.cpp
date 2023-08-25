@@ -9,10 +9,10 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/backend.h>
-#include <wlr/util/edges.h>
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/util/edges.h>
 #include "wlr-wrap-end.hpp"
 
 static void xdg_toplevel_map_notify(struct wl_listener* listener, void* data) {

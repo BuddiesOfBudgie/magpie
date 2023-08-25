@@ -1,5 +1,5 @@
 #ifdef WLROOTS_INCLUDE_WRAP_STARTED
-	static_assert(0 == 1, "wlroots include wrap started and not ended");
+static_assert(0 == 1, "wlroots include wrap started and not ended");
 #endif
 
 #define WLROOTS_INCLUDE_WRAP_STARTED

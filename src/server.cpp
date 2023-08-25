@@ -12,7 +12,6 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wayland-server.h>
-#include <wlr/types/wlr_output_layout.h>
 #include <wlr/render/allocator.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_cursor.h>
@@ -175,7 +174,8 @@ static void new_layer_surface_notify(struct wl_listener* listener, void* data) {
 
 static void request_activation_notify(struct wl_listener* listener, void* data) {
 	magpie_server_t* server = wl_container_of(listener, server, request_activation);
-	struct wlr_xdg_activation_v1_request_activate_event* event = static_cast<struct wlr_xdg_activation_v1_request_activate_event*>(data);
+	struct wlr_xdg_activation_v1_request_activate_event* event =
+		static_cast<struct wlr_xdg_activation_v1_request_activate_event*>(data);
 
 	if (!wlr_surface_is_xdg_surface(event->surface)) {
 		return;

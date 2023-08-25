@@ -13,9 +13,7 @@
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
-#define static
 #include <wlr/types/wlr_scene.h>
-#undef static
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
@@ -307,7 +305,8 @@ void new_input_notify(struct wl_listener* listener, void* data) {
 
 void request_cursor_notify(struct wl_listener* listener, void* data) {
 	magpie_server_t* server = wl_container_of(listener, server, request_cursor);
-	struct wlr_seat_pointer_request_set_cursor_event* event = static_cast<struct wlr_seat_pointer_request_set_cursor_event*>(data);
+	struct wlr_seat_pointer_request_set_cursor_event* event =
+		static_cast<struct wlr_seat_pointer_request_set_cursor_event*>(data);
 	struct wlr_seat_client* focused_client = server->seat->pointer_state.focused_client;
 
 	if (focused_client == event->seat_client) {

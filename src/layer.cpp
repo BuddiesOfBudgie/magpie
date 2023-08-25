@@ -147,7 +147,8 @@ static void wlr_layer_surface_v1_commit_notify(struct wl_listener* listener, voi
 
 static void wlr_layer_surface_v1_new_popup_notify(struct wl_listener* listener, void* data) {
 	magpie_layer_t* layer = wl_container_of(listener, layer, new_popup);
-	new_magpie_popup(static_cast<magpie_surface_t*>(layer->layer_surface->surface->data), static_cast<struct wlr_xdg_popup*>(data));
+	new_magpie_popup(
+		static_cast<magpie_surface_t*>(layer->layer_surface->surface->data), static_cast<struct wlr_xdg_popup*>(data));
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(struct wl_listener* listener, void* data) {

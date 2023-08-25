@@ -83,7 +83,8 @@ static void xwayland_surface_set_geometry_notify(struct wl_listener* listener, v
 	magpie_xwayland_view_t* xwayland_view = wl_container_of(listener, xwayland_view, set_geometry);
 	struct wlr_xwayland_surface* xwayland_surface = xwayland_view->xwayland_surface;
 
-	xwayland_view->base->current = {xwayland_surface->x, xwayland_surface->y, xwayland_surface->width, xwayland_surface->height};
+	xwayland_view->base->current = {
+		xwayland_surface->x, xwayland_surface->y, xwayland_surface->width, xwayland_surface->height};
 	if (xwayland_surface->mapped) {
 		wlr_scene_node_set_position(
 			&xwayland_view->base->scene_tree->node, xwayland_view->base->current.x, xwayland_view->base->current.y);
