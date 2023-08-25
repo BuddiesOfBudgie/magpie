@@ -21,17 +21,17 @@ enum atom_name {
 };
 
 class XWayland {
- private:
- 	struct xwayland_listener_container* listeners;
+  private:
+	struct xwayland_listener_container* listeners;
 
- public:
-  	magpie_server_t* server;
- 	struct wlr_xwayland* wlr_xwayland;
- 	xcb_atom_t atoms[ATOM_LAST];
+  public:
+	magpie_server_t* server;
+	struct wlr_xwayland* wlr_xwayland;
+	xcb_atom_t atoms[ATOM_LAST];
 
- 	XWayland(magpie_server_t* server);
+	XWayland(magpie_server_t* server);
 
- 	static XWayland& from_listener(wl_listener listener);
+	static XWayland& from_listener(wl_listener listener);
 };
 
 struct xwayland_listener_container {
