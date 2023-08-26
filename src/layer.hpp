@@ -10,7 +10,7 @@ struct magpie_layer {
 
 	wl_list link;
 
-	magpie_output_t* output;
+	Output* output;
 	struct wlr_layer_surface_v1* layer_surface;
 	struct wlr_scene_layer_surface_v1* scene_layer_surface;
 

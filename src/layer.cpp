@@ -11,6 +11,7 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_layer_shell_v1.h>
+#include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_xdg_shell.h>
@@ -33,9 +34,8 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(enum zwlr_layer_shell_v1
 }
 
 static void update_layer_layout(Server* server) {
-	magpie_output_t* output;
-	wl_list_for_each(output, &server->outputs, link) {
-		magpie_output_update_areas(output);
+	for (auto* output : server->outputs) {
+		output->update_areas();
 	}
 
 	for (int i = 0; i < MAGPIE_SCENE_LAYER_LOCK; i++) {
@@ -59,7 +59,7 @@ static void update_layer_layout(Server* server) {
 			}
 
 			magpie_layer_t* layer = magpie_surface->layer;
-			magpie_output_t* output = layer->output;
+			Output* output = layer->output;
 			if (output == NULL) {
 				continue;
 			}
@@ -175,10 +175,10 @@ magpie_layer_t* new_magpie_layer(Server& server, struct wlr_layer_surface_v1* su
 	layer->layer_surface = surface;
 
 	if (surface->output == NULL) {
-		magpie_output_t* output = wl_container_of(server.outputs.next, output, link);
+		Output* output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
 		surface->output = output->wlr_output;
 	}
-	layer->output = static_cast<magpie_output_t*>(surface->output->data);
+	layer->output = static_cast<Output*>(surface->output->data);
 
 	magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface->current.layer);
 	if (chosen_layer == MAGPIE_SCENE_LAYER_MAX) {

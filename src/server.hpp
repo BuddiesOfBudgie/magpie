@@ -6,6 +6,7 @@
 #include "types.hpp"
 #include "xwayland.hpp"
 
+#include <set>
 #include <vector>
 #include <wayland-server-core.h>
 
@@ -78,7 +79,7 @@ class Server {
 
 	struct wlr_xdg_output_manager_v1* output_manager;
 	struct wlr_output_layout* output_layout;
-	wl_list outputs;
+	std::set<Output*> outputs;
 
 	struct wlr_idle_notifier_v1* idle_notifier;
 	struct wlr_idle_inhibit_manager_v1* idle_inhibit_manager;

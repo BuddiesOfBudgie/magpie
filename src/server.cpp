@@ -135,8 +135,8 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	}
 
 	/* Allocates and configures our state for this output */
-	magpie_output_t* output = new_magpie_output(server, wlr_output);
-	wl_list_insert(&server.outputs, &output->link);
+	Output* output = new Output(server, wlr_output);
+	server.outputs.emplace(output);
 
 	/* Adds this to the output layout. The add_auto function arranges outputs
 	 * from left-to-right in the order they appear. A more sophisticated
@@ -149,7 +149,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	 */
 	wlr_output_layout_add_auto(server.output_layout, wlr_output);
 
-	magpie_output_update_areas(output);
+	output->update_areas();
 }
 
 static void new_xdg_surface_notify(wl_listener* listener, void* data) {
@@ -248,7 +248,6 @@ Server::Server() {
 
 	/* Configure a listener to be notified when new outputs are available on the
 	 * backend. */
-	wl_list_init(&outputs);
 	listeners.backend_new_output.notify = new_output_notify;
 	wl_signal_add(&backend->events.new_output, &listeners.backend_new_output);
 

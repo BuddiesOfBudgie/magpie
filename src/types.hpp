@@ -3,7 +3,7 @@
 
 class Server;
 class XWayland;
-typedef struct magpie_output magpie_output_t;
+class Output;
 
 typedef struct magpie_surface magpie_surface_t;
 typedef struct magpie_layer magpie_layer_t;

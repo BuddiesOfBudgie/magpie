@@ -141,11 +141,10 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 		view->previous.x = view->current.x;
 		view->previous.y = view->current.y;
 
-		magpie_output_t* best_output = NULL;
+		Output* best_output = NULL;
 		long best_area = 0;
 
-		magpie_output_t* output;
-		wl_list_for_each(output, &server->outputs, link) {
+		for (auto* output : server->outputs) {
 			if (!wlr_output_layout_intersects(server->output_layout, output->wlr_output, &view->previous)) {
 				continue;
 			}
@@ -164,7 +163,7 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 
 		// if it's outside of all outputs, just use the pointer position
 		if (best_output == NULL) {
-			wl_list_for_each(output, &server->outputs, link) {
+			for (auto* output : server->outputs) {
 				if (wlr_output_layout_contains_point(
 						server->output_layout, output->wlr_output, server->cursor->x, server->cursor->y)) {
 					best_output = output;
@@ -175,7 +174,7 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 
 		// still nothing? use the first output in the list
 		if (best_output == NULL) {
-			best_output = static_cast<magpie_output_t*>(wlr_output_layout_get_center_output(server->output_layout)->data);
+			best_output = static_cast<Output*>(wlr_output_layout_get_center_output(server->output_layout)->data);
 		}
 
 		struct wlr_box output_box;
