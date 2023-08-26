@@ -21,9 +21,9 @@ enum atom_name {
 };
 
 struct xwayland_listener_container {
-  XWayland* parent;
-  wl_listener ready;
-  wl_listener new_surface;
+	XWayland* parent;
+	wl_listener ready;
+	wl_listener new_surface;
 };
 
 class XWayland {
@@ -36,10 +36,6 @@ class XWayland {
 	xcb_atom_t atoms[ATOM_LAST];
 
 	XWayland(Server& server);
-
-	static XWayland& from_listener(wl_listener listener);
 };
-
-
 
 #endif

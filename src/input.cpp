@@ -4,6 +4,7 @@
 #include "types.hpp"
 #include "view.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 
 #include "wlr-wrap-start.hpp"
@@ -150,8 +151,8 @@ void reset_cursor_mode(Server& server) {
 	server.grabbed_view = NULL;
 }
 
-static bool handle_compositor_keybinding(magpie_keyboard_t* keyboard, uint32_t modifiers, xkb_keysym_t sym) {
-	Server& server = *keyboard->server;
+static bool handle_compositor_keybinding(Keyboard& keyboard, uint32_t modifiers, xkb_keysym_t sym) {
+	Server& server = keyboard.server;
 
 	if (modifiers == WLR_MODIFIER_ALT) {
 		switch (sym) {
@@ -168,8 +169,8 @@ static bool handle_compositor_keybinding(magpie_keyboard_t* keyboard, uint32_t m
 				return true;
 		}
 	} else if (sym >= XKB_KEY_XF86Switch_VT_1 && sym <= XKB_KEY_XF86Switch_VT_12) {
-		if (wlr_backend_is_multi(keyboard->server->backend)) {
-			struct wlr_session* session = wlr_backend_get_session(keyboard->server->backend);
+		if (wlr_backend_is_multi(keyboard.server.backend)) {
+			struct wlr_session* session = wlr_backend_get_session(keyboard.server.backend);
 			if (session) {
 				unsigned vt = sym - XKB_KEY_XF86Switch_VT_1 + 1;
 				wlr_session_change_vt(session, vt);
@@ -188,18 +189,23 @@ static void keyboard_handle_destroy(wl_listener* listener, void* data) {
 	 * the destruction of the wlr_keyboard. It will no longer receive events
 	 * and should be destroyed.
 	 */
-	magpie_keyboard_t* keyboard = wl_container_of(listener, keyboard, destroy);
-	wl_list_remove(&keyboard->modifiers.link);
-	wl_list_remove(&keyboard->key.link);
-	wl_list_remove(&keyboard->destroy.link);
-	wl_list_remove(&keyboard->link);
-	free(keyboard);
+	keyboard_listener_container* container = wl_container_of(listener, container, destroy);
+	Keyboard& keyboard = *container->parent;
+
+	wl_list_remove(&container->modifiers.link);
+	wl_list_remove(&container->key.link);
+	wl_list_remove(&container->destroy.link);
+
+	std::vector<Keyboard*>& keyboards = keyboard.server.keyboards;
+	std::remove(keyboards.begin(), keyboards.end(), &keyboard);
 }
 
 static void keyboard_handle_key(wl_listener* listener, void* data) {
 	/* This event is raised when a key is pressed or released. */
-	magpie_keyboard_t* keyboard = wl_container_of(listener, keyboard, key);
-	Server& server = *keyboard->server;
+	keyboard_listener_container* container = wl_container_of(listener, container, key);
+	Keyboard& keyboard = *container->parent;
+
+	Server& server = keyboard.server;
 	struct wlr_keyboard_key_event* event = static_cast<struct wlr_keyboard_key_event*>(data);
 	struct wlr_seat* seat = server.seat;
 
@@ -209,10 +215,10 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 	uint32_t keycode = event->keycode + 8;
 	/* Get a list of keysyms based on the keymap for this keyboard */
 	const xkb_keysym_t* syms;
-	int nsyms = xkb_state_key_get_syms(keyboard->wlr_keyboard->xkb_state, keycode, &syms);
+	int nsyms = xkb_state_key_get_syms(keyboard.wlr_keyboard->xkb_state, keycode, &syms);
 
 	bool handled = false;
-	uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->wlr_keyboard);
+	uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard.wlr_keyboard);
 	if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
 		if (modifiers & WLR_MODIFIER_ALT) {
 			/* If alt is held down and this button was _pressed_, we attempt to
@@ -225,7 +231,7 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 
 	if (!handled) {
 		/* Otherwise, we pass it along to the client. */
-		wlr_seat_set_keyboard(seat, keyboard->wlr_keyboard);
+		wlr_seat_set_keyboard(seat, keyboard.wlr_keyboard);
 		wlr_seat_keyboard_notify_key(seat, event->time_msec, event->keycode, event->state);
 	}
 }
@@ -235,28 +241,28 @@ static void keyboard_handle_modifiers(wl_listener* listener, void* data) {
 
 	/* This event is raised when a modifier key, such as shift or alt, is
 	 * pressed. We simply communicate this to the client. */
-	magpie_keyboard_t* keyboard = wl_container_of(listener, keyboard, modifiers);
+	keyboard_listener_container* container = wl_container_of(listener, container, modifiers);
+	Keyboard& keyboard = *container->parent;
+
 	/*
 	 * A seat can only have one keyboard, but this is a limitation of the
 	 * Wayland protocol - not wlroots. We assign all connected keyboards to the
 	 * same seat. You can swap out the underlying wlr_keyboard like this and
 	 * wlr_seat handles this transparently.
 	 */
-	wlr_seat_set_keyboard(keyboard->server->seat, keyboard->wlr_keyboard);
+	wlr_seat_set_keyboard(keyboard.server.seat, keyboard.wlr_keyboard);
 	/* Send modifiers to the client. */
-	wlr_seat_keyboard_notify_modifiers(keyboard->server->seat, &keyboard->wlr_keyboard->modifiers);
+	wlr_seat_keyboard_notify_modifiers(keyboard.server.seat, &keyboard.wlr_keyboard->modifiers);
 }
 
 static void new_pointer(Server& server, struct wlr_input_device* device) {
 	wlr_cursor_attach_input_device(server.cursor, device);
 }
 
-static void new_keyboard(Server& server, struct wlr_input_device* device) {
-	struct wlr_keyboard* wlr_keyboard = wlr_keyboard_from_input_device(device);
+Keyboard::Keyboard(Server& server, struct wlr_keyboard* wlr_keyboard) : server(server) {
+	listeners.parent = this;
 
-	magpie_keyboard_t* keyboard = (magpie_keyboard_t*) std::calloc(1, sizeof(magpie_keyboard_t));
-	keyboard->server = &server;
-	keyboard->wlr_keyboard = wlr_keyboard;
+	this->wlr_keyboard = wlr_keyboard;
 
 	/* We need to prepare an XKB keymap and assign it to the keyboard. This
 	 * assumes the defaults (e.g. layout = "us"). */
@@ -269,17 +275,14 @@ static void new_keyboard(Server& server, struct wlr_input_device* device) {
 	wlr_keyboard_set_repeat_info(wlr_keyboard, 25, 600);
 
 	/* Here we set up listeners for keyboard events. */
-	keyboard->modifiers.notify = keyboard_handle_modifiers;
-	wl_signal_add(&wlr_keyboard->events.modifiers, &keyboard->modifiers);
-	keyboard->key.notify = keyboard_handle_key;
-	wl_signal_add(&wlr_keyboard->events.key, &keyboard->key);
-	keyboard->destroy.notify = keyboard_handle_destroy;
-	wl_signal_add(&device->events.destroy, &keyboard->destroy);
+	listeners.modifiers.notify = keyboard_handle_modifiers;
+	wl_signal_add(&wlr_keyboard->events.modifiers, &listeners.modifiers);
+	listeners.key.notify = keyboard_handle_key;
+	wl_signal_add(&wlr_keyboard->events.key, &listeners.key);
+	listeners.destroy.notify = keyboard_handle_destroy;
+	wl_signal_add(&wlr_keyboard->base.events.destroy, &listeners.destroy);
 
-	wlr_seat_set_keyboard(server.seat, keyboard->wlr_keyboard);
-
-	/* And add the keyboard to our list of keyboards */
-	wl_list_insert(&server.keyboards, &keyboard->link);
+	wlr_seat_set_keyboard(server.seat, wlr_keyboard);
 }
 
 void new_input_notify(wl_listener* listener, void* data) {
@@ -289,7 +292,7 @@ void new_input_notify(wl_listener* listener, void* data) {
 	struct wlr_input_device* device = static_cast<struct wlr_input_device*>(data);
 	switch (device->type) {
 		case WLR_INPUT_DEVICE_KEYBOARD:
-			new_keyboard(server, device);
+			server.keyboards.push_back(new Keyboard(server, wlr_keyboard_from_input_device(device)));
 			break;
 		case WLR_INPUT_DEVICE_POINTER:
 			new_pointer(server, device);
@@ -299,7 +302,7 @@ void new_input_notify(wl_listener* listener, void* data) {
 	}
 
 	uint32_t caps = WL_SEAT_CAPABILITY_POINTER;
-	if (!wl_list_empty(&server.keyboards)) {
+	if (!server.keyboards.empty()) {
 		caps |= WL_SEAT_CAPABILITY_KEYBOARD;
 	}
 	wlr_seat_set_capabilities(server.seat, caps);

@@ -5,15 +5,22 @@
 
 #include <wayland-server-core.h>
 
-struct magpie_keyboard {
-	Server* server;
-
-	wl_list link;
-	struct wlr_keyboard* wlr_keyboard;
-
+struct keyboard_listener_container {
+	Keyboard* parent;
 	wl_listener modifiers;
 	wl_listener key;
 	wl_listener destroy;
+};
+
+class Keyboard {
+  private:
+	keyboard_listener_container listeners;
+
+  public:
+	Server& server;
+	struct wlr_keyboard* wlr_keyboard;
+
+	Keyboard(Server& server, struct wlr_keyboard* wlr_keyboard);
 };
 
 typedef enum { MAGPIE_CURSOR_PASSTHROUGH, MAGPIE_CURSOR_MOVE, MAGPIE_CURSOR_RESIZE } magpie_cursor_mode_t;

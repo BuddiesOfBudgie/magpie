@@ -333,7 +333,6 @@ Server::Server() {
 	 * pointer, touch, and drawing tablet device. We also rig up a listener to
 	 * let us know when new input devices are available on the backend.
 	 */
-	wl_list_init(&keyboards);
 	listeners.seat_new_input.notify = new_input_notify;
 	wl_signal_add(&backend->events.new_input, &listeners.seat_new_input);
 	seat = wlr_seat_create(display, "seat0");

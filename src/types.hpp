@@ -13,6 +13,6 @@ typedef struct magpie_view magpie_view_t;
 typedef struct magpie_xdg_view magpie_xdg_view_t;
 typedef struct magpie_xwayland_view magpie_xwayland_view_t;
 
-typedef struct magpie_keyboard magpie_keyboard_t;
+class Keyboard;
 
 #endif

@@ -6,6 +6,7 @@
 #include "types.hpp"
 #include "xwayland.hpp"
 
+#include <vector>
 #include <wayland-server-core.h>
 
 #include "wlr-wrap-start.hpp"
@@ -68,7 +69,7 @@ class Server {
 
 	struct wlr_seat* seat;
 
-	wl_list keyboards;
+	std::vector<Keyboard*> keyboards;
 	magpie_cursor_mode_t cursor_mode;
 	magpie_view_t* grabbed_view;
 	double grab_x, grab_y;
