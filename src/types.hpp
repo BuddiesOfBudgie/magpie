@@ -1,7 +1,8 @@
 #ifndef MAGPIE_TYPES_HPP
 #define MAGPIE_TYPES_HPP
 
-typedef struct magpie_server magpie_server_t;
+class Server;
+class XWayland;
 typedef struct magpie_output magpie_output_t;
 
 typedef struct magpie_surface magpie_surface_t;

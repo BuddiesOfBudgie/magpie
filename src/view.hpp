@@ -40,7 +40,7 @@ struct magpie_xwayland_view {
 };
 
 struct magpie_view {
-	magpie_server_t* server;
+	Server* server;
 
 	wl_list link;
 
@@ -58,7 +58,7 @@ struct magpie_view {
 	};
 };
 
-magpie_view_t* new_magpie_xdg_view(magpie_server_t* server, struct wlr_xdg_toplevel* toplevel);
-magpie_view_t* new_magpie_xwayland_view(magpie_server_t* server, struct wlr_xwayland_surface* surface);
+magpie_view_t* new_magpie_xdg_view(Server& server, struct wlr_xdg_toplevel* toplevel);
+magpie_view_t* new_magpie_xwayland_view(Server& server, struct wlr_xwayland_surface* surface);
 
 #endif

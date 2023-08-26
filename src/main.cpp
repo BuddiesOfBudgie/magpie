@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 
 	wlr_log_init(WLR_INFO, NULL);
 
-	magpie_server_t server = *new_magpie_server();
+	Server server = Server();
 
 	/* Add a Unix socket to the Wayland display. */
 	const char* socket = wl_display_add_socket_auto(server.display);

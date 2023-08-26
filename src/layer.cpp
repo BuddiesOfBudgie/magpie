@@ -32,7 +32,7 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(enum zwlr_layer_shell_v1
 	}
 }
 
-static void update_layer_layout(magpie_server_t* server) {
+static void update_layer_layout(Server* server) {
 	magpie_output_t* output;
 	wl_list_for_each(output, &server->outputs, link) {
 		magpie_output_update_areas(output);
@@ -126,7 +126,7 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data
 	(void) data;
 
 	magpie_layer_t* layer = wl_container_of(listener, layer, commit);
-	magpie_server_t* server = layer->server;
+	Server* server = layer->server;
 	struct wlr_layer_surface_v1* surface = layer->layer_surface;
 
 	uint32_t committed = surface->current.committed;
@@ -167,15 +167,15 @@ static void wlr_layer_surface_v1_output_destroy_notify(wl_listener* listener, vo
 	wlr_layer_surface_v1_destroy(layer->layer_surface);
 }
 
-magpie_layer_t* new_magpie_layer(magpie_server_t* server, struct wlr_layer_surface_v1* surface) {
+magpie_layer_t* new_magpie_layer(Server& server, struct wlr_layer_surface_v1* surface) {
 	/* Allocate a magpie_layer_t for this surface */
 	magpie_layer_t* layer = (magpie_layer_t*) std::calloc(1, sizeof(magpie_layer_t));
 	wl_list_init(&layer->subsurfaces);
-	layer->server = server;
+	layer->server = &server;
 	layer->layer_surface = surface;
 
 	if (surface->output == NULL) {
-		magpie_output_t* output = wl_container_of(server->outputs.next, output, link);
+		magpie_output_t* output = wl_container_of(server.outputs.next, output, link);
 		surface->output = output->wlr_output;
 	}
 	layer->output = static_cast<magpie_output_t*>(surface->output->data);
@@ -188,7 +188,7 @@ magpie_layer_t* new_magpie_layer(magpie_server_t* server, struct wlr_layer_surfa
 		return NULL;
 	}
 
-	layer->scene_layer_surface = wlr_scene_layer_surface_v1_create(server->scene_layers[chosen_layer], surface);
+	layer->scene_layer_surface = wlr_scene_layer_surface_v1_create(server.scene_layers[chosen_layer], surface);
 
 	magpie_surface_t* magpie_surface = new_magpie_surface_from_layer(layer);
 	layer->scene_layer_surface->tree->node.data = new_magpie_surface_from_layer(layer);

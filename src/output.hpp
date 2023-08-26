@@ -9,7 +9,7 @@
 #include "wlr-wrap-end.hpp"
 
 struct magpie_output {
-	magpie_server_t* server;
+	Server* server;
 
 	struct wlr_box full_area;
 	struct wlr_box usable_area;
@@ -20,7 +20,7 @@ struct magpie_output {
 	wl_listener destroy;
 };
 
-magpie_output_t* new_magpie_output(magpie_server_t* server, struct wlr_output* wlr_output);
+magpie_output_t* new_magpie_output(Server& server, struct wlr_output* wlr_output);
 
 void magpie_output_update_areas(magpie_output_t* output);
 

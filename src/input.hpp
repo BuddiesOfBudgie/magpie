@@ -6,7 +6,7 @@
 #include <wayland-server-core.h>
 
 struct magpie_keyboard {
-	magpie_server_t* server;
+	Server* server;
 
 	wl_list link;
 	struct wlr_keyboard* wlr_keyboard;
@@ -26,6 +26,6 @@ void cursor_button_notify(wl_listener* listener, void* data);
 void cursor_axis_notify(wl_listener* listener, void* data);
 void cursor_frame_notify(wl_listener* listener, void* data);
 void seat_request_set_selection(wl_listener* listener, void* data);
-void reset_cursor_mode(magpie_server_t* server);
+void reset_cursor_mode(Server& server);
 
 #endif

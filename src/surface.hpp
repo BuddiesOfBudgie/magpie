@@ -6,7 +6,7 @@
 typedef enum { MAGPIE_SURFACE_TYPE_VIEW, MAGPIE_SURFACE_TYPE_LAYER, MAGPIE_SURFACE_TYPE_POPUP } magpie_surface_type_t;
 
 struct magpie_surface {
-	magpie_server_t* server;
+	Server* server;
 
 	magpie_surface_type_t type;
 	struct wlr_scene_tree* scene_tree;

@@ -7,7 +7,7 @@
 #include <wayland-server-core.h>
 
 struct magpie_popup {
-	magpie_server_t* server;
+	Server* server;
 
 	magpie_surface_t* parent;
 

@@ -21,7 +21,8 @@ static void xdg_toplevel_map_notify(wl_listener* listener, void* data) {
 	/* Called when the surface is mapped, or ready to display on-screen. */
 	magpie_xdg_view_t* xdg_view = wl_container_of(listener, xdg_view, map);
 	wl_list_insert(&xdg_view->base->server->views, &xdg_view->base->link);
-	focus_view(xdg_view->base, xdg_view->xdg_toplevel->base->surface);
+
+	xdg_view->base->server->focus_view(xdg_view->base, xdg_view->xdg_toplevel->base->surface);
 }
 
 static void xdg_toplevel_unmap_notify(wl_listener* listener, void* data) {
@@ -32,7 +33,7 @@ static void xdg_toplevel_unmap_notify(wl_listener* listener, void* data) {
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
 	if (xdg_view->base == xdg_view->base->server->grabbed_view) {
-		reset_cursor_mode(xdg_view->base->server);
+		reset_cursor_mode(*xdg_view->base->server);
 	}
 
 	wl_list_remove(&xdg_view->base->link);
@@ -57,7 +58,7 @@ static void xdg_toplevel_destroy_notify(wl_listener* listener, void* data) {
 
 static void begin_interactive(magpie_xdg_view_t* xdg_view, magpie_cursor_mode_t mode, uint32_t edges) {
 	magpie_view_t* view = xdg_view->base;
-	magpie_server_t* server = view->server;
+	Server* server = view->server;
 	struct wlr_surface* focused_surface = server->seat->pointer_state.focused_surface;
 
 	if (xdg_view->xdg_toplevel->base->surface != wlr_surface_get_root_surface(focused_surface)) {
@@ -121,7 +122,7 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 	 * client-side decorations. */
 	magpie_xdg_view_t* xdg_view = wl_container_of(listener, xdg_view, request_maximize);
 	magpie_view_t* view = xdg_view->base;
-	magpie_server_t* server = view->server;
+	Server* server = view->server;
 	struct wlr_xdg_toplevel* toplevel = xdg_view->xdg_toplevel;
 	struct wlr_surface* focused_surface = server->seat->pointer_state.focused_surface;
 	if (toplevel->base->surface != wlr_surface_get_root_surface(focused_surface)) {
@@ -196,10 +197,10 @@ static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* 
 	wlr_xdg_surface_schedule_configure(xdg_view->xdg_toplevel->base);
 }
 
-magpie_view_t* new_magpie_xdg_view(magpie_server_t* server, struct wlr_xdg_toplevel* toplevel) {
+magpie_view_t* new_magpie_xdg_view(Server& server, struct wlr_xdg_toplevel* toplevel) {
 	magpie_view_t* view = (magpie_view_t*) std::calloc(1, sizeof(magpie_xdg_view_t));
-	view->server = server;
-	view->scene_tree = wlr_scene_xdg_surface_create(&server->scene->tree, toplevel->base);
+	view->server = &server;
+	view->scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, toplevel->base);
 	view->scene_node = &view->scene_tree->node;
 	view->surface = toplevel->base->surface;
 

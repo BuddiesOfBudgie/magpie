@@ -6,7 +6,7 @@
 #include <wayland-server-core.h>
 
 struct magpie_layer {
-	magpie_server_t* server;
+	Server* server;
 
 	wl_list link;
 
@@ -36,6 +36,6 @@ struct magpie_layer_subsurface {
 	wl_listener commit;
 };
 
-magpie_layer_t* new_magpie_layer(magpie_server_t* server, struct wlr_layer_surface_v1* surface);
+magpie_layer_t* new_magpie_layer(Server& server, struct wlr_layer_surface_v1* surface);
 
 #endif

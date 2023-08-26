@@ -35,11 +35,11 @@ static void output_destroy_notify(wl_listener* listener, void* data) {
 	free(output);
 }
 
-magpie_output_t* new_magpie_output(magpie_server_t* server, struct wlr_output* wlr_output) {
+magpie_output_t* new_magpie_output(Server& server, struct wlr_output* wlr_output) {
 	magpie_output_t* output = (magpie_output_t*) std::calloc(1, sizeof(magpie_output_t));
 	wlr_output->data = output;
 	output->wlr_output = wlr_output;
-	output->server = server;
+	output->server = &server;
 
 	output->frame.notify = output_frame_notify;
 	wl_signal_add(&wlr_output->events.frame, &output->frame);

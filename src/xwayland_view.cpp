@@ -27,7 +27,7 @@ static void xwayland_surface_map_notify(wl_listener* listener, void* data) {
 	wlr_scene_node_set_position(view->scene_node, view->current.x, view->current.y);
 
 	wl_list_insert(&xwayland_view->base->server->views, &xwayland_view->base->link);
-	focus_view(xwayland_view->base, xwayland_view->xwayland_surface->surface);
+	xwayland_view->base->server->focus_view(xwayland_view->base, xwayland_view->xwayland_surface->surface);
 }
 
 static void xwayland_surface_unmap_notify(wl_listener* listener, void* data) {
@@ -35,15 +35,15 @@ static void xwayland_surface_unmap_notify(wl_listener* listener, void* data) {
 
 	/* Called when the surface is unmapped, and should no longer be shown. */
 	magpie_xwayland_view_t* xwayland_view = wl_container_of(listener, xwayland_view, unmap);
-	magpie_server_t* server = xwayland_view->base->server;
+	Server& server = *xwayland_view->base->server;
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
-	if (xwayland_view->base == server->grabbed_view) {
+	if (xwayland_view->base == server.grabbed_view) {
 		reset_cursor_mode(server);
 	}
 
-	if (server->seat->keyboard_state.focused_surface == xwayland_view->base->surface) {
-		server->seat->keyboard_state.focused_surface = NULL;
+	if (server.seat->keyboard_state.focused_surface == xwayland_view->base->surface) {
+		server.seat->keyboard_state.focused_surface = NULL;
 	}
 
 	wlr_scene_node_destroy(&xwayland_view->base->scene_tree->node);
@@ -93,7 +93,7 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, void* da
 
 static void begin_interactive(magpie_xwayland_view_t* xwayland_view, magpie_cursor_mode_t mode, uint32_t edges) {
 	magpie_view_t* view = xwayland_view->base;
-	magpie_server_t* server = view->server;
+	Server* server = view->server;
 	struct wlr_surface* focused_surface = server->seat->pointer_state.focused_surface;
 
 	if (xwayland_view->xwayland_surface->surface != wlr_surface_get_root_surface(focused_surface)) {
@@ -152,9 +152,9 @@ static void xwayland_surface_request_resize_notify(wl_listener* listener, void* 
 	begin_interactive(xwayland_view, MAGPIE_CURSOR_RESIZE, event->edges);
 }
 
-magpie_view_t* new_magpie_xwayland_view(magpie_server_t* server, struct wlr_xwayland_surface* xwayland_surface) {
+magpie_view_t* new_magpie_xwayland_view(Server& server, struct wlr_xwayland_surface* xwayland_surface) {
 	magpie_view_t* view = (magpie_view_t*) std::calloc(1, sizeof(magpie_xwayland_view_t));
-	view->server = server;
+	view->server = &server;
 
 	magpie_xwayland_view_t* xwayland_view = (magpie_xwayland_view_t*) std::calloc(1, sizeof(magpie_xwayland_view_t));
 	xwayland_view->base = view;
@@ -162,7 +162,7 @@ magpie_view_t* new_magpie_xwayland_view(magpie_server_t* server, struct wlr_xway
 
 	view->xwayland_view = xwayland_view;
 	view->type = MAGPIE_VIEW_TYPE_XWAYLAND;
-	view->scene_tree = wlr_scene_tree_create(&server->scene->tree);
+	view->scene_tree = wlr_scene_tree_create(&server.scene->tree);
 	view->scene_node = &view->scene_tree->node;
 
 	/* Listen to the various events it can emit */

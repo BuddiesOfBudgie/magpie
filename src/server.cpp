@@ -33,13 +33,13 @@
 #include <wlr/xwayland.h>
 #include "wlr-wrap-end.hpp"
 
-void focus_view(magpie_view_t* view, struct wlr_surface* surface) {
+void Server::focus_view(magpie_view_t* view, struct wlr_surface* surface) {
 	/* Note: this function only deals with keyboard focus. */
 	if (view == NULL) {
 		return;
 	}
 
-	magpie_server_t* server = view->server;
+	Server* server = view->server;
 	struct wlr_seat* seat = server->seat;
 	struct wlr_surface* prev_surface = seat->keyboard_state.focused_surface;
 	if (prev_surface == surface) {
@@ -84,12 +84,11 @@ void focus_view(magpie_view_t* view, struct wlr_surface* surface) {
 	}
 }
 
-magpie_surface_t* surface_at(
-	magpie_server_t* server, double lx, double ly, struct wlr_surface** surface, double* sx, double* sy) {
+magpie_surface_t* Server::surface_at(double lx, double ly, struct wlr_surface** surface, double* sx, double* sy) {
 	/* This returns the topmost node in the scene at the given layout coords.
 	 * we only care about surface nodes as we are specifically looking for a
 	 * surface in the surface tree of a magpie_view. */
-	struct wlr_scene_node* node = wlr_scene_node_at(&server->scene->tree.node, lx, ly, sx, sy);
+	struct wlr_scene_node* node = wlr_scene_node_at(&scene->tree.node, lx, ly, sx, sy);
 	if (node == NULL || node->type != WLR_SCENE_NODE_BUFFER) {
 		return NULL;
 	}
@@ -112,12 +111,14 @@ magpie_surface_t* surface_at(
 static void new_output_notify(wl_listener* listener, void* data) {
 	/* This event is raised by the backend when a new output (aka a display or
 	 * monitor) becomes available. */
-	magpie_server_t* server = wl_container_of(listener, server, new_output);
+	server_listener_container* container = wl_container_of(listener, container, backend_new_output);
+	Server& server = *container->parent;
+
 	struct wlr_output* wlr_output = static_cast<struct wlr_output*>(data);
 
 	/* Configures the output created by the backend to use our allocator
 	 * and our renderer. Must be done once, before commiting the output */
-	wlr_output_init_render(wlr_output, server->allocator, server->renderer);
+	wlr_output_init_render(wlr_output, server.allocator, server.renderer);
 
 	/* Some backends don't have modes. DRM+KMS does, and we need to set a mode
 	 * before we can use the output. The mode is a tuple of (width, height,
@@ -135,7 +136,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 
 	/* Allocates and configures our state for this output */
 	magpie_output_t* output = new_magpie_output(server, wlr_output);
-	wl_list_insert(&server->outputs, &output->link);
+	wl_list_insert(&server.outputs, &output->link);
 
 	/* Adds this to the output layout. The add_auto function arranges outputs
 	 * from left-to-right in the order they appear. A more sophisticated
@@ -146,7 +147,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	 * display, which Wayland clients can see to find out information about the
 	 * output (such as DPI, scale factor, manufacturer, etc).
 	 */
-	wlr_output_layout_add_auto(server->output_layout, wlr_output);
+	wlr_output_layout_add_auto(server.output_layout, wlr_output);
 
 	magpie_output_update_areas(output);
 }
@@ -154,7 +155,9 @@ static void new_output_notify(wl_listener* listener, void* data) {
 static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 	/* This event is raised when wlr_xdg_shell receives a new xdg surface from a
 	 * client, either a toplevel (application window) or popup. */
-	magpie_server_t* server = wl_container_of(listener, server, new_xdg_surface);
+	server_listener_container* container = wl_container_of(listener, container, xdg_shell_new_xdg_surface);
+	Server& server = *container->parent;
+
 	struct wlr_xdg_surface* xdg_surface = static_cast<struct wlr_xdg_surface*>(data);
 
 	if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
@@ -166,7 +169,9 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 }
 
 static void new_layer_surface_notify(wl_listener* listener, void* data) {
-	magpie_server_t* server = wl_container_of(listener, server, new_layer_surface);
+	server_listener_container* container = wl_container_of(listener, container, layer_shell_new_layer_surface);
+	Server& server = *container->parent;
+
 	struct wlr_layer_surface_v1* layer_surface = static_cast<struct wlr_layer_surface_v1*>(data);
 
 	/* Allocate a magpie_view_t for this surface */
@@ -174,7 +179,9 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 }
 
 static void request_activation_notify(wl_listener* listener, void* data) {
-	magpie_server_t* server = wl_container_of(listener, server, request_activation);
+	server_listener_container* container = wl_container_of(listener, container, activation_request_activation);
+	Server& server = *container->parent;
+
 	struct wlr_xdg_activation_v1_request_activate_event* event =
 		static_cast<struct wlr_xdg_activation_v1_request_activate_event*>(data);
 
@@ -188,38 +195,38 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 		return;
 	}
 
-	focus_view(surface->view, xdg_surface->surface);
+	server.focus_view(surface->view, xdg_surface->surface);
 }
 
-magpie_server_t* new_magpie_server(void) {
-	magpie_server_t* server = (magpie_server_t*) std::calloc(1, sizeof(magpie_server_t));
+Server::Server() {
+	listeners.parent = this;
 
 	/* The Wayland display is managed by libwayland. It handles accepting
 	 * clients from the Unix socket, manging Wayland globals, and so on. */
-	server->display = wl_display_create();
-	assert(server->display);
+	display = wl_display_create();
+	assert(display);
 
 	/* The backend is a wlroots feature which abstracts the underlying input and
 	 * output hardware. The autocreate option will choose the most suitable
 	 * backend based on the current environment, such as opening an X11 window
 	 * if an X11 server is running. */
-	server->backend = wlr_backend_autocreate(server->display);
-	assert(server->backend);
+	backend = wlr_backend_autocreate(display);
+	assert(backend);
 
 	/* Autocreates a renderer, either Pixman, GLES2 or Vulkan for us. The user
 	 * can also specify a renderer using the WLR_RENDERER env var.
 	 * The renderer is responsible for defining the various pixel formats it
 	 * supports for shared memory, this configures that for clients. */
-	server->renderer = wlr_renderer_autocreate(server->backend);
-	assert(server->renderer);
-	wlr_renderer_init_wl_display(server->renderer, server->display);
+	renderer = wlr_renderer_autocreate(backend);
+	assert(renderer);
+	wlr_renderer_init_wl_display(renderer, display);
 
 	/* Autocreates an allocator for us.
 	 * The allocator is the bridge between the renderer and the backend. It
 	 * handles the buffer creation, allowing wlroots to render onto the
 	 * screen */
-	server->allocator = wlr_allocator_autocreate(server->backend, server->renderer);
-	assert(server->allocator);
+	allocator = wlr_allocator_autocreate(backend, renderer);
+	assert(allocator);
 
 	/* This creates some hands-off wlroots interfaces. The compositor is
 	 * necessary for clients to allocate surfaces, the subcompositor allows to
@@ -228,22 +235,22 @@ magpie_server_t* new_magpie_server(void) {
 	 * to dig your fingers in and play with their behavior if you want. Note that
 	 * the clients cannot set the selection directly without compositor approval,
 	 * see the handling of the request_set_selection event below.*/
-	server->compositor = wlr_compositor_create(server->display, server->renderer);
-	wlr_subcompositor_create(server->display);
-	wlr_data_device_manager_create(server->display);
+	compositor = wlr_compositor_create(display, renderer);
+	wlr_subcompositor_create(display);
+	wlr_data_device_manager_create(display);
 
 	/* Creates an output layout, which a wlroots utility for working with an
 	 * arrangement of screens in a physical layout. */
-	server->output_layout = wlr_output_layout_create();
-	assert(server->output_layout);
+	output_layout = wlr_output_layout_create();
+	assert(output_layout);
 
-	server->output_manager = wlr_xdg_output_manager_v1_create(server->display, server->output_layout);
+	output_manager = wlr_xdg_output_manager_v1_create(display, output_layout);
 
 	/* Configure a listener to be notified when new outputs are available on the
 	 * backend. */
-	wl_list_init(&server->outputs);
-	server->new_output.notify = new_output_notify;
-	wl_signal_add(&server->backend->events.new_output, &server->new_output);
+	wl_list_init(&outputs);
+	listeners.backend_new_output.notify = new_output_notify;
+	wl_signal_add(&backend->events.new_output, &listeners.backend_new_output);
 
 	/* Create a scene graph. This is a wlroots abstraction that handles all
 	 * rendering and damage tracking. All the compositor author needs to do
@@ -251,14 +258,14 @@ magpie_server_t* new_magpie_server(void) {
 	 * positions and then call wlr_scene_output_commit() to render a frame if
 	 * necessary.
 	 */
-	server->scene = wlr_scene_create();
-	assert(server->scene);
+	scene = wlr_scene_create();
+	assert(scene);
 	for (int idx = 0; idx < MAGPIE_SCENE_LAYER_MAX; idx++) {
-		server->scene_layers[idx] = wlr_scene_tree_create(&server->scene->tree);
-		wlr_scene_node_raise_to_top(&server->scene_layers[idx]->node);
+		scene_layers[idx] = wlr_scene_tree_create(&scene->tree);
+		wlr_scene_node_raise_to_top(&scene_layers[idx]->node);
 	}
 
-	wlr_scene_attach_output_layout(server->scene, server->output_layout);
+	wlr_scene_attach_output_layout(scene, output_layout);
 
 	/* Set up xdg-shell version 3. The xdg-shell is a Wayland protocol which is
 	 * used for application windows. For more detail on shells, refer to my
@@ -266,35 +273,35 @@ magpie_server_t* new_magpie_server(void) {
 	 *
 	 * https://drewdevault.com/2018/07/29/Wayland-shells.html
 	 */
-	wl_list_init(&server->views);
-	server->xdg_shell = wlr_xdg_shell_create(server->display, 5);
-	server->new_xdg_surface.notify = new_xdg_surface_notify;
-	wl_signal_add(&server->xdg_shell->events.new_surface, &server->new_xdg_surface);
+	wl_list_init(&views);
+	xdg_shell = wlr_xdg_shell_create(display, 5);
+	listeners.xdg_shell_new_xdg_surface.notify = new_xdg_surface_notify;
+	wl_signal_add(&xdg_shell->events.new_surface, &listeners.xdg_shell_new_xdg_surface);
 
-	wl_list_init(&server->layers);
-	server->layer_shell = wlr_layer_shell_v1_create(server->display);
-	server->new_layer_surface.notify = new_layer_surface_notify;
-	wl_signal_add(&server->layer_shell->events.new_surface, &server->new_layer_surface);
+	wl_list_init(&layers);
+	layer_shell = wlr_layer_shell_v1_create(display);
+	listeners.layer_shell_new_layer_surface.notify = new_layer_surface_notify;
+	wl_signal_add(&layer_shell->events.new_surface, &listeners.layer_shell_new_layer_surface);
 
-	server->xdg_activation = wlr_xdg_activation_v1_create(server->display);
-	server->request_activation.notify = request_activation_notify;
-	wl_signal_add(&server->xdg_activation->events.request_activate, &server->request_activation);
+	xdg_activation = wlr_xdg_activation_v1_create(display);
+	listeners.activation_request_activation.notify = request_activation_notify;
+	wl_signal_add(&xdg_activation->events.request_activate, &listeners.activation_request_activation);
 
 	/*
 	 * Creates a cursor, which is a wlroots utility for tracking the cursor
 	 * image shown on screen.
 	 */
-	server->cursor = wlr_cursor_create();
-	wlr_cursor_attach_output_layout(server->cursor, server->output_layout);
+	cursor = wlr_cursor_create();
+	wlr_cursor_attach_output_layout(cursor, output_layout);
 
 	/* Creates an xcursor manager, another wlroots utility which loads up
 	 * Xcursor themes to source cursor images from and makes sure that cursor
 	 * images are available at all scale factors on the screen (necessary for
 	 * HiDPI support). We add a cursor theme at scale factor 1 to begin with. */
-	server->cursor_mgr = wlr_xcursor_manager_create(NULL, 24);
-	wlr_xcursor_manager_load(server->cursor_mgr, 1);
+	cursor_mgr = wlr_xcursor_manager_create(NULL, 24);
+	wlr_xcursor_manager_load(cursor_mgr, 1);
 
-	server->xwayland = new XWayland(server);
+	xwayland = new XWayland(*this);
 
 	/*
 	 * wlr_cursor *only* displays an image on screen. It does not move around
@@ -308,17 +315,17 @@ magpie_server_t* new_magpie_server(void) {
 	 *
 	 * And more comments are sprinkled throughout the notify functions above.
 	 */
-	server->cursor_mode = MAGPIE_CURSOR_PASSTHROUGH;
-	server->cursor_motion.notify = cursor_motion_notify;
-	wl_signal_add(&server->cursor->events.motion, &server->cursor_motion);
-	server->cursor_motion_absolute.notify = cursor_motion_absolute_notify;
-	wl_signal_add(&server->cursor->events.motion_absolute, &server->cursor_motion_absolute);
-	server->cursor_button.notify = cursor_button_notify;
-	wl_signal_add(&server->cursor->events.button, &server->cursor_button);
-	server->cursor_axis.notify = cursor_axis_notify;
-	wl_signal_add(&server->cursor->events.axis, &server->cursor_axis);
-	server->cursor_frame.notify = cursor_frame_notify;
-	wl_signal_add(&server->cursor->events.frame, &server->cursor_frame);
+	cursor_mode = MAGPIE_CURSOR_PASSTHROUGH;
+	listeners.cursor_motion.notify = cursor_motion_notify;
+	wl_signal_add(&cursor->events.motion, &listeners.cursor_motion);
+	listeners.cursor_motion_absolute.notify = cursor_motion_absolute_notify;
+	wl_signal_add(&cursor->events.motion_absolute, &listeners.cursor_motion_absolute);
+	listeners.cursor_button.notify = cursor_button_notify;
+	wl_signal_add(&cursor->events.button, &listeners.cursor_button);
+	listeners.cursor_axis.notify = cursor_axis_notify;
+	wl_signal_add(&cursor->events.axis, &listeners.cursor_axis);
+	listeners.cursor_frame.notify = cursor_frame_notify;
+	wl_signal_add(&cursor->events.frame, &listeners.cursor_frame);
 
 	/*
 	 * Configures a seat, which is a single "seat" at which a user sits and
@@ -326,20 +333,18 @@ magpie_server_t* new_magpie_server(void) {
 	 * pointer, touch, and drawing tablet device. We also rig up a listener to
 	 * let us know when new input devices are available on the backend.
 	 */
-	wl_list_init(&server->keyboards);
-	server->new_input.notify = new_input_notify;
-	wl_signal_add(&server->backend->events.new_input, &server->new_input);
-	server->seat = wlr_seat_create(server->display, "seat0");
-	server->request_cursor.notify = request_cursor_notify;
-	wl_signal_add(&server->seat->events.request_set_cursor, &server->request_cursor);
-	server->request_set_selection.notify = seat_request_set_selection;
-	wl_signal_add(&server->seat->events.request_set_selection, &server->request_set_selection);
+	wl_list_init(&keyboards);
+	listeners.seat_new_input.notify = new_input_notify;
+	wl_signal_add(&backend->events.new_input, &listeners.seat_new_input);
+	seat = wlr_seat_create(display, "seat0");
+	listeners.seat_request_cursor.notify = request_cursor_notify;
+	wl_signal_add(&seat->events.request_set_cursor, &listeners.seat_request_cursor);
+	listeners.seat_request_set_selection.notify = seat_request_set_selection;
+	wl_signal_add(&seat->events.request_set_selection, &listeners.seat_request_set_selection);
 
-	wlr_viewporter_create(server->display);
-	wlr_single_pixel_buffer_manager_v1_create(server->display);
+	wlr_viewporter_create(display);
+	wlr_single_pixel_buffer_manager_v1_create(display);
 
-	server->idle_notifier = wlr_idle_notifier_v1_create(server->display);
-	server->idle_inhibit_manager = wlr_idle_inhibit_v1_create(server->display);
-
-	return server;
+	idle_notifier = wlr_idle_notifier_v1_create(display);
+	idle_inhibit_manager = wlr_idle_inhibit_v1_create(display);
 }
