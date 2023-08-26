@@ -27,8 +27,6 @@ class Output {
 	Output(Server& server, struct wlr_output* wlr_output);
 
 	void update_areas();
-
-	auto operator<=>(const Output&) const = default;
 };
 
 #endif
