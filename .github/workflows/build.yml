@@ -1,0 +1,14 @@
+name: Build
+on: [push]
+jobs:
+  alpine:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v2
+    - uses: jirutka/setup-alpine@v1
+      with:
+        packages: build-base meson wlroots-dev wayland-dev wayland-protocols libdecor
+    - run: |
+        meson setup build
+        meson compile -C build
+      shell: alpine.sh {0}
