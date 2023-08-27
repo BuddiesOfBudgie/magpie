@@ -1,6 +1,5 @@
 magpie_sources = [
     'main.cpp',
-    'input.cpp',
     'layer.cpp',
     'output.cpp',
     'popup.cpp',
@@ -9,6 +8,9 @@ magpie_sources = [
     'xdg_view.cpp',
     'xwayland.cpp',
     'xwayland_view.cpp',
+    'input/cursor.cpp',
+    'input/keyboard.cpp',
+    'input/seat.cpp',
     xdg_shell_protocol,
     wlr_layer_shell_protocol,
 ]

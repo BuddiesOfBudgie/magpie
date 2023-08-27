@@ -4,10 +4,11 @@
 #include "server.hpp"
 #include "types.hpp"
 #include "view.hpp"
+#include "input/seat.hpp"
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/util/log.h>
-#include <wlr/xwayland.h>
+#include <wlr/xwayland/xwayland.h>
 #include "wlr-wrap-end.hpp"
 
 static const char* atom_map[ATOM_LAST] = {
@@ -30,7 +31,7 @@ static void ready_notify(wl_listener* listener, void* data) {
 	xwayland_listener_container* container = wl_container_of(listener, container, ready);
 	XWayland& xwayland = *container->parent;
 
-	wlr_xwayland_set_seat(xwayland.wlr_xwayland, xwayland.server.seat);
+	wlr_xwayland_set_seat(xwayland.wlr_xwayland, xwayland.server.seat->wlr_seat);
 
 	xcb_connection_t* xcb_conn = xcb_connect(NULL, NULL);
 	int err = xcb_connection_has_error(xcb_conn);

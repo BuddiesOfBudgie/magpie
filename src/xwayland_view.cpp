@@ -1,6 +1,8 @@
 #include "server.hpp"
 #include "types.hpp"
 #include "view.hpp"
+#include "input/cursor.hpp"
+#include "input/seat.hpp"
 
 #include <cstdlib>
 #include <wayland-server-core.h>
@@ -36,14 +38,15 @@ static void xwayland_surface_unmap_notify(wl_listener* listener, void* data) {
 	/* Called when the surface is unmapped, and should no longer be shown. */
 	magpie_xwayland_view_t* xwayland_view = wl_container_of(listener, xwayland_view, unmap);
 	Server& server = *xwayland_view->base->server;
+	Cursor& cursor = *server.seat->cursor;
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
 	if (xwayland_view->base == server.grabbed_view) {
-		reset_cursor_mode(server);
+		cursor.reset_mode();
 	}
 
-	if (server.seat->keyboard_state.focused_surface == xwayland_view->base->surface) {
-		server.seat->keyboard_state.focused_surface = NULL;
+	if (server.seat->wlr_seat->keyboard_state.focused_surface == xwayland_view->base->surface) {
+		server.seat->wlr_seat->keyboard_state.focused_surface = NULL;
 	}
 
 	wlr_scene_node_destroy(&xwayland_view->base->scene_tree->node);
@@ -91,22 +94,23 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, void* da
 	}
 }
 
-static void begin_interactive(magpie_xwayland_view_t* xwayland_view, magpie_cursor_mode_t mode, uint32_t edges) {
+static void begin_interactive(magpie_xwayland_view_t* xwayland_view, CursorMode mode, uint32_t edges) {
 	magpie_view_t* view = xwayland_view->base;
-	Server* server = view->server;
-	struct wlr_surface* focused_surface = server->seat->pointer_state.focused_surface;
+	Server& server = *view->server;
+	Cursor& cursor = *server.seat->cursor;
+	struct wlr_surface* focused_surface = server.seat->wlr_seat->pointer_state.focused_surface;
 
 	if (xwayland_view->xwayland_surface->surface != wlr_surface_get_root_surface(focused_surface)) {
 		/* Deny move/resize requests from unfocused clients. */
 		return;
 	}
 
-	server->grabbed_view = view;
-	server->cursor_mode = mode;
+	server.grabbed_view = view;
+	cursor.mode = mode;
 
 	if (mode == MAGPIE_CURSOR_MOVE) {
-		server->grab_x = server->cursor->x - view->current.x;
-		server->grab_y = server->cursor->y - view->current.y;
+		server.grab_x = cursor.wlr_cursor->x - view->current.x;
+		server.grab_y = cursor.wlr_cursor->y - view->current.y;
 	} else {
 		struct wlr_box geo_box;
 		geo_box.x = xwayland_view->xwayland_surface->x;
@@ -116,14 +120,14 @@ static void begin_interactive(magpie_xwayland_view_t* xwayland_view, magpie_curs
 
 		double border_x = (view->current.x + geo_box.x) + ((edges & WLR_EDGE_RIGHT) ? geo_box.width : 0);
 		double border_y = (view->current.y + geo_box.y) + ((edges & WLR_EDGE_BOTTOM) ? geo_box.height : 0);
-		server->grab_x = server->cursor->x - border_x;
-		server->grab_y = server->cursor->y - border_y;
+		server.grab_x = cursor.wlr_cursor->x - border_x;
+		server.grab_y = cursor.wlr_cursor->y - border_y;
 
-		server->grab_geobox = geo_box;
-		server->grab_geobox.x += view->current.x;
-		server->grab_geobox.y += view->current.y;
+		server.grab_geobox = geo_box;
+		server.grab_geobox.x += view->current.x;
+		server.grab_geobox.y += view->current.y;
 
-		server->resize_edges = edges;
+		server.resize_edges = edges;
 	}
 }
 

@@ -1,5 +1,4 @@
 #include "server.hpp"
-#include "input.hpp"
 #include "layer.hpp"
 #include "output.hpp"
 #include "popup.hpp"
@@ -7,6 +6,7 @@
 #include "types.hpp"
 #include "view.hpp"
 #include "xwayland.hpp"
+#include "input/seat.hpp"
 
 #include <cassert>
 #include <cstdlib>
@@ -40,7 +40,7 @@ void Server::focus_view(magpie_view_t* view, struct wlr_surface* surface) {
 	}
 
 	Server* server = view->server;
-	struct wlr_seat* seat = server->seat;
+	struct wlr_seat* seat = server->seat->wlr_seat;
 	struct wlr_surface* prev_surface = seat->keyboard_state.focused_surface;
 	if (prev_surface == surface) {
 		/* Don't re-focus an already focused surface. */
@@ -106,6 +106,14 @@ magpie_surface_t* Server::surface_at(double lx, double ly, struct wlr_surface** 
 		tree = tree->node.parent;
 	}
 	return static_cast<magpie_surface_t*>(tree->node.data);
+}
+
+void new_input_notify(wl_listener* listener, void* data) {
+	server_listener_container* container = wl_container_of(listener, container, backend_new_input);
+	Server& server = *container->parent;
+
+	struct wlr_input_device* device = static_cast<struct wlr_input_device*>(data);
+	server.seat->new_input_device(device);
 }
 
 static void new_output_notify(wl_listener* listener, void* data) {
@@ -246,6 +254,11 @@ Server::Server() {
 
 	output_manager = wlr_xdg_output_manager_v1_create(display, output_layout);
 
+	seat = new Seat(*this);
+
+	listeners.backend_new_input.notify = new_input_notify;
+	wl_signal_add(&backend->events.new_input, &listeners.backend_new_input);
+
 	/* Configure a listener to be notified when new outputs are available on the
 	 * backend. */
 	listeners.backend_new_output.notify = new_output_notify;
@@ -286,59 +299,7 @@ Server::Server() {
 	listeners.activation_request_activation.notify = request_activation_notify;
 	wl_signal_add(&xdg_activation->events.request_activate, &listeners.activation_request_activation);
 
-	/*
-	 * Creates a cursor, which is a wlroots utility for tracking the cursor
-	 * image shown on screen.
-	 */
-	cursor = wlr_cursor_create();
-	wlr_cursor_attach_output_layout(cursor, output_layout);
-
-	/* Creates an xcursor manager, another wlroots utility which loads up
-	 * Xcursor themes to source cursor images from and makes sure that cursor
-	 * images are available at all scale factors on the screen (necessary for
-	 * HiDPI support). We add a cursor theme at scale factor 1 to begin with. */
-	cursor_mgr = wlr_xcursor_manager_create(NULL, 24);
-	wlr_xcursor_manager_load(cursor_mgr, 1);
-
 	xwayland = new XWayland(*this);
-
-	/*
-	 * wlr_cursor *only* displays an image on screen. It does not move around
-	 * when the pointer moves. However, we can attach input devices to it, and
-	 * it will generate aggregate events for all of them. In these events, we
-	 * can choose how we want to process them, forwarding them to clients and
-	 * moving the cursor around. More detail on this process is described in my
-	 * input handling blog post:
-	 *
-	 * https://drewdevault.com/2018/07/17/Input-handling-in-wlroots.html
-	 *
-	 * And more comments are sprinkled throughout the notify functions above.
-	 */
-	cursor_mode = MAGPIE_CURSOR_PASSTHROUGH;
-	listeners.cursor_motion.notify = cursor_motion_notify;
-	wl_signal_add(&cursor->events.motion, &listeners.cursor_motion);
-	listeners.cursor_motion_absolute.notify = cursor_motion_absolute_notify;
-	wl_signal_add(&cursor->events.motion_absolute, &listeners.cursor_motion_absolute);
-	listeners.cursor_button.notify = cursor_button_notify;
-	wl_signal_add(&cursor->events.button, &listeners.cursor_button);
-	listeners.cursor_axis.notify = cursor_axis_notify;
-	wl_signal_add(&cursor->events.axis, &listeners.cursor_axis);
-	listeners.cursor_frame.notify = cursor_frame_notify;
-	wl_signal_add(&cursor->events.frame, &listeners.cursor_frame);
-
-	/*
-	 * Configures a seat, which is a single "seat" at which a user sits and
-	 * operates the computer. This conceptually includes up to one keyboard,
-	 * pointer, touch, and drawing tablet device. We also rig up a listener to
-	 * let us know when new input devices are available on the backend.
-	 */
-	listeners.seat_new_input.notify = new_input_notify;
-	wl_signal_add(&backend->events.new_input, &listeners.seat_new_input);
-	seat = wlr_seat_create(display, "seat0");
-	listeners.seat_request_cursor.notify = request_cursor_notify;
-	wl_signal_add(&seat->events.request_set_cursor, &listeners.seat_request_cursor);
-	listeners.seat_request_set_selection.notify = seat_request_set_selection;
-	wl_signal_add(&seat->events.request_set_selection, &listeners.seat_request_set_selection);
 
 	wlr_viewporter_create(display);
 	wlr_single_pixel_buffer_manager_v1_create(display);

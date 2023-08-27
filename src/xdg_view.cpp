@@ -1,9 +1,10 @@
-#include "input.hpp"
 #include "output.hpp"
 #include "server.hpp"
 #include "surface.hpp"
 #include "types.hpp"
 #include "view.hpp"
+#include "input/seat.hpp"
+#include "input/cursor.hpp"
 
 #include <cstdlib>
 
@@ -33,7 +34,7 @@ static void xdg_toplevel_unmap_notify(wl_listener* listener, void* data) {
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
 	if (xdg_view->base == xdg_view->base->server->grabbed_view) {
-		reset_cursor_mode(*xdg_view->base->server);
+		xdg_view->base->server->seat->cursor->reset_mode();
 	}
 
 	wl_list_remove(&xdg_view->base->link);
@@ -56,10 +57,11 @@ static void xdg_toplevel_destroy_notify(wl_listener* listener, void* data) {
 	free(xdg_view);
 }
 
-static void begin_interactive(magpie_xdg_view_t* xdg_view, magpie_cursor_mode_t mode, uint32_t edges) {
+static void begin_interactive(magpie_xdg_view_t* xdg_view, CursorMode mode, uint32_t edges) {
 	magpie_view_t* view = xdg_view->base;
 	Server* server = view->server;
-	struct wlr_surface* focused_surface = server->seat->pointer_state.focused_surface;
+	Cursor* cursor = server->seat->cursor;
+	struct wlr_surface* focused_surface = server->seat->wlr_seat->pointer_state.focused_surface;
 
 	if (xdg_view->xdg_toplevel->base->surface != wlr_surface_get_root_surface(focused_surface)) {
 		/* Deny move/resize requests from unfocused clients. */
@@ -67,19 +69,19 @@ static void begin_interactive(magpie_xdg_view_t* xdg_view, magpie_cursor_mode_t 
 	}
 
 	server->grabbed_view = view;
-	server->cursor_mode = mode;
+	server->seat->cursor->mode = mode;
 
 	if (mode == MAGPIE_CURSOR_MOVE) {
-		server->grab_x = server->cursor->x - view->current.x;
-		server->grab_y = server->cursor->y - view->current.y;
+		server->grab_x = cursor->wlr_cursor->x - view->current.x;
+		server->grab_y = cursor->wlr_cursor->y - view->current.y;
 	} else {
 		struct wlr_box geo_box;
 		wlr_xdg_surface_get_geometry(xdg_view->xdg_toplevel->base, &geo_box);
 
 		double border_x = (view->current.x + geo_box.x) + ((edges & WLR_EDGE_RIGHT) ? geo_box.width : 0);
 		double border_y = (view->current.y + geo_box.y) + ((edges & WLR_EDGE_BOTTOM) ? geo_box.height : 0);
-		server->grab_x = server->cursor->x - border_x;
-		server->grab_y = server->cursor->y - border_y;
+		server->grab_x = cursor->wlr_cursor->x - border_x;
+		server->grab_y = cursor->wlr_cursor->y - border_y;
 
 		server->grab_geobox = geo_box;
 		server->grab_geobox.x += view->current.x;
@@ -123,8 +125,10 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 	magpie_xdg_view_t* xdg_view = wl_container_of(listener, xdg_view, request_maximize);
 	magpie_view_t* view = xdg_view->base;
 	Server* server = view->server;
+	Cursor* cursor = server->seat->cursor;
+
 	struct wlr_xdg_toplevel* toplevel = xdg_view->xdg_toplevel;
-	struct wlr_surface* focused_surface = server->seat->pointer_state.focused_surface;
+	struct wlr_surface* focused_surface = server->seat->wlr_seat->pointer_state.focused_surface;
 	if (toplevel->base->surface != wlr_surface_get_root_surface(focused_surface)) {
 		/* Deny maximize requests from unfocused clients. */
 		return;
@@ -165,7 +169,7 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 		if (best_output == NULL) {
 			for (auto* output : server->outputs) {
 				if (wlr_output_layout_contains_point(
-						server->output_layout, output->wlr_output, server->cursor->x, server->cursor->y)) {
+						server->output_layout, output->wlr_output, cursor->wlr_cursor->x, cursor->wlr_cursor->y)) {
 					best_output = output;
 					break;
 				}
