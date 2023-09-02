@@ -183,7 +183,7 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 	struct wlr_layer_surface_v1* layer_surface = static_cast<struct wlr_layer_surface_v1*>(data);
 
 	/* Allocate a magpie_view_t for this surface */
-	new_magpie_layer(server, layer_surface);
+	server.layers.emplace(new Layer(server, layer_surface));
 }
 
 static void request_activation_notify(wl_listener* listener, void* data) {
@@ -272,7 +272,7 @@ Server::Server() {
 	 */
 	scene = wlr_scene_create();
 	assert(scene);
-	for (int idx = 0; idx < MAGPIE_SCENE_LAYER_MAX; idx++) {
+	for (int idx = 0; idx <= MAGPIE_SCENE_LAYER_LOCK; idx++) {
 		scene_layers[idx] = wlr_scene_tree_create(&scene->tree);
 		wlr_scene_node_raise_to_top(&scene_layers[idx]->node);
 	}
@@ -290,7 +290,6 @@ Server::Server() {
 	listeners.xdg_shell_new_xdg_surface.notify = new_xdg_surface_notify;
 	wl_signal_add(&xdg_shell->events.new_surface, &listeners.xdg_shell_new_xdg_surface);
 
-	wl_list_init(&layers);
 	layer_shell = wlr_layer_shell_v1_create(display);
 	listeners.layer_shell_new_layer_surface.notify = new_layer_surface_notify;
 	wl_signal_add(&layer_shell->events.new_surface, &listeners.layer_shell_new_layer_surface);

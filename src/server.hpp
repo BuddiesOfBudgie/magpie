@@ -19,8 +19,7 @@ typedef enum {
 	MAGPIE_SCENE_LAYER_NORMAL,
 	MAGPIE_SCENE_LAYER_TOP,
 	MAGPIE_SCENE_LAYER_OVERLAY,
-	MAGPIE_SCENE_LAYER_LOCK,
-	MAGPIE_SCENE_LAYER_MAX
+	MAGPIE_SCENE_LAYER_LOCK
 } magpie_scene_layer_t;
 
 struct server_listener_container {
@@ -46,7 +45,7 @@ class Server {
 	XWayland* xwayland;
 
 	struct wlr_scene* scene;
-	struct wlr_scene_tree* scene_layers[MAGPIE_SCENE_LAYER_MAX];
+	struct wlr_scene_tree* scene_layers[MAGPIE_SCENE_LAYER_LOCK + 1];
 
 	struct wlr_xdg_shell* xdg_shell;
 
@@ -55,7 +54,7 @@ class Server {
 	struct wlr_xdg_activation_v1* xdg_activation;
 
 	struct wlr_layer_shell_v1* layer_shell;
-	wl_list layers;
+	std::set<Layer*> layers;
 
 	Seat* seat;
 

@@ -19,12 +19,12 @@ magpie_surface_t* new_magpie_surface_from_view(magpie_view_t* view) {
 	return surface;
 }
 
-magpie_surface_t* new_magpie_surface_from_layer(magpie_layer_t* layer) {
+magpie_surface_t* new_magpie_surface_from_layer(Layer& layer) {
 	magpie_surface_t* surface = (magpie_surface_t*) std::calloc(1, sizeof(magpie_surface_t));
 	surface->type = MAGPIE_SURFACE_TYPE_LAYER;
-	surface->server = layer->server;
-	surface->layer = layer;
-	surface->scene_tree = layer->scene_layer_surface->tree;
+	surface->server = &layer.server;
+	surface->layer = &layer;
+	surface->scene_tree = layer.scene_layer_surface->tree;
 	return surface;
 }
 

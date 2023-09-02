@@ -3,17 +3,11 @@
 
 #include "types.hpp"
 
+#include <set>
 #include <wayland-server-core.h>
 
-struct magpie_layer {
-	Server* server;
-
-	wl_list link;
-
-	Output* output;
-	struct wlr_layer_surface_v1* layer_surface;
-	struct wlr_scene_layer_surface_v1* scene_layer_surface;
-
+struct layer_listener_container {
+	Layer* parent;
 	wl_listener map;
 	wl_listener unmap;
 	wl_listener destroy;
@@ -21,21 +15,41 @@ struct magpie_layer {
 	wl_listener new_popup;
 	wl_listener new_subsurface;
 	wl_listener output_destroy;
-
-	wl_list subsurfaces;
 };
 
-struct magpie_layer_subsurface {
-	magpie_layer_t* parent_layer;
-	struct wlr_subsurface* wlr_subsurface;
-	wl_list link;
+class Layer {
+  private:
+	layer_listener_container listeners;
 
+  public:
+	Server& server;
+	Output* output;
+
+	struct wlr_layer_surface_v1* layer_surface;
+	struct wlr_scene_layer_surface_v1* scene_layer_surface;
+
+	std::set<LayerSubsurface*> subsurfaces;
+
+	Layer(Server& server, struct wlr_layer_surface_v1* surface);
+};
+
+struct layer_subsurface_listener_container {
+	LayerSubsurface* parent;
 	wl_listener map;
 	wl_listener unmap;
 	wl_listener destroy;
 	wl_listener commit;
 };
 
-magpie_layer_t* new_magpie_layer(Server& server, struct wlr_layer_surface_v1* surface);
+class LayerSubsurface {
+  private:
+	layer_subsurface_listener_container listeners;
+
+  public:
+	Layer& parent_layer;
+	struct wlr_subsurface* wlr_subsurface;
+
+	LayerSubsurface(Layer& parent_layer, struct wlr_subsurface* wlr_subsurface);
+};
 
 #endif
