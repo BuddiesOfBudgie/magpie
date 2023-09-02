@@ -68,7 +68,7 @@ static void new_surface_notify(wl_listener* listener, void* data) {
 
 	struct wlr_xwayland_surface* xwayland_surface = static_cast<struct wlr_xwayland_surface*>(data);
 
-	new_magpie_xwayland_view(xwayland.server, xwayland_surface);
+	new XWaylandView(xwayland.server, xwayland_surface);
 }
 
 XWayland::XWayland(Server& server) : server(server) {

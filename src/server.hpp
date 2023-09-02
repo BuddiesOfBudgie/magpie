@@ -5,6 +5,7 @@
 #include "types.hpp"
 #include "xwayland.hpp"
 
+#include <list>
 #include <set>
 #include <vector>
 #include <wayland-server-core.h>
@@ -49,8 +50,6 @@ class Server {
 
 	struct wlr_xdg_shell* xdg_shell;
 
-	wl_list views;
-
 	struct wlr_xdg_activation_v1* xdg_activation;
 
 	struct wlr_layer_shell_v1* layer_shell;
@@ -58,7 +57,8 @@ class Server {
 
 	Seat* seat;
 
-	magpie_view_t* grabbed_view;
+	std::list<View*> views;
+	View* grabbed_view;
 	double grab_x, grab_y;
 	struct wlr_box grab_geobox;
 	uint32_t resize_edges;
@@ -73,8 +73,7 @@ class Server {
 	Server();
 
 	magpie_surface_t* surface_at(double lx, double ly, struct wlr_surface** surface, double* sx, double* sy);
-
-	void focus_view(magpie_view_t* view, struct wlr_surface* surface);
+	void focus_view(View& view, struct wlr_surface* surface);
 };
 
 #endif

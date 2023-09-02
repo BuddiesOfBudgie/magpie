@@ -6,6 +6,7 @@
 #include "input/seat.hpp"
 #include "input/cursor.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 
 #include "wlr-wrap-start.hpp"
@@ -20,75 +21,39 @@ static void xdg_toplevel_map_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is mapped, or ready to display on-screen. */
-	magpie_xdg_view_t* xdg_view = wl_container_of(listener, xdg_view, map);
-	wl_list_insert(&xdg_view->base->server->views, &xdg_view->base->link);
+	XdgView::listener_container* container = wl_container_of(listener, container, map);
+	XdgView& view = *container->parent;
 
-	xdg_view->base->server->focus_view(xdg_view->base, xdg_view->xdg_toplevel->base->surface);
+	view.server.views.push_back(&view);
+	view.server.focus_view(view, view.xdg_toplevel->base->surface);
 }
 
 static void xdg_toplevel_unmap_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is unmapped, and should no longer be shown. */
-	magpie_xdg_view_t* xdg_view = wl_container_of(listener, xdg_view, unmap);
+	XdgView::listener_container* container = wl_container_of(listener, container, unmap);
+	XdgView& view = *container->parent;
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
-	if (xdg_view->base == xdg_view->base->server->grabbed_view) {
-		xdg_view->base->server->seat->cursor->reset_mode();
+	if (&view == view.server.grabbed_view) {
+		view.server.seat->cursor->reset_mode();
 	}
 
-	wl_list_remove(&xdg_view->base->link);
+	view.server.views.remove(&view);
 }
 
 static void xdg_toplevel_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is destroyed and should never be shown again. */
-	magpie_xdg_view_t* xdg_view = wl_container_of(listener, xdg_view, destroy);
+	XdgView::listener_container* container = wl_container_of(listener, container, destroy);
+	XdgView& view = *container->parent;
 
-	wl_list_remove(&xdg_view->map.link);
-	wl_list_remove(&xdg_view->unmap.link);
-	wl_list_remove(&xdg_view->destroy.link);
-	wl_list_remove(&xdg_view->request_move.link);
-	wl_list_remove(&xdg_view->request_resize.link);
-	wl_list_remove(&xdg_view->request_maximize.link);
-	wl_list_remove(&xdg_view->request_fullscreen.link);
+	// just in case
+	view.server.views.remove(&view);
 
-	free(xdg_view);
-}
-
-static void begin_interactive(magpie_xdg_view_t* xdg_view, CursorMode mode, uint32_t edges) {
-	magpie_view_t* view = xdg_view->base;
-	Server* server = view->server;
-	Cursor* cursor = server->seat->cursor;
-	struct wlr_surface* focused_surface = server->seat->wlr_seat->pointer_state.focused_surface;
-
-	if (xdg_view->xdg_toplevel->base->surface != wlr_surface_get_root_surface(focused_surface)) {
-		/* Deny move/resize requests from unfocused clients. */
-		return;
-	}
-
-	server->grabbed_view = view;
-	server->seat->cursor->mode = mode;
-
-	if (mode == MAGPIE_CURSOR_MOVE) {
-		server->grab_x = cursor->wlr_cursor->x - view->current.x;
-		server->grab_y = cursor->wlr_cursor->y - view->current.y;
-	} else {
-		struct wlr_box geo_box;
-		wlr_xdg_surface_get_geometry(xdg_view->xdg_toplevel->base, &geo_box);
-
-		double border_x = (view->current.x + geo_box.x) + ((edges & WLR_EDGE_RIGHT) ? geo_box.width : 0);
-		double border_y = (view->current.y + geo_box.y) + ((edges & WLR_EDGE_BOTTOM) ? geo_box.height : 0);
-		server->grab_x = cursor->wlr_cursor->x - border_x;
-		server->grab_y = cursor->wlr_cursor->y - border_y;
-
-		server->grab_geobox = geo_box;
-		server->grab_geobox.x += view->current.x;
-		server->grab_geobox.y += view->current.y;
-
-		server->resize_edges = edges;
-	}
+	delete &view;
 }
 
 static void xdg_toplevel_request_move_notify(wl_listener* listener, void* data) {
@@ -99,9 +64,11 @@ static void xdg_toplevel_request_move_notify(wl_listener* listener, void* data) 
 	 * decorations. Note that a more sophisticated compositor should check the
 	 * provided serial against a list of button press serials sent to this
 	 * client, to prevent the client from requesting this whenever they want. */
-	magpie_xdg_view_t* xdg_view = wl_container_of(listener, xdg_view, request_move);
-	wlr_xdg_toplevel_set_maximized(xdg_view->xdg_toplevel, false);
-	begin_interactive(xdg_view, MAGPIE_CURSOR_MOVE, 0);
+	XdgView::listener_container* container = wl_container_of(listener, container, request_move);
+	XdgView& view = *container->parent;
+
+	wlr_xdg_toplevel_set_maximized(view.xdg_toplevel, false);
+	view.begin_interactive(MAGPIE_CURSOR_MOVE, 0);
 }
 
 static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data) {
@@ -110,10 +77,12 @@ static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data
 	 * decorations. Note that a more sophisticated compositor should check the
 	 * provided serial against a list of button press serials sent to this
 	 * client, to prevent the client from requesting this whenever they want. */
+	XdgView::listener_container* container = wl_container_of(listener, container, request_resize);
+	XdgView& view = *container->parent;
+
 	struct wlr_xdg_toplevel_resize_event* event = static_cast<struct wlr_xdg_toplevel_resize_event*>(data);
-	magpie_xdg_view_t* xdg_view = wl_container_of(listener, xdg_view, request_resize);
-	wlr_xdg_toplevel_set_maximized(xdg_view->xdg_toplevel, false);
-	begin_interactive(xdg_view, MAGPIE_CURSOR_RESIZE, event->edges);
+	wlr_xdg_toplevel_set_maximized(view.xdg_toplevel, false);
+	view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
 }
 
 static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* data) {
@@ -122,41 +91,42 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 	/* This event is raised when a client would like to maximize itself,
 	 * typically because the user clicked on the maximize button on
 	 * client-side decorations. */
-	magpie_xdg_view_t* xdg_view = wl_container_of(listener, xdg_view, request_maximize);
-	magpie_view_t* view = xdg_view->base;
-	Server* server = view->server;
-	Cursor* cursor = server->seat->cursor;
+	XdgView::listener_container* container = wl_container_of(listener, container, request_maximize);
+	XdgView& view = *container->parent;
 
-	struct wlr_xdg_toplevel* toplevel = xdg_view->xdg_toplevel;
-	struct wlr_surface* focused_surface = server->seat->wlr_seat->pointer_state.focused_surface;
+	Server& server = view.server;
+	Cursor& cursor = *server.seat->cursor;
+
+	struct wlr_xdg_toplevel* toplevel = view.xdg_toplevel;
+	struct wlr_surface* focused_surface = server.seat->wlr_seat->pointer_state.focused_surface;
 	if (toplevel->base->surface != wlr_surface_get_root_surface(focused_surface)) {
 		/* Deny maximize requests from unfocused clients. */
 		return;
 	}
 
 	if (toplevel->current.maximized) {
-		wlr_xdg_toplevel_set_size(toplevel, view->previous.width, view->previous.height);
+		wlr_xdg_toplevel_set_size(toplevel, view.previous.width, view.previous.height);
 		wlr_xdg_toplevel_set_maximized(toplevel, false);
-		view->current.x = view->previous.x;
-		view->current.y = view->previous.y;
-		wlr_scene_node_set_position(xdg_view->base->scene_node, view->current.x, view->current.y);
+		view.current.x = view.previous.x;
+		view.current.y = view.previous.y;
+		wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
 	} else {
-		wlr_xdg_surface_get_geometry(toplevel->base, &view->previous);
-		view->previous.x = view->current.x;
-		view->previous.y = view->current.y;
+		wlr_xdg_surface_get_geometry(toplevel->base, &view.previous);
+		view.previous.x = view.current.x;
+		view.previous.y = view.current.y;
 
 		Output* best_output = NULL;
 		long best_area = 0;
 
-		for (auto* output : server->outputs) {
-			if (!wlr_output_layout_intersects(server->output_layout, output->wlr_output, &view->previous)) {
+		for (auto* output : server.outputs) {
+			if (!wlr_output_layout_intersects(server.output_layout, output->wlr_output, &view.previous)) {
 				continue;
 			}
 
 			struct wlr_box output_box;
-			wlr_output_layout_get_box(server->output_layout, output->wlr_output, &output_box);
+			wlr_output_layout_get_box(server.output_layout, output->wlr_output, &output_box);
 			struct wlr_box intersection;
-			wlr_box_intersection(&intersection, &view->previous, &output_box);
+			wlr_box_intersection(&intersection, &view.previous, &output_box);
 			long intersection_area = intersection.width * intersection.height;
 
 			if (intersection.width * intersection.height > best_area) {
@@ -167,9 +137,9 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 
 		// if it's outside of all outputs, just use the pointer position
 		if (best_output == NULL) {
-			for (auto* output : server->outputs) {
+			for (auto* output : server.outputs) {
 				if (wlr_output_layout_contains_point(
-						server->output_layout, output->wlr_output, cursor->wlr_cursor->x, cursor->wlr_cursor->y)) {
+						server.output_layout, output->wlr_output, cursor.wlr_cursor->x, cursor.wlr_cursor->y)) {
 					best_output = output;
 					break;
 				}
@@ -178,17 +148,17 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 
 		// still nothing? use the first output in the list
 		if (best_output == NULL) {
-			best_output = static_cast<Output*>(wlr_output_layout_get_center_output(server->output_layout)->data);
+			best_output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
 		}
 
 		struct wlr_box output_box;
-		wlr_output_layout_get_box(server->output_layout, best_output->wlr_output, &output_box);
+		wlr_output_layout_get_box(server.output_layout, best_output->wlr_output, &output_box);
 
 		wlr_xdg_toplevel_set_size(toplevel, output_box.width, output_box.height);
 		wlr_xdg_toplevel_set_maximized(toplevel, true);
-		view->current.x = output_box.x;
-		view->current.y = output_box.y;
-		wlr_scene_node_set_position(xdg_view->base->scene_node, view->current.x, view->current.y);
+		view.current.x = output_box.x;
+		view.current.y = output_box.y;
+		wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
 	}
 }
 
@@ -196,48 +166,103 @@ static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* 
 	(void) data;
 
 	/* We must send a configure here, even on a no-op. */
-	magpie_xdg_view_t* xdg_view = wl_container_of(listener, xdg_view, request_fullscreen);
-	wlr_xdg_surface_schedule_configure(xdg_view->xdg_toplevel->base);
+	XdgView::listener_container* container = wl_container_of(listener, container, request_fullscreen);
+	XdgView& view = *container->parent;
+
+	wlr_xdg_surface_schedule_configure(view.xdg_toplevel->base);
 }
 
-magpie_view_t* new_magpie_xdg_view(Server& server, struct wlr_xdg_toplevel* toplevel) {
-	magpie_view_t* view = (magpie_view_t*) std::calloc(1, sizeof(magpie_xdg_view_t));
-	view->server = &server;
-	view->scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, toplevel->base);
-	view->scene_node = &view->scene_tree->node;
-	view->surface = toplevel->base->surface;
+XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(server) {
+	listeners.parent = this;
 
-	wlr_xdg_surface_get_geometry(toplevel->base, &view->previous);
+	scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, toplevel->base);
+	scene_node = &scene_tree->node;
+	surface = toplevel->base->surface;
+
+	wlr_xdg_surface_get_geometry(toplevel->base, &previous);
 	wlr_xdg_toplevel_set_wm_capabilities(toplevel, WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE);
 
-	magpie_surface_t* surface = new_magpie_surface_from_view(view);
-	view->scene_node->data = surface;
+	magpie_surface_t* surface = new_magpie_surface_from_view(*this);
+	scene_node->data = surface;
 	toplevel->base->surface->data = surface;
 
-	magpie_xdg_view_t* xdg_view = (magpie_xdg_view_t*) std::calloc(1, sizeof(magpie_xdg_view_t));
-	xdg_view->base = view;
-	xdg_view->xdg_toplevel = toplevel;
-
-	view->xdg_view = xdg_view;
-	view->type = MAGPIE_VIEW_TYPE_XDG;
+	xdg_toplevel = toplevel;
 
 	/* Listen to the various events it can emit */
-	xdg_view->map.notify = xdg_toplevel_map_notify;
-	wl_signal_add(&toplevel->base->events.map, &xdg_view->map);
-	xdg_view->unmap.notify = xdg_toplevel_unmap_notify;
-	wl_signal_add(&toplevel->base->events.unmap, &xdg_view->unmap);
-	xdg_view->destroy.notify = xdg_toplevel_destroy_notify;
-	wl_signal_add(&toplevel->base->events.destroy, &xdg_view->destroy);
+	listeners.map.notify = xdg_toplevel_map_notify;
+	wl_signal_add(&toplevel->base->events.map, &listeners.map);
+	listeners.unmap.notify = xdg_toplevel_unmap_notify;
+	wl_signal_add(&toplevel->base->events.unmap, &listeners.unmap);
+	listeners.destroy.notify = xdg_toplevel_destroy_notify;
+	wl_signal_add(&toplevel->base->events.destroy, &listeners.destroy);
 
 	/* cotd */
-	xdg_view->request_move.notify = xdg_toplevel_request_move_notify;
-	wl_signal_add(&xdg_view->xdg_toplevel->events.request_move, &xdg_view->request_move);
-	xdg_view->request_resize.notify = xdg_toplevel_request_resize_notify;
-	wl_signal_add(&xdg_view->xdg_toplevel->events.request_resize, &xdg_view->request_resize);
-	xdg_view->request_maximize.notify = xdg_toplevel_request_maximize_notify;
-	wl_signal_add(&xdg_view->xdg_toplevel->events.request_maximize, &xdg_view->request_maximize);
-	xdg_view->request_fullscreen.notify = xdg_toplevel_request_fullscreen_notify;
-	wl_signal_add(&xdg_view->xdg_toplevel->events.request_fullscreen, &xdg_view->request_fullscreen);
+	listeners.request_move.notify = xdg_toplevel_request_move_notify;
+	wl_signal_add(&xdg_toplevel->events.request_move, &listeners.request_move);
+	listeners.request_resize.notify = xdg_toplevel_request_resize_notify;
+	wl_signal_add(&xdg_toplevel->events.request_resize, &listeners.request_resize);
+	listeners.request_maximize.notify = xdg_toplevel_request_maximize_notify;
+	wl_signal_add(&xdg_toplevel->events.request_maximize, &listeners.request_maximize);
+	listeners.request_fullscreen.notify = xdg_toplevel_request_fullscreen_notify;
+	wl_signal_add(&xdg_toplevel->events.request_fullscreen, &listeners.request_fullscreen);
+}
 
-	return view;
+XdgView::~XdgView() noexcept {
+	wl_list_remove(&listeners.map.link);
+	wl_list_remove(&listeners.unmap.link);
+	wl_list_remove(&listeners.destroy.link);
+	wl_list_remove(&listeners.request_move.link);
+	wl_list_remove(&listeners.request_resize.link);
+	wl_list_remove(&listeners.request_maximize.link);
+	wl_list_remove(&listeners.request_fullscreen.link);
+}
+
+Server& XdgView::get_server() {
+	return server;
+}
+
+struct wlr_box XdgView::get_geometry() {
+	wlr_box box;
+	wlr_xdg_surface_get_geometry(xdg_toplevel->base, &box);
+	return box;
+}
+
+void XdgView::set_size(int new_width, int new_height) {
+	wlr_xdg_toplevel_set_size(xdg_toplevel, new_width, new_height);
+}
+
+void XdgView::begin_interactive(CursorMode mode, uint32_t edges) {
+	Cursor* cursor = server.seat->cursor;
+	struct wlr_surface* focused_surface = server.seat->wlr_seat->pointer_state.focused_surface;
+
+	if (xdg_toplevel->base->surface != wlr_surface_get_root_surface(focused_surface)) {
+		/* Deny move/resize requests from unfocused clients. */
+		return;
+	}
+
+	server.grabbed_view = this;
+	server.seat->cursor->mode = mode;
+
+	if (mode == MAGPIE_CURSOR_MOVE) {
+		server.grab_x = cursor->wlr_cursor->x - current.x;
+		server.grab_y = cursor->wlr_cursor->y - current.y;
+	} else {
+		struct wlr_box geo_box;
+		wlr_xdg_surface_get_geometry(xdg_toplevel->base, &geo_box);
+
+		double border_x = (current.x + geo_box.x) + ((edges & WLR_EDGE_RIGHT) ? geo_box.width : 0);
+		double border_y = (current.y + geo_box.y) + ((edges & WLR_EDGE_BOTTOM) ? geo_box.height : 0);
+		server.grab_x = cursor->wlr_cursor->x - border_x;
+		server.grab_y = cursor->wlr_cursor->y - border_y;
+
+		server.grab_geobox = geo_box;
+		server.grab_geobox.x += current.x;
+		server.grab_geobox.y += current.y;
+
+		server.resize_edges = edges;
+	}
+}
+
+void XdgView::activate() {
+	wlr_xdg_toplevel_set_activated(xdg_toplevel, true);
 }

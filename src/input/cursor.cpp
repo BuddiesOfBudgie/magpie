@@ -28,7 +28,7 @@ void Cursor::process_resize(uint32_t time) {
 	 * you'd wait for the client to prepare a buffer at the new size, then
 	 * commit any movement that was prepared.
 	 */
-	magpie_view_t* view = seat.server.grabbed_view;
+	View& view = *seat.server.grabbed_view;
 	double border_x = wlr_cursor->x - seat.server.grab_x;
 	double border_y = wlr_cursor->y - seat.server.grab_y;
 	int new_left = seat.server.grab_geobox.x;
@@ -59,34 +59,21 @@ void Cursor::process_resize(uint32_t time) {
 		}
 	}
 
-	struct wlr_box geo_box;
-	if (view->type == MAGPIE_VIEW_TYPE_XDG) {
-		wlr_xdg_surface_get_geometry(view->xdg_view->xdg_toplevel->base, &geo_box);
-	} else {
-		geo_box.x = view->xwayland_view->xwayland_surface->x;
-		geo_box.y = view->xwayland_view->xwayland_surface->y;
-		geo_box.width = view->xwayland_view->xwayland_surface->width;
-		geo_box.height = view->xwayland_view->xwayland_surface->height;
-	}
-	view->current.x = new_left - geo_box.x;
-	view->current.y = new_top - geo_box.y;
-	wlr_scene_node_set_position(&view->scene_tree->node, view->current.x, view->current.y);
+	struct wlr_box geo_box = view.get_geometry();
+	view.current.x = new_left - geo_box.x;
+	view.current.y = new_top - geo_box.y;
+	wlr_scene_node_set_position(&view.scene_tree->node, view.current.x, view.current.y);
 
 	int new_width = new_right - new_left;
 	int new_height = new_bottom - new_top;
-	if (view->type == MAGPIE_VIEW_TYPE_XDG) {
-		wlr_xdg_toplevel_set_size(view->xdg_view->xdg_toplevel, new_width, new_height);
-	} else {
-		wlr_xwayland_surface_configure(
-			view->xwayland_view->xwayland_surface, view->current.x, view->current.y, new_width, new_height);
-	}
+	view.set_size(new_width, new_height);
 }
 
 void Cursor::process_move(uint32_t time) {
 	(void) time;
 
 	/* Move the grabbed view to the new position. */
-	magpie_view_t* view = seat.server.grabbed_view;
+	View* view = seat.server.grabbed_view;
 	view->current.x = wlr_cursor->x - seat.server.grab_x;
 	view->current.y = fmax(wlr_cursor->y - seat.server.grab_y, 0);
 	wlr_xcursor_manager_set_cursor_image(cursor_mgr, "fleur", wlr_cursor);
@@ -206,7 +193,7 @@ void cursor_button_notify(wl_listener* listener, void* data) {
 		}
 	} else if (magpie_surface != NULL && magpie_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
 		/* Focus that client if the button was _pressed_ */
-		server.focus_view(magpie_surface->view, surface);
+		server.focus_view(*magpie_surface->view, surface);
 	}
 }
 

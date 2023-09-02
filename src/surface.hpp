@@ -12,13 +12,13 @@ struct magpie_surface {
 	struct wlr_scene_tree* scene_tree;
 
 	union {
-		magpie_view_t* view;
+		View* view;
 		Layer* layer;
 		Popup* popup;
 	};
 };
 
-magpie_surface_t* new_magpie_surface_from_view(magpie_view_t* view);
+magpie_surface_t* new_magpie_surface_from_view(View& view);
 magpie_surface_t* new_magpie_surface_from_layer(Layer& view);
 magpie_surface_t* new_magpie_surface_from_popup(Popup& popup);
 

@@ -1,6 +1,7 @@
 #ifndef MAGPIE_VIEW_HPP
 #define MAGPIE_VIEW_HPP
 
+#include "input/cursor.hpp"
 #include "types.hpp"
 
 #include "wlr-wrap-start.hpp"
@@ -8,43 +9,8 @@
 #include <wlr/util/box.h>
 #include "wlr-wrap-end.hpp"
 
-typedef enum { MAGPIE_VIEW_TYPE_XDG, MAGPIE_VIEW_TYPE_XWAYLAND } magpie_view_type_t;
-
-struct magpie_xdg_view {
-	magpie_view_t* base;
-
-	struct wlr_xdg_toplevel* xdg_toplevel;
-	wl_listener map;
-	wl_listener unmap;
-	wl_listener destroy;
-	wl_listener commit;
-	wl_listener request_move;
-	wl_listener request_resize;
-	wl_listener request_maximize;
-	wl_listener request_unmaximize;
-	wl_listener request_fullscreen;
-};
-
-struct magpie_xwayland_view {
-	magpie_view_t* base;
-
-	struct wlr_xwayland_surface* xwayland_surface;
-	wl_listener map;
-	wl_listener unmap;
-	wl_listener destroy;
-	wl_listener commit;
-	wl_listener request_configure;
-	wl_listener request_move;
-	wl_listener request_resize;
-	wl_listener set_geometry;
-};
-
-struct magpie_view {
-	Server* server;
-
-	wl_list link;
-
-	magpie_view_type_t type;
+class View {
+  public:
 	struct wlr_box current;
 	struct wlr_box pending;
 	struct wlr_box previous;
@@ -52,13 +18,76 @@ struct magpie_view {
 	struct wlr_scene_tree* scene_tree;
 	struct wlr_scene_node* scene_node;
 
-	union {
-		magpie_xdg_view_t* xdg_view;
-		magpie_xwayland_view_t* xwayland_view;
-	};
+	virtual ~View() noexcept {};
+
+	virtual Server& get_server() = 0;
+	virtual struct wlr_box get_geometry() = 0;
+	virtual void set_size(int new_width, int new_height) = 0;
+	virtual void begin_interactive(CursorMode mode, uint32_t edges) = 0;
+	virtual void activate() = 0;
 };
 
-magpie_view_t* new_magpie_xdg_view(Server& server, struct wlr_xdg_toplevel* toplevel);
-magpie_view_t* new_magpie_xwayland_view(Server& server, struct wlr_xwayland_surface* surface);
+class XdgView : public View {
+  public:
+	struct listener_container {
+		XdgView* parent;
+		wl_listener map;
+		wl_listener unmap;
+		wl_listener destroy;
+		wl_listener commit;
+		wl_listener request_move;
+		wl_listener request_resize;
+		wl_listener request_maximize;
+		wl_listener request_unmaximize;
+		wl_listener request_fullscreen;
+	};
+
+  private:
+	listener_container listeners;
+
+  public:
+	Server& server;
+	struct wlr_xdg_toplevel* xdg_toplevel;
+
+	XdgView(Server& server, struct wlr_xdg_toplevel* toplevel);
+	~XdgView() noexcept;
+
+	inline Server& get_server();
+	struct wlr_box get_geometry();
+	void set_size(int new_width, int new_height);
+	void begin_interactive(CursorMode mode, uint32_t edges);
+	void activate();
+};
+
+class XWaylandView : public View {
+  public:
+	struct listener_container {
+		XWaylandView* parent;
+		wl_listener map;
+		wl_listener unmap;
+		wl_listener destroy;
+		wl_listener commit;
+		wl_listener request_configure;
+		wl_listener request_move;
+		wl_listener request_resize;
+		wl_listener set_geometry;
+	};
+
+  private:
+	listener_container listeners;
+
+  public:
+	Server& server;
+	struct wlr_xwayland_surface* xwayland_surface;
+
+	XWaylandView(Server& server, struct wlr_xwayland_surface* surface);
+	~XWaylandView() noexcept;
+
+	inline Server& get_server();
+	struct wlr_box get_geometry();
+	void set_size(int new_width, int new_height);
+	void begin_interactive(CursorMode mode, uint32_t edges);
+	void activate();
+};
 
 #endif

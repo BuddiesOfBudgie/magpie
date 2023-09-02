@@ -43,11 +43,11 @@ static bool handle_compositor_keybinding(Keyboard& keyboard, uint32_t modifiers,
 				return true;
 			case XKB_KEY_Tab:
 				/* Cycle to the next view */
-				if (wl_list_length(&server.views) < 2) {
+				if (server.views.size() < 2) {
 					return true;
 				}
-				magpie_view_t* next_view = wl_container_of(server.views.prev, next_view, link);
-				server.focus_view(next_view, next_view->xdg_view->xdg_toplevel->base->surface);
+				View& next_view = **server.views.begin()++;
+				server.focus_view(next_view, next_view.surface);
 				return true;
 		}
 	} else if (sym >= XKB_KEY_XF86Switch_VT_1 && sym <= XKB_KEY_XF86Switch_VT_12) {

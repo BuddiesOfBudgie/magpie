@@ -8,6 +8,7 @@
 #include "xwayland.hpp"
 #include "input/seat.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstdlib>
 
@@ -33,14 +34,9 @@
 #include <wlr/xwayland.h>
 #include "wlr-wrap-end.hpp"
 
-void Server::focus_view(magpie_view_t* view, struct wlr_surface* surface) {
-	/* Note: this function only deals with keyboard focus. */
-	if (view == NULL) {
-		return;
-	}
-
-	Server* server = view->server;
-	struct wlr_seat* seat = server->seat->wlr_seat;
+void Server::focus_view(View& view, struct wlr_surface* surface) {
+	Server& server = view.get_server();
+	struct wlr_seat* seat = server.seat->wlr_seat;
 	struct wlr_surface* prev_surface = seat->keyboard_state.focused_surface;
 	if (prev_surface == surface) {
 		/* Don't re-focus an already focused surface. */
@@ -60,27 +56,22 @@ void Server::focus_view(magpie_view_t* view, struct wlr_surface* surface) {
 		}
 	}
 
-	struct wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat);
 	/* Move the view to the front */
-	wlr_scene_node_raise_to_top(&view->scene_tree->node);
-	wl_list_remove(&view->link);
-	wl_list_insert(&server->views, &view->link);
+	wlr_scene_node_raise_to_top(&view.scene_tree->node);
+	std::remove(server.views.begin(), server.views.end(), &view);
+	server.views.insert(server.views.begin(), &view);
 
 	/* Activate the new surface */
-	if (view->type == MAGPIE_VIEW_TYPE_XDG) {
-		wlr_xdg_toplevel_set_activated(view->xdg_view->xdg_toplevel, true);
-	} else {
-		wlr_xwayland_surface_activate(view->xwayland_view->xwayland_surface, true);
-		wlr_xwayland_surface_restack(view->xwayland_view->xwayland_surface, NULL, XCB_STACK_MODE_ABOVE);
-	}
+	view.activate();
 
 	/*
 	 * Tell the seat to have the keyboard enter this surface. wlroots will keep
 	 * track of this and automatically send key events to the appropriate
 	 * clients without additional work on your part.
 	 */
-	if (keyboard != NULL) {
-		wlr_seat_keyboard_notify_enter(seat, view->surface, keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
+	struct wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat);
+	if (keyboard != nullptr) {
+		wlr_seat_keyboard_notify_enter(seat, view.surface, keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
 	}
 }
 
@@ -169,7 +160,7 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 	struct wlr_xdg_surface* xdg_surface = static_cast<struct wlr_xdg_surface*>(data);
 
 	if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-		new_magpie_xdg_view(server, xdg_surface->toplevel);
+		new XdgView(server, xdg_surface->toplevel);
 	} else if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
 		magpie_surface_t* surface = static_cast<magpie_surface_t*>(xdg_surface->popup->parent->data);
 		new Popup(*surface, xdg_surface->popup);
@@ -182,7 +173,7 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 
 	struct wlr_layer_surface_v1* layer_surface = static_cast<struct wlr_layer_surface_v1*>(data);
 
-	/* Allocate a magpie_view_t for this surface */
+	/* Allocate a View for this surface */
 	server.layers.emplace(new Layer(server, layer_surface));
 }
 
@@ -203,7 +194,7 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 		return;
 	}
 
-	server.focus_view(surface->view, xdg_surface->surface);
+	server.focus_view(*surface->view, xdg_surface->surface);
 }
 
 Server::Server() {
@@ -285,7 +276,6 @@ Server::Server() {
 	 *
 	 * https://drewdevault.com/2018/07/29/Wayland-shells.html
 	 */
-	wl_list_init(&views);
 	xdg_shell = wlr_xdg_shell_create(display, 5);
 	listeners.xdg_shell_new_xdg_surface.notify = new_xdg_surface_notify;
 	wl_signal_add(&xdg_shell->events.new_surface, &listeners.xdg_shell_new_xdg_surface);
