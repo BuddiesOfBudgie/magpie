@@ -14,12 +14,12 @@ struct magpie_surface {
 	union {
 		magpie_view_t* view;
 		Layer* layer;
-		magpie_popup_t* popup;
+		Popup* popup;
 	};
 };
 
 magpie_surface_t* new_magpie_surface_from_view(magpie_view_t* view);
 magpie_surface_t* new_magpie_surface_from_layer(Layer& view);
-magpie_surface_t* new_magpie_surface_from_popup(magpie_popup_t* popup);
+magpie_surface_t* new_magpie_surface_from_popup(Popup& popup);
 
 #endif

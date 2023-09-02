@@ -172,7 +172,7 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 		new_magpie_xdg_view(server, xdg_surface->toplevel);
 	} else if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
 		magpie_surface_t* surface = static_cast<magpie_surface_t*>(xdg_surface->popup->parent->data);
-		new_magpie_popup(surface, xdg_surface->popup);
+		new Popup(*surface, xdg_surface->popup);
 	}
 }
 

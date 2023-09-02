@@ -26,7 +26,7 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(enum zwlr_layer_shell_v1
 			return MAGPIE_SCENE_LAYER_BOTTOM;
 		case ZWLR_LAYER_SHELL_V1_LAYER_TOP:
 			return MAGPIE_SCENE_LAYER_TOP;
-		case ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY:
+		default:
 			return MAGPIE_SCENE_LAYER_OVERLAY;
 	}
 }
@@ -150,8 +150,8 @@ static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* d
 	layer_listener_container* container = wl_container_of(listener, container, new_popup);
 	Layer& layer = *container->parent;
 
-	new_magpie_popup(
-		static_cast<magpie_surface_t*>(layer.layer_surface->surface->data), static_cast<struct wlr_xdg_popup*>(data));
+	magpie_surface_t* surface = static_cast<magpie_surface_t*>(layer.layer_surface->surface->data);
+	new Popup(*surface, static_cast<struct wlr_xdg_popup*>(data));
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, void* data) {

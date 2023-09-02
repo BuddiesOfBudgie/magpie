@@ -28,11 +28,11 @@ magpie_surface_t* new_magpie_surface_from_layer(Layer& layer) {
 	return surface;
 }
 
-magpie_surface_t* new_magpie_surface_from_popup(magpie_popup_t* popup) {
+magpie_surface_t* new_magpie_surface_from_popup(Popup& popup) {
 	magpie_surface_t* surface = (magpie_surface_t*) std::calloc(1, sizeof(magpie_surface_t));
 	surface->type = MAGPIE_SURFACE_TYPE_POPUP;
-	surface->server = popup->server;
-	surface->popup = popup;
-	surface->scene_tree = popup->scene_tree;
+	surface->server = &popup.server;
+	surface->popup = &popup;
+	surface->scene_tree = popup.scene_tree;
 	return surface;
 }
