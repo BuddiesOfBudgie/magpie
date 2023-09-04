@@ -17,7 +17,9 @@
 #include <wlr/render/allocator.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_data_device.h>
+#include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_idle_inhibit_v1.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
@@ -287,6 +289,9 @@ Server::Server() {
 	xdg_activation = wlr_xdg_activation_v1_create(display);
 	listeners.activation_request_activation.notify = request_activation_notify;
 	wl_signal_add(&xdg_activation->events.request_activate, &listeners.activation_request_activation);
+
+	data_controller = wlr_data_control_manager_v1_create(display);
+	foreign_toplevel_manager = wlr_foreign_toplevel_manager_v1_create(display);
 
 	xwayland = new XWayland(*this);
 

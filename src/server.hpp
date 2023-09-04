@@ -52,6 +52,9 @@ class Server {
 
 	struct wlr_xdg_activation_v1* xdg_activation;
 
+	struct wlr_data_control_manager_v1* data_controller;
+	struct wlr_foreign_toplevel_manager_v1* foreign_toplevel_manager;
+
 	struct wlr_layer_shell_v1* layer_shell;
 	std::set<Layer*> layers;
 
