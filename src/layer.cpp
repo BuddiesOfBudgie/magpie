@@ -121,6 +121,7 @@ static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void* dat
 	wl_list_remove(&container->commit.link);
 	wl_list_remove(&container->new_popup.link);
 	wl_list_remove(&container->new_subsurface.link);
+	wl_list_remove(&container->output_destroy.link);
 
 	layer.server.layers.erase(&layer); // just in case
 	delete &layer;
