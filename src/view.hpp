@@ -17,6 +17,7 @@ class View {
 	struct wlr_surface* surface;
 	struct wlr_scene_tree* scene_tree;
 	struct wlr_scene_node* scene_node;
+	struct wlr_foreign_toplevel_handle_v1* toplevel_handle;
 
 	virtual ~View() noexcept {};
 
@@ -24,7 +25,7 @@ class View {
 	virtual struct wlr_box get_geometry() = 0;
 	virtual void set_size(int new_width, int new_height) = 0;
 	virtual void begin_interactive(CursorMode mode, uint32_t edges) = 0;
-	virtual void activate() = 0;
+	virtual void set_activated(bool activated) = 0;
 };
 
 class XdgView : public View {
@@ -40,6 +41,8 @@ class XdgView : public View {
 		wl_listener request_maximize;
 		wl_listener request_unmaximize;
 		wl_listener request_fullscreen;
+		wl_listener set_title;
+		wl_listener set_app_id;
 	};
 
   private:
@@ -56,7 +59,7 @@ class XdgView : public View {
 	struct wlr_box get_geometry();
 	void set_size(int new_width, int new_height);
 	void begin_interactive(CursorMode mode, uint32_t edges);
-	void activate();
+	void set_activated(bool activated);
 };
 
 class XWaylandView : public View {
@@ -71,6 +74,8 @@ class XWaylandView : public View {
 		wl_listener request_move;
 		wl_listener request_resize;
 		wl_listener set_geometry;
+		wl_listener set_title;
+		wl_listener set_class;
 	};
 
   private:
@@ -87,7 +92,7 @@ class XWaylandView : public View {
 	struct wlr_box get_geometry();
 	void set_size(int new_width, int new_height);
 	void begin_interactive(CursorMode mode, uint32_t edges);
-	void activate();
+	void set_activated(bool activated);
 };
 
 #endif

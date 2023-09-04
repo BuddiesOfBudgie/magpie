@@ -9,6 +9,7 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/util/edges.h>
@@ -129,10 +130,41 @@ static void xwayland_surface_request_resize_notify(wl_listener* listener, void* 
 	view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
 }
 
+static void xwayland_surface_set_title_notify(wl_listener* listener, void* data) {
+	(void) data;
+
+	XWaylandView::listener_container* container = wl_container_of(listener, container, set_title);
+	XWaylandView& view = *container->parent;
+
+	if (view.xwayland_surface->title != nullptr) {
+		wlr_foreign_toplevel_handle_v1_set_title(view.toplevel_handle, view.xwayland_surface->title);
+	}
+}
+
+static void xwayland_surface_set_class_notify(wl_listener* listener, void* data) {
+	(void) data;
+
+	XWaylandView::listener_container* container = wl_container_of(listener, container, set_class);
+	XWaylandView& view = *container->parent;
+
+	if (view.xwayland_surface->_class != nullptr) {
+		wlr_foreign_toplevel_handle_v1_set_app_id(view.toplevel_handle, view.xwayland_surface->_class);
+	}
+}
+
 XWaylandView::XWaylandView(Server& server, struct wlr_xwayland_surface* xwayland_surface) : server(server) {
 	listeners.parent = this;
 
 	this->xwayland_surface = xwayland_surface;
+	toplevel_handle = wlr_foreign_toplevel_handle_v1_create(server.foreign_toplevel_manager);
+
+	if (xwayland_surface->title != nullptr) {
+		wlr_foreign_toplevel_handle_v1_set_title(toplevel_handle, xwayland_surface->title);
+	}
+
+	if (xwayland_surface->_class != nullptr) {
+		wlr_foreign_toplevel_handle_v1_set_app_id(toplevel_handle, xwayland_surface->_class);
+	}
 
 	/* Listen to the various events it can emit */
 	listeners.map.notify = xwayland_surface_map_notify;
@@ -149,9 +181,14 @@ XWaylandView::XWaylandView(Server& server, struct wlr_xwayland_surface* xwayland
 	wl_signal_add(&xwayland_surface->events.request_resize, &listeners.request_resize);
 	listeners.set_geometry.notify = xwayland_surface_set_geometry_notify;
 	wl_signal_add(&xwayland_surface->events.set_geometry, &listeners.set_geometry);
+	listeners.set_title.notify = xwayland_surface_set_title_notify;
+	wl_signal_add(&xwayland_surface->events.set_title, &listeners.set_title);
+	listeners.set_class.notify = xwayland_surface_set_class_notify;
+	wl_signal_add(&xwayland_surface->events.set_class, &listeners.set_class);
 }
 
 XWaylandView::~XWaylandView() noexcept {
+	wlr_foreign_toplevel_handle_v1_destroy(toplevel_handle);
 	wl_list_remove(&listeners.map.link);
 	wl_list_remove(&listeners.unmap.link);
 	wl_list_remove(&listeners.destroy.link);
@@ -205,7 +242,10 @@ void XWaylandView::begin_interactive(CursorMode mode, uint32_t edges) {
 	}
 }
 
-void XWaylandView::activate() {
-	wlr_xwayland_surface_activate(xwayland_surface, true);
-	wlr_xwayland_surface_restack(xwayland_surface, NULL, XCB_STACK_MODE_ABOVE);
+void XWaylandView::set_activated(bool activated) {
+	wlr_xwayland_surface_activate(xwayland_surface, activated);
+	wlr_foreign_toplevel_handle_v1_set_activated(toplevel_handle, activated);
+	if (activated) {
+		wlr_xwayland_surface_restack(xwayland_surface, NULL, XCB_STACK_MODE_ABOVE);
+	}
 }

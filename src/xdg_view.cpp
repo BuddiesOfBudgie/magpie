@@ -12,6 +12,7 @@
 #include "wlr-wrap-start.hpp"
 #include <wlr/backend.h>
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
@@ -68,6 +69,7 @@ static void xdg_toplevel_request_move_notify(wl_listener* listener, void* data) 
 	XdgView& view = *container->parent;
 
 	wlr_xdg_toplevel_set_maximized(view.xdg_toplevel, false);
+	wlr_foreign_toplevel_handle_v1_set_maximized(view.toplevel_handle, false);
 	view.begin_interactive(MAGPIE_CURSOR_MOVE, 0);
 }
 
@@ -172,6 +174,24 @@ static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* 
 	wlr_xdg_surface_schedule_configure(view.xdg_toplevel->base);
 }
 
+static void xdg_toplevel_set_title_notify(wl_listener* listener, void* data) {
+	(void) data;
+
+	XdgView::listener_container* container = wl_container_of(listener, container, set_title);
+	XdgView& view = *container->parent;
+
+	wlr_foreign_toplevel_handle_v1_set_title(view.toplevel_handle, view.xdg_toplevel->title);
+}
+
+static void xdg_toplevel_set_app_id_notify(wl_listener* listener, void* data) {
+	(void) data;
+
+	XdgView::listener_container* container = wl_container_of(listener, container, set_app_id);
+	XdgView& view = *container->parent;
+
+	wlr_foreign_toplevel_handle_v1_set_app_id(view.toplevel_handle, view.xdg_toplevel->app_id);
+}
+
 XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(server) {
 	listeners.parent = this;
 
@@ -187,6 +207,9 @@ XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(ser
 	toplevel->base->surface->data = surface;
 
 	xdg_toplevel = toplevel;
+	toplevel_handle = wlr_foreign_toplevel_handle_v1_create(server.foreign_toplevel_manager);
+	wlr_foreign_toplevel_handle_v1_set_title(toplevel_handle, xdg_toplevel->title);
+	wlr_foreign_toplevel_handle_v1_set_app_id(toplevel_handle, xdg_toplevel->app_id);
 
 	/* Listen to the various events it can emit */
 	listeners.map.notify = xdg_toplevel_map_notify;
@@ -205,16 +228,22 @@ XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(ser
 	wl_signal_add(&xdg_toplevel->events.request_maximize, &listeners.request_maximize);
 	listeners.request_fullscreen.notify = xdg_toplevel_request_fullscreen_notify;
 	wl_signal_add(&xdg_toplevel->events.request_fullscreen, &listeners.request_fullscreen);
+	listeners.set_title.notify = xdg_toplevel_set_title_notify;
+	wl_signal_add(&xdg_toplevel->events.set_title, &listeners.set_title);
+	listeners.set_app_id.notify = xdg_toplevel_set_app_id_notify;
+	wl_signal_add(&xdg_toplevel->events.set_app_id, &listeners.set_app_id);
 }
 
 XdgView::~XdgView() noexcept {
+	wlr_foreign_toplevel_handle_v1_destroy(toplevel_handle);
 	wl_list_remove(&listeners.map.link);
 	wl_list_remove(&listeners.unmap.link);
 	wl_list_remove(&listeners.destroy.link);
 	wl_list_remove(&listeners.request_move.link);
 	wl_list_remove(&listeners.request_resize.link);
 	wl_list_remove(&listeners.request_maximize.link);
-	wl_list_remove(&listeners.request_fullscreen.link);
+	wl_list_remove(&listeners.set_title.link);
+	wl_list_remove(&listeners.set_app_id.link);
 }
 
 Server& XdgView::get_server() {
@@ -263,6 +292,7 @@ void XdgView::begin_interactive(CursorMode mode, uint32_t edges) {
 	}
 }
 
-void XdgView::activate() {
-	wlr_xdg_toplevel_set_activated(xdg_toplevel, true);
+void XdgView::set_activated(bool activated) {
+	wlr_xdg_toplevel_set_activated(xdg_toplevel, activated);
+	wlr_foreign_toplevel_handle_v1_set_activated(toplevel_handle, activated);
 }

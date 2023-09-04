@@ -61,10 +61,13 @@ void Server::focus_view(View& view, struct wlr_surface* surface) {
 	/* Move the view to the front */
 	wlr_scene_node_raise_to_top(&view.scene_tree->node);
 	std::remove(server.views.begin(), server.views.end(), &view);
-	server.views.insert(server.views.begin(), &view);
+	for (auto* view : server.views) {
+		view->set_activated(false);
+	}
 
 	/* Activate the new surface */
-	view.activate();
+	server.views.insert(server.views.begin(), &view);
+	view.set_activated(true);
 
 	/*
 	 * Tell the seat to have the keyboard enter this surface. wlroots will keep
