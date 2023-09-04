@@ -1,5 +1,6 @@
 magpie_sources = [
     'main.cpp',
+    'foreign_toplevel.cpp',
     'layer.cpp',
     'output.cpp',
     'popup.cpp',

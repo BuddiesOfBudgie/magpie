@@ -12,6 +12,7 @@ class Cursor;
 class View;
 class XdgView;
 class XWaylandView;
+class ForeignToplevelHandle;
 
 class Layer;
 class LayerSubsurface;

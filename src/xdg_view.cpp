@@ -1,8 +1,10 @@
+#include "view.hpp"
+
+#include "foreign_toplevel.hpp"
 #include "output.hpp"
 #include "server.hpp"
 #include "surface.hpp"
 #include "types.hpp"
-#include "view.hpp"
 #include "input/seat.hpp"
 #include "input/cursor.hpp"
 
@@ -69,7 +71,7 @@ static void xdg_toplevel_request_move_notify(wl_listener* listener, void* data) 
 	XdgView& view = *container->parent;
 
 	wlr_xdg_toplevel_set_maximized(view.xdg_toplevel, false);
-	wlr_foreign_toplevel_handle_v1_set_maximized(view.toplevel_handle, false);
+	view.toplevel_handle->set_maximized(false);
 	view.begin_interactive(MAGPIE_CURSOR_MOVE, 0);
 }
 
@@ -96,72 +98,7 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 	XdgView::listener_container* container = wl_container_of(listener, container, request_maximize);
 	XdgView& view = *container->parent;
 
-	Server& server = view.server;
-	Cursor& cursor = *server.seat->cursor;
-
-	struct wlr_xdg_toplevel* toplevel = view.xdg_toplevel;
-	struct wlr_surface* focused_surface = server.seat->wlr_seat->pointer_state.focused_surface;
-	if (toplevel->base->surface != wlr_surface_get_root_surface(focused_surface)) {
-		/* Deny maximize requests from unfocused clients. */
-		return;
-	}
-
-	if (toplevel->current.maximized) {
-		wlr_xdg_toplevel_set_size(toplevel, view.previous.width, view.previous.height);
-		wlr_xdg_toplevel_set_maximized(toplevel, false);
-		view.current.x = view.previous.x;
-		view.current.y = view.previous.y;
-		wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
-	} else {
-		wlr_xdg_surface_get_geometry(toplevel->base, &view.previous);
-		view.previous.x = view.current.x;
-		view.previous.y = view.current.y;
-
-		Output* best_output = NULL;
-		long best_area = 0;
-
-		for (auto* output : server.outputs) {
-			if (!wlr_output_layout_intersects(server.output_layout, output->wlr_output, &view.previous)) {
-				continue;
-			}
-
-			struct wlr_box output_box;
-			wlr_output_layout_get_box(server.output_layout, output->wlr_output, &output_box);
-			struct wlr_box intersection;
-			wlr_box_intersection(&intersection, &view.previous, &output_box);
-			long intersection_area = intersection.width * intersection.height;
-
-			if (intersection.width * intersection.height > best_area) {
-				best_area = intersection_area;
-				best_output = output;
-			}
-		}
-
-		// if it's outside of all outputs, just use the pointer position
-		if (best_output == NULL) {
-			for (auto* output : server.outputs) {
-				if (wlr_output_layout_contains_point(
-						server.output_layout, output->wlr_output, cursor.wlr_cursor->x, cursor.wlr_cursor->y)) {
-					best_output = output;
-					break;
-				}
-			}
-		}
-
-		// still nothing? use the first output in the list
-		if (best_output == NULL) {
-			best_output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
-		}
-
-		struct wlr_box output_box;
-		wlr_output_layout_get_box(server.output_layout, best_output->wlr_output, &output_box);
-
-		wlr_xdg_toplevel_set_size(toplevel, output_box.width, output_box.height);
-		wlr_xdg_toplevel_set_maximized(toplevel, true);
-		view.current.x = output_box.x;
-		view.current.y = output_box.y;
-		wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
-	}
+	view.set_maximized(true);
 }
 
 static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* data) {
@@ -180,7 +117,7 @@ static void xdg_toplevel_set_title_notify(wl_listener* listener, void* data) {
 	XdgView::listener_container* container = wl_container_of(listener, container, set_title);
 	XdgView& view = *container->parent;
 
-	wlr_foreign_toplevel_handle_v1_set_title(view.toplevel_handle, view.xdg_toplevel->title);
+	view.toplevel_handle->set_title(view.xdg_toplevel->title);
 }
 
 static void xdg_toplevel_set_app_id_notify(wl_listener* listener, void* data) {
@@ -189,7 +126,7 @@ static void xdg_toplevel_set_app_id_notify(wl_listener* listener, void* data) {
 	XdgView::listener_container* container = wl_container_of(listener, container, set_app_id);
 	XdgView& view = *container->parent;
 
-	wlr_foreign_toplevel_handle_v1_set_app_id(view.toplevel_handle, view.xdg_toplevel->app_id);
+	view.toplevel_handle->set_app_id(view.xdg_toplevel->app_id);
 }
 
 static void xdg_toplevel_set_parent_notify(wl_listener* listener, void* data) {
@@ -201,12 +138,12 @@ static void xdg_toplevel_set_parent_notify(wl_listener* listener, void* data) {
 	if (view.xdg_toplevel->parent != nullptr) {
 		magpie_surface_t* m_surface = static_cast<magpie_surface_t*>(view.xdg_toplevel->parent->base->data);
 		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
-			wlr_foreign_toplevel_handle_v1_set_parent(view.toplevel_handle, m_surface->view->toplevel_handle);
+			view.toplevel_handle->set_parent(m_surface->view->toplevel_handle);
 			return;
 		}
 	}
 
-	wlr_foreign_toplevel_handle_v1_set_parent(view.toplevel_handle, nullptr);
+	view.toplevel_handle->set_parent(nullptr);
 }
 
 XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(server) {
@@ -224,14 +161,14 @@ XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(ser
 	toplevel->base->surface->data = surface;
 
 	xdg_toplevel = toplevel;
-	toplevel_handle = wlr_foreign_toplevel_handle_v1_create(server.foreign_toplevel_manager);
-	wlr_foreign_toplevel_handle_v1_set_title(toplevel_handle, xdg_toplevel->title);
-	wlr_foreign_toplevel_handle_v1_set_app_id(toplevel_handle, xdg_toplevel->app_id);
+	toplevel_handle = new ForeignToplevelHandle(*this);
+	toplevel_handle->set_title(xdg_toplevel->title);
+	toplevel_handle->set_app_id(xdg_toplevel->app_id);
 
 	if (xdg_toplevel->parent != nullptr) {
 		magpie_surface_t* m_surface = static_cast<magpie_surface_t*>(xdg_toplevel->parent->base->data);
 		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
-			wlr_foreign_toplevel_handle_v1_set_parent(toplevel_handle, m_surface->view->toplevel_handle);
+			toplevel_handle->set_parent(m_surface->view->toplevel_handle);
 		}
 	}
 
@@ -261,7 +198,7 @@ XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(ser
 }
 
 XdgView::~XdgView() noexcept {
-	wlr_foreign_toplevel_handle_v1_destroy(toplevel_handle);
+	delete toplevel_handle;
 	wl_list_remove(&listeners.map.link);
 	wl_list_remove(&listeners.unmap.link);
 	wl_list_remove(&listeners.destroy.link);
@@ -321,5 +258,78 @@ void XdgView::begin_interactive(CursorMode mode, uint32_t edges) {
 
 void XdgView::set_activated(bool activated) {
 	wlr_xdg_toplevel_set_activated(xdg_toplevel, activated);
-	wlr_foreign_toplevel_handle_v1_set_activated(toplevel_handle, activated);
+	toplevel_handle->set_activated(activated);
+}
+
+void XdgView::set_maximized(bool maximized) {
+	Cursor& cursor = *server.seat->cursor;
+
+	struct wlr_xdg_toplevel* toplevel = xdg_toplevel;
+	if (toplevel->current.maximized == maximized) {
+		/* Don't honor request if already maximized. */
+		return;
+	}
+
+	struct wlr_surface* focused_surface = server.seat->wlr_seat->pointer_state.focused_surface;
+	if (toplevel->base->surface != wlr_surface_get_root_surface(focused_surface)) {
+		/* Deny maximize requests from unfocused clients. */
+		return;
+	}
+
+	if (toplevel->current.maximized) {
+		wlr_xdg_toplevel_set_size(toplevel, previous.width, previous.height);
+		wlr_xdg_toplevel_set_maximized(toplevel, false);
+		current.x = previous.x;
+		current.y = previous.y;
+		wlr_scene_node_set_position(scene_node, current.x, current.y);
+	} else {
+		wlr_xdg_surface_get_geometry(toplevel->base, &previous);
+		previous.x = current.x;
+		previous.y = current.y;
+
+		Output* best_output = NULL;
+		long best_area = 0;
+
+		for (auto* output : server.outputs) {
+			if (!wlr_output_layout_intersects(server.output_layout, output->wlr_output, &previous)) {
+				continue;
+			}
+
+			struct wlr_box output_box;
+			wlr_output_layout_get_box(server.output_layout, output->wlr_output, &output_box);
+			struct wlr_box intersection;
+			wlr_box_intersection(&intersection, &previous, &output_box);
+			long intersection_area = intersection.width * intersection.height;
+
+			if (intersection.width * intersection.height > best_area) {
+				best_area = intersection_area;
+				best_output = output;
+			}
+		}
+
+		// if it's outside of all outputs, just use the pointer position
+		if (best_output == NULL) {
+			for (auto* output : server.outputs) {
+				if (wlr_output_layout_contains_point(
+						server.output_layout, output->wlr_output, cursor.wlr_cursor->x, cursor.wlr_cursor->y)) {
+					best_output = output;
+					break;
+				}
+			}
+		}
+
+		// still nothing? use the first output in the list
+		if (best_output == NULL) {
+			best_output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
+		}
+
+		struct wlr_box output_box;
+		wlr_output_layout_get_box(server.output_layout, best_output->wlr_output, &output_box);
+
+		wlr_xdg_toplevel_set_size(toplevel, output_box.width, output_box.height);
+		wlr_xdg_toplevel_set_maximized(toplevel, true);
+		current.x = output_box.x;
+		current.y = output_box.y;
+		wlr_scene_node_set_position(scene_node, current.x, current.y);
+	}
 }

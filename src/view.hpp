@@ -17,7 +17,7 @@ class View {
 	struct wlr_surface* surface;
 	struct wlr_scene_tree* scene_tree;
 	struct wlr_scene_node* scene_node;
-	struct wlr_foreign_toplevel_handle_v1* toplevel_handle;
+	ForeignToplevelHandle* toplevel_handle;
 
 	virtual ~View() noexcept {};
 
@@ -25,7 +25,9 @@ class View {
 	virtual struct wlr_box get_geometry() = 0;
 	virtual void set_size(int new_width, int new_height) = 0;
 	virtual void begin_interactive(CursorMode mode, uint32_t edges) = 0;
+
 	virtual void set_activated(bool activated) = 0;
+	virtual void set_maximized(bool maximized) = 0;
 };
 
 class XdgView : public View {
@@ -60,7 +62,9 @@ class XdgView : public View {
 	struct wlr_box get_geometry();
 	void set_size(int new_width, int new_height);
 	void begin_interactive(CursorMode mode, uint32_t edges);
+
 	void set_activated(bool activated);
+	void set_maximized(bool maximized);
 };
 
 class XWaylandView : public View {
@@ -94,7 +98,9 @@ class XWaylandView : public View {
 	struct wlr_box get_geometry();
 	void set_size(int new_width, int new_height);
 	void begin_interactive(CursorMode mode, uint32_t edges);
+
 	void set_activated(bool activated);
+	void set_maximized(bool maximized);
 };
 
 #endif
