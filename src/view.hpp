@@ -43,6 +43,7 @@ class XdgView : public View {
 		wl_listener request_fullscreen;
 		wl_listener set_title;
 		wl_listener set_app_id;
+		wl_listener set_parent;
 	};
 
   private:
@@ -76,6 +77,7 @@ class XWaylandView : public View {
 		wl_listener set_geometry;
 		wl_listener set_title;
 		wl_listener set_class;
+		wl_listener set_parent;
 	};
 
   private:

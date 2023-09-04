@@ -192,6 +192,23 @@ static void xdg_toplevel_set_app_id_notify(wl_listener* listener, void* data) {
 	wlr_foreign_toplevel_handle_v1_set_app_id(view.toplevel_handle, view.xdg_toplevel->app_id);
 }
 
+static void xdg_toplevel_set_parent_notify(wl_listener* listener, void* data) {
+	(void) data;
+
+	XdgView::listener_container* container = wl_container_of(listener, container, set_parent);
+	XdgView& view = *container->parent;
+
+	if (view.xdg_toplevel->parent != nullptr) {
+		magpie_surface_t* m_surface = static_cast<magpie_surface_t*>(view.xdg_toplevel->parent->base->data);
+		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
+			wlr_foreign_toplevel_handle_v1_set_parent(view.toplevel_handle, m_surface->view->toplevel_handle);
+			return;
+		}
+	}
+
+	wlr_foreign_toplevel_handle_v1_set_parent(view.toplevel_handle, nullptr);
+}
+
 XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(server) {
 	listeners.parent = this;
 
@@ -210,6 +227,13 @@ XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(ser
 	toplevel_handle = wlr_foreign_toplevel_handle_v1_create(server.foreign_toplevel_manager);
 	wlr_foreign_toplevel_handle_v1_set_title(toplevel_handle, xdg_toplevel->title);
 	wlr_foreign_toplevel_handle_v1_set_app_id(toplevel_handle, xdg_toplevel->app_id);
+
+	if (xdg_toplevel->parent != nullptr) {
+		magpie_surface_t* m_surface = static_cast<magpie_surface_t*>(xdg_toplevel->parent->base->data);
+		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
+			wlr_foreign_toplevel_handle_v1_set_parent(toplevel_handle, m_surface->view->toplevel_handle);
+		}
+	}
 
 	/* Listen to the various events it can emit */
 	listeners.map.notify = xdg_toplevel_map_notify;
@@ -232,6 +256,8 @@ XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(ser
 	wl_signal_add(&xdg_toplevel->events.set_title, &listeners.set_title);
 	listeners.set_app_id.notify = xdg_toplevel_set_app_id_notify;
 	wl_signal_add(&xdg_toplevel->events.set_app_id, &listeners.set_app_id);
+	listeners.set_parent.notify = xdg_toplevel_set_parent_notify;
+	wl_signal_add(&xdg_toplevel->events.set_parent, &listeners.set_parent);
 }
 
 XdgView::~XdgView() noexcept {
@@ -244,6 +270,7 @@ XdgView::~XdgView() noexcept {
 	wl_list_remove(&listeners.request_maximize.link);
 	wl_list_remove(&listeners.set_title.link);
 	wl_list_remove(&listeners.set_app_id.link);
+	wl_list_remove(&listeners.set_parent.link);
 }
 
 Server& XdgView::get_server() {

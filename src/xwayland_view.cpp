@@ -1,4 +1,5 @@
 #include "server.hpp"
+#include "surface.hpp"
 #include "types.hpp"
 #include "view.hpp"
 #include "input/cursor.hpp"
@@ -23,12 +24,30 @@ static void xwayland_surface_map_notify(wl_listener* listener, void* data) {
 	XWaylandView& view = *container->parent;
 
 	magpie_surface_t* surface = new_magpie_surface_from_view(view);
+	view.xwayland_surface->data = surface;
 	view.xwayland_surface->surface->data = surface;
 
 	view.surface = view.xwayland_surface->surface;
 	view.scene_tree = wlr_scene_subsurface_tree_create(&view.server.scene->tree, view.xwayland_surface->surface);
 	view.scene_node = &view.scene_tree->node;
 	view.scene_node->data = surface;
+
+	view.toplevel_handle = wlr_foreign_toplevel_handle_v1_create(view.server.foreign_toplevel_manager);
+
+	if (view.xwayland_surface->title != nullptr) {
+		wlr_foreign_toplevel_handle_v1_set_title(view.toplevel_handle, view.xwayland_surface->title);
+	}
+
+	if (view.xwayland_surface->_class != nullptr) {
+		wlr_foreign_toplevel_handle_v1_set_app_id(view.toplevel_handle, view.xwayland_surface->_class);
+	}
+
+	if (view.xwayland_surface->parent != nullptr) {
+		magpie_surface_t* m_surface = static_cast<magpie_surface_t*>(view.xwayland_surface->parent->data);
+		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
+			wlr_foreign_toplevel_handle_v1_set_parent(view.toplevel_handle, m_surface->view->toplevel_handle);
+		}
+	}
 
 	wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
 
@@ -57,6 +76,9 @@ static void xwayland_surface_unmap_notify(wl_listener* listener, void* data) {
 
 	wlr_scene_node_destroy(&view.scene_tree->node);
 	server.views.remove(&view);
+
+	wlr_foreign_toplevel_handle_v1_destroy(view.toplevel_handle);
+	view.toplevel_handle = nullptr;
 }
 
 static void xwayland_surface_destroy_notify(wl_listener* listener, void* data) {
@@ -136,7 +158,7 @@ static void xwayland_surface_set_title_notify(wl_listener* listener, void* data)
 	XWaylandView::listener_container* container = wl_container_of(listener, container, set_title);
 	XWaylandView& view = *container->parent;
 
-	if (view.xwayland_surface->title != nullptr) {
+	if (view.xwayland_surface->title != nullptr && view.toplevel_handle != nullptr) {
 		wlr_foreign_toplevel_handle_v1_set_title(view.toplevel_handle, view.xwayland_surface->title);
 	}
 }
@@ -147,24 +169,36 @@ static void xwayland_surface_set_class_notify(wl_listener* listener, void* data)
 	XWaylandView::listener_container* container = wl_container_of(listener, container, set_class);
 	XWaylandView& view = *container->parent;
 
-	if (view.xwayland_surface->_class != nullptr) {
+	if (view.xwayland_surface->_class != nullptr && view.toplevel_handle != nullptr) {
 		wlr_foreign_toplevel_handle_v1_set_app_id(view.toplevel_handle, view.xwayland_surface->_class);
 	}
+}
+
+static void xwayland_surface_set_parent_notify(wl_listener* listener, void* data) {
+	(void) data;
+
+	XWaylandView::listener_container* container = wl_container_of(listener, container, set_parent);
+	XWaylandView& view = *container->parent;
+
+	if (view.toplevel_handle == nullptr)
+		return;
+
+	if (view.xwayland_surface->parent != nullptr) {
+		magpie_surface_t* m_surface = static_cast<magpie_surface_t*>(view.xwayland_surface->parent->data);
+		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
+			wlr_foreign_toplevel_handle_v1_set_parent(view.toplevel_handle, m_surface->view->toplevel_handle);
+			return;
+		}
+	}
+
+	wlr_foreign_toplevel_handle_v1_set_parent(view.toplevel_handle, nullptr);
 }
 
 XWaylandView::XWaylandView(Server& server, struct wlr_xwayland_surface* xwayland_surface) : server(server) {
 	listeners.parent = this;
 
 	this->xwayland_surface = xwayland_surface;
-	toplevel_handle = wlr_foreign_toplevel_handle_v1_create(server.foreign_toplevel_manager);
-
-	if (xwayland_surface->title != nullptr) {
-		wlr_foreign_toplevel_handle_v1_set_title(toplevel_handle, xwayland_surface->title);
-	}
-
-	if (xwayland_surface->_class != nullptr) {
-		wlr_foreign_toplevel_handle_v1_set_app_id(toplevel_handle, xwayland_surface->_class);
-	}
+	toplevel_handle = nullptr;
 
 	/* Listen to the various events it can emit */
 	listeners.map.notify = xwayland_surface_map_notify;
@@ -185,13 +219,21 @@ XWaylandView::XWaylandView(Server& server, struct wlr_xwayland_surface* xwayland
 	wl_signal_add(&xwayland_surface->events.set_title, &listeners.set_title);
 	listeners.set_class.notify = xwayland_surface_set_class_notify;
 	wl_signal_add(&xwayland_surface->events.set_class, &listeners.set_class);
+	listeners.set_parent.notify = xwayland_surface_set_parent_notify;
+	wl_signal_add(&xwayland_surface->events.set_parent, &listeners.set_parent);
 }
 
 XWaylandView::~XWaylandView() noexcept {
-	wlr_foreign_toplevel_handle_v1_destroy(toplevel_handle);
 	wl_list_remove(&listeners.map.link);
 	wl_list_remove(&listeners.unmap.link);
 	wl_list_remove(&listeners.destroy.link);
+	wl_list_remove(&listeners.request_configure.link);
+	wl_list_remove(&listeners.request_move.link);
+	wl_list_remove(&listeners.request_resize.link);
+	wl_list_remove(&listeners.set_geometry.link);
+	wl_list_remove(&listeners.set_title.link);
+	wl_list_remove(&listeners.set_class.link);
+	wl_list_remove(&listeners.set_parent.link);
 }
 
 Server& XWaylandView::get_server() {
