@@ -48,10 +48,11 @@ Popup::Popup(magpie_surface_t& parent_surface, struct wlr_xdg_popup* xdg_popup)
 	listeners.parent = this;
 
 	this->xdg_popup = xdg_popup;
-	scene_tree = wlr_scene_xdg_surface_create(parent_surface.scene_tree, xdg_popup->base);
+	auto* scene_tree = wlr_scene_xdg_surface_create(parent_surface.scene_node->parent, xdg_popup->base);
+	scene_node = &scene_tree->node;
 
 	magpie_surface_t* surface = new_magpie_surface_from_popup(*this);
-	scene_tree->node.data = surface;
+	scene_node->data = surface; 
 	xdg_popup->base->surface->data = surface;
 
 	listeners.map.notify = popup_map_notify;

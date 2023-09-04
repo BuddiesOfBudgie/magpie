@@ -149,7 +149,7 @@ static void xdg_toplevel_set_parent_notify(wl_listener* listener, void* data) {
 XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(server) {
 	listeners.parent = this;
 
-	scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, toplevel->base);
+	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, toplevel->base);
 	scene_node = &scene_tree->node;
 	surface = toplevel->base->surface;
 

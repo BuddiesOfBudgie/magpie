@@ -62,7 +62,7 @@ void Cursor::process_resize(uint32_t time) {
 	struct wlr_box geo_box = view.get_geometry();
 	view.current.x = new_left - geo_box.x;
 	view.current.y = new_top - geo_box.y;
-	wlr_scene_node_set_position(&view.scene_tree->node, view.current.x, view.current.y);
+	wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
 
 	int new_width = new_right - new_left;
 	int new_height = new_bottom - new_top;
@@ -77,7 +77,7 @@ void Cursor::process_move(uint32_t time) {
 	view->current.x = wlr_cursor->x - seat.server.grab_x;
 	view->current.y = fmax(wlr_cursor->y - seat.server.grab_y, 0);
 	wlr_xcursor_manager_set_cursor_image(cursor_mgr, "fleur", wlr_cursor);
-	wlr_scene_node_set_position(&view->scene_tree->node, view->current.x, view->current.y);
+	wlr_scene_node_set_position(view->scene_node, view->current.x, view->current.y);
 }
 
 void Cursor::process_motion(uint32_t time) {

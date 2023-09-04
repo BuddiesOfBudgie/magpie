@@ -15,7 +15,6 @@ class View {
 	struct wlr_box pending;
 	struct wlr_box previous;
 	struct wlr_surface* surface;
-	struct wlr_scene_tree* scene_tree;
 	struct wlr_scene_node* scene_node;
 	ForeignToplevelHandle* toplevel_handle;
 

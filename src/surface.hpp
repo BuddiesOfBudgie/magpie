@@ -9,7 +9,7 @@ struct magpie_surface {
 	Server* server;
 
 	magpie_surface_type_t type;
-	struct wlr_scene_tree* scene_tree;
+	struct wlr_scene_node* scene_node;
 
 	union {
 		View* view;

@@ -30,17 +30,19 @@ static void xwayland_surface_map_notify(wl_listener* listener, void* data) {
 	view.xwayland_surface->surface->data = surface;
 
 	view.surface = view.xwayland_surface->surface;
-	view.scene_tree = wlr_scene_subsurface_tree_create(&view.server.scene->tree, view.xwayland_surface->surface);
-	view.scene_node = &view.scene_tree->node;
-	view.scene_node->data = surface;
 
 	view.toplevel_handle = new ForeignToplevelHandle(view);
 	view.toplevel_handle->set_title(view.xwayland_surface->title);
 	view.toplevel_handle->set_app_id(view.xwayland_surface->_class);
 
+	struct wlr_scene_tree* scene_tree = wlr_scene_subsurface_tree_create(&view.server.scene->tree, view.xwayland_surface->surface);
+	view.scene_node = &scene_tree->node;
+	view.scene_node->data = surface;
+
 	if (view.xwayland_surface->parent != nullptr) {
 		magpie_surface_t* m_surface = static_cast<magpie_surface_t*>(view.xwayland_surface->parent->data);
 		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
+			wlr_scene_node_reparent(view.scene_node, m_surface->view->scene_node->parent);
 			view.toplevel_handle->set_parent(m_surface->view->toplevel_handle);
 		}
 	}
@@ -70,7 +72,7 @@ static void xwayland_surface_unmap_notify(wl_listener* listener, void* data) {
 		server.seat->wlr_seat->keyboard_state.focused_surface = NULL;
 	}
 
-	wlr_scene_node_destroy(&view.scene_tree->node);
+	wlr_scene_node_destroy(view.scene_node);
 	server.views.remove(&view);
 
 	delete view.toplevel_handle;
@@ -101,7 +103,7 @@ static void xwayland_surface_request_configure_notify(wl_listener* listener, voi
 	view.current = {event->x, event->y, event->width, event->height};
 
 	if (surface->mapped) {
-		wlr_scene_node_set_position(&view.scene_tree->node, event->x, event->y);
+		wlr_scene_node_set_position(view.scene_node, event->x, event->y);
 	}
 }
 
@@ -115,7 +117,7 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, void* da
 
 	view.current = {surface.x, surface.y, surface.width, surface.height};
 	if (surface.mapped) {
-		wlr_scene_node_set_position(&view.scene_tree->node, view.current.x, view.current.y);
+		wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
 	}
 }
 
@@ -182,6 +184,7 @@ static void xwayland_surface_set_parent_notify(wl_listener* listener, void* data
 	if (view.xwayland_surface->parent != nullptr) {
 		magpie_surface_t* m_surface = static_cast<magpie_surface_t*>(view.xwayland_surface->parent->data);
 		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
+			wlr_scene_node_reparent(view.scene_node, m_surface->view->scene_node->parent);
 			view.toplevel_handle->set_parent(m_surface->view->toplevel_handle);
 			return;
 		}

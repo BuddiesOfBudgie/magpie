@@ -24,7 +24,7 @@ class Popup {
 	magpie_surface_t& parent;
 
 	struct wlr_xdg_popup* xdg_popup;
-	struct wlr_scene_tree* scene_tree;
+	struct wlr_scene_node* scene_node;
 
 	Popup(magpie_surface_t& parent, struct wlr_xdg_popup* xdg_popup);
 };

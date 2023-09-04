@@ -15,7 +15,7 @@ magpie_surface_t* new_magpie_surface_from_view(View& view) {
 	surface->type = MAGPIE_SURFACE_TYPE_VIEW;
 	surface->server = &view.get_server();
 	surface->view = &view;
-	surface->scene_tree = view.scene_tree;
+	surface->scene_node = view.scene_node;
 	return surface;
 }
 
@@ -24,7 +24,7 @@ magpie_surface_t* new_magpie_surface_from_layer(Layer& layer) {
 	surface->type = MAGPIE_SURFACE_TYPE_LAYER;
 	surface->server = &layer.server;
 	surface->layer = &layer;
-	surface->scene_tree = layer.scene_layer_surface->tree;
+	surface->scene_node = &layer.scene_layer_surface->tree->node;
 	return surface;
 }
 
@@ -33,6 +33,6 @@ magpie_surface_t* new_magpie_surface_from_popup(Popup& popup) {
 	surface->type = MAGPIE_SURFACE_TYPE_POPUP;
 	surface->server = &popup.server;
 	surface->popup = &popup;
-	surface->scene_tree = popup.scene_tree;
+	surface->scene_node = popup.scene_node;
 	return surface;
 }
