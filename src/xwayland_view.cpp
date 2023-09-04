@@ -22,9 +22,12 @@ static void xwayland_surface_map_notify(wl_listener* listener, void* data) {
 	XWaylandView& view = *container->parent;
 
 	magpie_surface_t* surface = new_magpie_surface_from_view(view);
-	view.scene_tree->node.data = surface;
-	view.surface = view.xwayland_surface->surface;
 	view.xwayland_surface->surface->data = surface;
+
+	view.surface = view.xwayland_surface->surface;
+	view.scene_tree = wlr_scene_subsurface_tree_create(&view.server.scene->tree, view.xwayland_surface->surface);
+	view.scene_node = &view.scene_tree->node;
+	view.scene_node->data = surface;
 
 	wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
 
@@ -130,8 +133,6 @@ XWaylandView::XWaylandView(Server& server, struct wlr_xwayland_surface* xwayland
 	listeners.parent = this;
 
 	this->xwayland_surface = xwayland_surface;
-	scene_tree = wlr_scene_tree_create(&server.scene->tree);
-	scene_node = &scene_tree->node;
 
 	/* Listen to the various events it can emit */
 	listeners.map.notify = xwayland_surface_map_notify;
