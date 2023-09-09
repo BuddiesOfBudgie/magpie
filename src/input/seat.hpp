@@ -6,8 +6,6 @@
 #include <vector>
 #include <wayland-server-core.h>
 
-
-
 class Seat {
   public:
 	struct Listeners {

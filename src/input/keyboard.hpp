@@ -5,8 +5,6 @@
 
 #include <wayland-server-core.h>
 
-
-
 class Keyboard {
   public:
 	struct Listeners {
