@@ -24,8 +24,7 @@ static void xdg_toplevel_map_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is mapped, or ready to display on-screen. */
-	XdgView::Listeners* container = wl_container_of(listener, container, map);
-	XdgView& view = *container->parent;
+	XdgView& view = *magpie_container_of(listener, view, map);
 
 	view.server.views.push_back(&view);
 	view.server.focus_view(view, view.xdg_toplevel->base->surface);
@@ -35,8 +34,7 @@ static void xdg_toplevel_unmap_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is unmapped, and should no longer be shown. */
-	XdgView::Listeners* container = wl_container_of(listener, container, unmap);
-	XdgView& view = *container->parent;
+	XdgView& view = *magpie_container_of(listener, view, unmap);
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
 	if (&view == view.server.grabbed_view) {
@@ -50,8 +48,7 @@ static void xdg_toplevel_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is destroyed and should never be shown again. */
-	XdgView::Listeners* container = wl_container_of(listener, container, destroy);
-	XdgView& view = *container->parent;
+	XdgView& view = *magpie_container_of(listener, view, destroy);
 
 	// just in case
 	view.server.views.remove(&view);
@@ -67,8 +64,7 @@ static void xdg_toplevel_request_move_notify(wl_listener* listener, void* data) 
 	 * decorations. Note that a more sophisticated compositor should check the
 	 * provided serial against a list of button press serials sent to this
 	 * client, to prevent the client from requesting this whenever they want. */
-	XdgView::Listeners* container = wl_container_of(listener, container, request_move);
-	XdgView& view = *container->parent;
+	XdgView& view = *magpie_container_of(listener, view, request_move);
 
 	wlr_xdg_toplevel_set_maximized(view.xdg_toplevel, false);
 	view.toplevel_handle->set_maximized(false);
@@ -81,8 +77,7 @@ static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data
 	 * decorations. Note that a more sophisticated compositor should check the
 	 * provided serial against a list of button press serials sent to this
 	 * client, to prevent the client from requesting this whenever they want. */
-	XdgView::Listeners* container = wl_container_of(listener, container, request_resize);
-	XdgView& view = *container->parent;
+	XdgView& view = *magpie_container_of(listener, view, request_resize);
 
 	struct wlr_xdg_toplevel_resize_event* event = static_cast<struct wlr_xdg_toplevel_resize_event*>(data);
 	wlr_xdg_toplevel_set_maximized(view.xdg_toplevel, false);
@@ -95,8 +90,7 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 	/* This event is raised when a client would like to maximize itself,
 	 * typically because the user clicked on the maximize button on
 	 * client-side decorations. */
-	XdgView::Listeners* container = wl_container_of(listener, container, request_maximize);
-	XdgView& view = *container->parent;
+	XdgView& view = *magpie_container_of(listener, view, request_maximize);
 
 	view.set_maximized(true);
 }
@@ -105,8 +99,7 @@ static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* 
 	(void) data;
 
 	/* We must send a configure here, even on a no-op. */
-	XdgView::Listeners* container = wl_container_of(listener, container, request_fullscreen);
-	XdgView& view = *container->parent;
+	XdgView& view = *magpie_container_of(listener, view, request_fullscreen);
 
 	wlr_xdg_surface_schedule_configure(view.xdg_toplevel->base);
 }
@@ -114,8 +107,7 @@ static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* 
 static void xdg_toplevel_set_title_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	XdgView::Listeners* container = wl_container_of(listener, container, set_title);
-	XdgView& view = *container->parent;
+	XdgView& view = *magpie_container_of(listener, view, set_title);
 
 	view.toplevel_handle->set_title(view.xdg_toplevel->title);
 }
@@ -123,8 +115,7 @@ static void xdg_toplevel_set_title_notify(wl_listener* listener, void* data) {
 static void xdg_toplevel_set_app_id_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	XdgView::Listeners* container = wl_container_of(listener, container, set_app_id);
-	XdgView& view = *container->parent;
+	XdgView& view = *magpie_container_of(listener, view, set_app_id);
 
 	view.toplevel_handle->set_app_id(view.xdg_toplevel->app_id);
 }
@@ -132,8 +123,7 @@ static void xdg_toplevel_set_app_id_notify(wl_listener* listener, void* data) {
 static void xdg_toplevel_set_parent_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	XdgView::Listeners* container = wl_container_of(listener, container, set_parent);
-	XdgView& view = *container->parent;
+	XdgView& view = *magpie_container_of(listener, view, set_parent);
 
 	if (view.xdg_toplevel->parent != nullptr) {
 		magpie_surface_t* m_surface = static_cast<magpie_surface_t*>(view.xdg_toplevel->parent->base->data);

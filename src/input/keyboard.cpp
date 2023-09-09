@@ -22,15 +22,12 @@ static void keyboard_handle_destroy(wl_listener* listener, void* data) {
 	 * the destruction of the wlr_keyboard. It will no longer receive events
 	 * and should be destroyed.
 	 */
-	Keyboard::Listeners* container = wl_container_of(listener, container, destroy);
-	Keyboard& keyboard = *container->parent;
-
-	wl_list_remove(&container->modifiers.link);
-	wl_list_remove(&container->key.link);
-	wl_list_remove(&container->destroy.link);
+	Keyboard& keyboard = *magpie_container_of(listener, keyboard, destroy);
 
 	std::vector<Keyboard*>& keyboards = keyboard.seat.keyboards;
 	std::remove(keyboards.begin(), keyboards.end(), &keyboard);
+
+	delete &keyboard;
 }
 
 static bool handle_compositor_keybinding(Keyboard& keyboard, uint32_t modifiers, xkb_keysym_t sym) {
@@ -66,8 +63,7 @@ static bool handle_compositor_keybinding(Keyboard& keyboard, uint32_t modifiers,
 
 static void keyboard_handle_key(wl_listener* listener, void* data) {
 	/* This event is raised when a key is pressed or released. */
-	Keyboard::Listeners* container = wl_container_of(listener, container, key);
-	Keyboard& keyboard = *container->parent;
+	Keyboard& keyboard = *magpie_container_of(listener, keyboard, key);
 
 	struct wlr_keyboard_key_event* event = static_cast<struct wlr_keyboard_key_event*>(data);
 	struct wlr_seat* seat = keyboard.seat.wlr_seat;
@@ -104,8 +100,7 @@ static void keyboard_handle_modifiers(wl_listener* listener, void* data) {
 
 	/* This event is raised when a modifier key, such as shift or alt, is
 	 * pressed. We simply communicate this to the client. */
-	Keyboard::Listeners* container = wl_container_of(listener, container, modifiers);
-	Keyboard& keyboard = *container->parent;
+	Keyboard& keyboard = *magpie_container_of(listener, keyboard, modifiers);
 
 	/*
 	 * A seat can only have one keyboard, but this is a limitation of the
@@ -142,4 +137,10 @@ Keyboard::Keyboard(Seat& seat, struct wlr_keyboard* wlr_keyboard) : seat(seat) {
 	wl_signal_add(&wlr_keyboard->base.events.destroy, &listeners.destroy);
 
 	wlr_seat_set_keyboard(seat.wlr_seat, wlr_keyboard);
+}
+
+Keyboard::~Keyboard() noexcept {
+	wl_list_remove(&listeners.modifiers.link);
+	wl_list_remove(&listeners.key.link);
+	wl_list_remove(&listeners.destroy.link);
 }

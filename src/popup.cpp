@@ -1,8 +1,7 @@
 #include "popup.hpp"
+
 #include "surface.hpp"
 #include "types.hpp"
-
-#include <cstdlib>
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_scene.h>
@@ -22,13 +21,7 @@ static void popup_unmap_notify(wl_listener* listener, void* data) {
 static void popup_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	Popup::Listeners* container = wl_container_of(listener, container, destroy);
-	Popup& popup = *container->parent;
-	wl_list_remove(&container->map.link);
-	wl_list_remove(&container->unmap.link);
-	wl_list_remove(&container->destroy.link);
-	wl_list_remove(&container->commit.link);
-	wl_list_remove(&container->new_popup.link);
+	Popup& popup = *magpie_container_of(listener, popup, destroy);
 
 	delete &popup;
 }
@@ -39,8 +32,9 @@ static void popup_commit_notify(wl_listener* listener, void* data) {
 }
 
 static void popup_new_popup_notify(wl_listener* listener, void* data) {
-	Popup::Listeners* container = wl_container_of(listener, container, new_popup);
-	new Popup(container->parent->parent, static_cast<wlr_xdg_popup*>(data));
+	Popup& popup = *magpie_container_of(listener, popup, new_popup);
+
+	new Popup(popup.parent, static_cast<wlr_xdg_popup*>(data));
 }
 
 Popup::Popup(magpie_surface_t& parent_surface, struct wlr_xdg_popup* xdg_popup)
@@ -65,4 +59,12 @@ Popup::Popup(magpie_surface_t& parent_surface, struct wlr_xdg_popup* xdg_popup)
 	wl_signal_add(&xdg_popup->base->surface->events.commit, &listeners.commit);
 	listeners.new_popup.notify = popup_new_popup_notify;
 	wl_signal_add(&xdg_popup->base->events.new_popup, &listeners.new_popup);
+}
+
+Popup::~Popup() noexcept {
+	wl_list_remove(&listeners.map.link);
+	wl_list_remove(&listeners.unmap.link);
+	wl_list_remove(&listeners.destroy.link);
+	wl_list_remove(&listeners.commit.link);
+	wl_list_remove(&listeners.new_popup.link);
 }

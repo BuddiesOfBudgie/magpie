@@ -24,6 +24,7 @@ class Keyboard {
 	struct wlr_keyboard* wlr_keyboard;
 
 	Keyboard(Seat& seat, struct wlr_keyboard* wlr_keyboard);
+	~Keyboard() noexcept;
 };
 
 #endif

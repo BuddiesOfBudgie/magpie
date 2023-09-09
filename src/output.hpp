@@ -26,6 +26,7 @@ class Output {
 	struct wlr_box usable_area;
 
 	Output(Server& server, struct wlr_output* wlr_output);
+	~Output() noexcept;
 
 	void update_areas();
 };

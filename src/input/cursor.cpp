@@ -126,8 +126,7 @@ void Cursor::process_motion(uint32_t time) {
 void cursor_axis_notify(wl_listener* listener, void* data) {
 	/* This event is forwarded by the cursor when a pointer emits an axis event,
 	 * for example when you move the scroll wheel. */
-	Cursor::Listeners* container = wl_container_of(listener, container, axis);
-	Cursor& cursor = *container->parent;
+	Cursor& cursor = *magpie_container_of(listener, cursor, axis);
 
 	struct wlr_pointer_axis_event* event = static_cast<struct wlr_pointer_axis_event*>(data);
 	/* Notify the client with pointer focus of the axis event. */
@@ -142,8 +141,7 @@ void cursor_frame_notify(wl_listener* listener, void* data) {
 	 * event. Frame events are sent after regular pointer events to group
 	 * multiple events together. For instance, two axis events may happen at the
 	 * same time, in which case a frame event won't be sent in between. */
-	Cursor::Listeners* container = wl_container_of(listener, container, frame);
-	Cursor& cursor = *container->parent;
+	Cursor& cursor = *magpie_container_of(listener, cursor, frame);
 
 	/* Notify the client with pointer focus of the frame event. */
 	wlr_seat_pointer_notify_frame(cursor.seat.wlr_seat);
@@ -156,8 +154,7 @@ void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
 	 * move the mouse over the window. You could enter the window from any edge,
 	 * so we have to warp the mouse there. There is also some hardware which
 	 * emits these events. */
-	Cursor::Listeners* container = wl_container_of(listener, container, motion_absolute);
-	Cursor& cursor = *container->parent;
+	Cursor& cursor = *magpie_container_of(listener, cursor, motion_absolute);
 
 	struct wlr_pointer_motion_absolute_event* event = static_cast<struct wlr_pointer_motion_absolute_event*>(data);
 	wlr_cursor_warp_absolute(cursor.wlr_cursor, &event->pointer->base, event->x, event->y);
@@ -175,8 +172,7 @@ void Cursor::reset_mode() {
 
 void cursor_button_notify(wl_listener* listener, void* data) {
 	/* This event is forwarded by the cursor when a pointer emits a button event. */
-	Cursor::Listeners* container = wl_container_of(listener, container, button);
-	Cursor& cursor = *container->parent;
+	Cursor& cursor = *magpie_container_of(listener, cursor, button);
 
 	Server& server = cursor.seat.server;
 	struct wlr_pointer_button_event* event = static_cast<struct wlr_pointer_button_event*>(data);
@@ -200,8 +196,7 @@ void cursor_button_notify(wl_listener* listener, void* data) {
 void cursor_motion_notify(wl_listener* listener, void* data) {
 	/* This event is forwarded by the cursor when a pointer emits a _relative_
 	 * pointer motion event (i.e. a delta) */
-	Cursor::Listeners* container = wl_container_of(listener, container, motion);
-	Cursor& cursor = *container->parent;
+	Cursor& cursor = *magpie_container_of(listener, cursor, motion);
 
 	struct wlr_pointer_motion_event* event = static_cast<struct wlr_pointer_motion_event*>(data);
 

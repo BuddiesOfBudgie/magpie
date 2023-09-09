@@ -32,9 +32,9 @@ class Layer {
 	std::set<LayerSubsurface*> subsurfaces;
 
 	Layer(Server& server, struct wlr_layer_surface_v1* surface);
+
+	~Layer() noexcept;
 };
-
-
 
 class LayerSubsurface {
   public:
@@ -54,6 +54,8 @@ class LayerSubsurface {
 	struct wlr_subsurface* wlr_subsurface;
 
 	LayerSubsurface(Layer& parent_layer, struct wlr_subsurface* wlr_subsurface);
+
+	~LayerSubsurface() noexcept;
 };
 
 #endif

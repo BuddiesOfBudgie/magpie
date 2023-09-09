@@ -105,8 +105,7 @@ magpie_surface_t* Server::surface_at(double lx, double ly, struct wlr_surface** 
 }
 
 void new_input_notify(wl_listener* listener, void* data) {
-	Server::Listeners* container = wl_container_of(listener, container, backend_new_input);
-	Server& server = *container->parent;
+	Server& server = *magpie_container_of(listener, server, backend_new_input);
 
 	struct wlr_input_device* device = static_cast<struct wlr_input_device*>(data);
 	server.seat->new_input_device(device);
@@ -115,8 +114,7 @@ void new_input_notify(wl_listener* listener, void* data) {
 static void new_output_notify(wl_listener* listener, void* data) {
 	/* This event is raised by the backend when a new output (aka a display or
 	 * monitor) becomes available. */
-	Server::Listeners* container = wl_container_of(listener, container, backend_new_output);
-	Server& server = *container->parent;
+	Server& server = *magpie_container_of(listener, server, backend_new_output);
 
 	struct wlr_output* wlr_output = static_cast<struct wlr_output*>(data);
 
@@ -159,8 +157,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 	/* This event is raised when wlr_xdg_shell receives a new xdg surface from a
 	 * client, either a toplevel (application window) or popup. */
-	Server::Listeners* container = wl_container_of(listener, container, xdg_shell_new_xdg_surface);
-	Server& server = *container->parent;
+	Server& server = *magpie_container_of(listener, server, xdg_shell_new_xdg_surface);
 
 	struct wlr_xdg_surface* xdg_surface = static_cast<struct wlr_xdg_surface*>(data);
 
@@ -173,8 +170,7 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 }
 
 static void new_layer_surface_notify(wl_listener* listener, void* data) {
-	Server::Listeners* container = wl_container_of(listener, container, layer_shell_new_layer_surface);
-	Server& server = *container->parent;
+	Server& server = *magpie_container_of(listener, server, layer_shell_new_layer_surface);
 
 	struct wlr_layer_surface_v1* layer_surface = static_cast<struct wlr_layer_surface_v1*>(data);
 
@@ -183,8 +179,7 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 }
 
 static void request_activation_notify(wl_listener* listener, void* data) {
-	Server::Listeners* container = wl_container_of(listener, container, activation_request_activation);
-	Server& server = *container->parent;
+	Server& server = *magpie_container_of(listener, server, activation_request_activation);
 
 	struct wlr_xdg_activation_v1_request_activate_event* event =
 		static_cast<struct wlr_xdg_activation_v1_request_activate_event*>(data);

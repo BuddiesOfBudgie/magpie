@@ -1,13 +1,11 @@
 #include "layer.hpp"
+
 #include "output.hpp"
 #include "popup.hpp"
 #include "server.hpp"
 #include "surface.hpp"
 #include "types.hpp"
 #include "xdg-shell-protocol.h"
-
-#include <cassert>
-#include <cstdlib>
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_layer_shell_v1.h>
@@ -71,10 +69,8 @@ static void update_layer_layout(Server* server) {
 static void subsurface_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	LayerSubsurface::Listeners* container = wl_container_of(listener, container, destroy);
-	LayerSubsurface& subsurface = *container->parent;
+	LayerSubsurface& subsurface = *magpie_container_of(listener, subsurface, destroy);
 
-	wl_list_remove(&container->destroy.link);
 	subsurface.parent_layer.subsurfaces.erase(&subsurface);
 	delete &subsurface;
 }
@@ -88,12 +84,15 @@ LayerSubsurface::LayerSubsurface(Layer& parent_layer, struct wlr_subsurface* wlr
 	wl_signal_add(&wlr_subsurface->events.destroy, &listeners.destroy);
 }
 
+LayerSubsurface::~LayerSubsurface() noexcept {
+	wl_list_remove(&listeners.destroy.link);
+}
+
 static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is mapped, or ready to display on-screen. */
-	Layer::Listeners* container = wl_container_of(listener, container, map);
-	Layer& layer = *container->parent;
+	Layer& layer = *magpie_container_of(listener, layer, map);
 
 	layer.server.layers.emplace(&layer);
 }
@@ -102,8 +101,7 @@ static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, void* data)
 	(void) data;
 
 	/* Called when the surface is unmapped, and should no longer be shown. */
-	Layer::Listeners* container = wl_container_of(listener, container, unmap);
-	Layer& layer = *container->parent;
+	Layer& layer = *magpie_container_of(listener, layer, unmap);
 
 	layer.server.layers.erase(&layer);
 }
@@ -112,16 +110,7 @@ static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void* dat
 	(void) data;
 
 	/* Called when the surface is destroyed and should never be shown again. */
-	Layer::Listeners* container = wl_container_of(listener, container, destroy);
-	Layer& layer = *container->parent;
-
-	wl_list_remove(&container->map.link);
-	wl_list_remove(&container->unmap.link);
-	wl_list_remove(&container->destroy.link);
-	wl_list_remove(&container->commit.link);
-	wl_list_remove(&container->new_popup.link);
-	wl_list_remove(&container->new_subsurface.link);
-	wl_list_remove(&container->output_destroy.link);
+	Layer& layer = *magpie_container_of(listener, layer, destroy);
 
 	layer.server.layers.erase(&layer); // just in case
 	delete &layer;
@@ -130,8 +119,7 @@ static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void* dat
 static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	Layer::Listeners* container = wl_container_of(listener, container, commit);
-	Layer& layer = *container->parent;
+	Layer& layer = *magpie_container_of(listener, layer, commit);
 
 	Server& server = layer.server;
 	struct wlr_layer_surface_v1* surface = layer.layer_surface;
@@ -148,16 +136,14 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data
 }
 
 static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* data) {
-	Layer::Listeners* container = wl_container_of(listener, container, new_popup);
-	Layer& layer = *container->parent;
+	Layer& layer = *magpie_container_of(listener, layer, new_popup);
 
 	magpie_surface_t* surface = static_cast<magpie_surface_t*>(layer.layer_surface->surface->data);
 	new Popup(*surface, static_cast<struct wlr_xdg_popup*>(data));
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, void* data) {
-	Layer::Listeners* container = wl_container_of(listener, container, new_subsurface);
-	Layer& layer = *container->parent;
+	Layer& layer = *magpie_container_of(listener, layer, new_subsurface);
 
 	struct wlr_subsurface* subsurface = static_cast<struct wlr_subsurface*>(data);
 	layer.subsurfaces.emplace(new LayerSubsurface(layer, subsurface));
@@ -166,11 +152,9 @@ static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, vo
 static void wlr_layer_surface_v1_output_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	Layer::Listeners* container = wl_container_of(listener, container, output_destroy);
-	Layer& layer = *container->parent;
+	Layer& layer = *magpie_container_of(listener, layer, output_destroy);
 
 	layer.layer_surface->output = nullptr;
-	wl_list_remove(&container->output_destroy.link);
 	wlr_layer_surface_v1_destroy(layer.layer_surface);
 }
 
@@ -206,4 +190,14 @@ Layer::Layer(Server& server, struct wlr_layer_surface_v1* surface) : server(serv
 	wl_signal_add(&surface->surface->events.new_subsurface, &listeners.new_subsurface);
 	listeners.output_destroy.notify = wlr_layer_surface_v1_output_destroy_notify;
 	wl_signal_add(&surface->output->events.destroy, &listeners.output_destroy);
+}
+
+Layer::~Layer() noexcept {
+	wl_list_remove(&listeners.map.link);
+	wl_list_remove(&listeners.unmap.link);
+	wl_list_remove(&listeners.destroy.link);
+	wl_list_remove(&listeners.commit.link);
+	wl_list_remove(&listeners.new_popup.link);
+	wl_list_remove(&listeners.new_subsurface.link);
+	wl_list_remove(&listeners.output_destroy.link);
 }

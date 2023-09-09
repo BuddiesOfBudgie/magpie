@@ -21,4 +21,10 @@ class Popup;
 
 typedef struct magpie_surface magpie_surface_t;
 
+#define magpie_container_of(ptr, sample, member)                                                                               \
+	(__extension__({                                                                                                           \
+		std::remove_reference<decltype(sample)>::type::Listeners* container = wl_container_of(ptr, container, member);         \
+		container->parent;                                                                                                     \
+	}))
+
 #endif

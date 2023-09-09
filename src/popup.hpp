@@ -28,6 +28,7 @@ class Popup {
 	struct wlr_scene_node* scene_node;
 
 	Popup(magpie_surface_t& parent, struct wlr_xdg_popup* xdg_popup);
+	~Popup() noexcept;
 };
 
 #endif

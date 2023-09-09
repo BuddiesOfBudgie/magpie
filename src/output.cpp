@@ -13,11 +13,9 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 
 	/* This function is called every time an output is ready to display a frame,
 	 * generally at the output's refresh rate (e.g. 60Hz). */
-	Output::Listeners* container = wl_container_of(listener, container, frame);
-	Output& output = *container->parent;
+	Output& output = *magpie_container_of(listener, output, frame);
 
 	struct wlr_scene* scene = output.server.scene;
-
 	struct wlr_scene_output* scene_output = wlr_scene_get_scene_output(scene, output.wlr_output);
 
 	/* Render the scene if needed and commit the output */
@@ -31,14 +29,12 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 static void output_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	Output::Listeners* container = wl_container_of(listener, container, destroy);
-	Output& output = *container->parent;
-
-	wl_list_remove(&container->frame.link);
-	wl_list_remove(&container->destroy.link);
+	Output& output = *magpie_container_of(listener, output, destroy);
 
 	std::set<Output*>& outputs = output.server.outputs;
 	outputs.erase(&output);
+
+	delete &output;
 }
 
 Output::Output(Server& server, struct wlr_output* wlr_output) : server(server) {
@@ -51,6 +47,11 @@ Output::Output(Server& server, struct wlr_output* wlr_output) : server(server) {
 	wl_signal_add(&wlr_output->events.frame, &listeners.frame);
 	listeners.destroy.notify = output_destroy_notify;
 	wl_signal_add(&wlr_output->events.destroy, &listeners.destroy);
+}
+
+Output::~Output() noexcept {
+	wl_list_remove(&listeners.frame.link);
+	wl_list_remove(&listeners.destroy.link);
 }
 
 void Output::update_areas() {
