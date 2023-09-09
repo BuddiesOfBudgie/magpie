@@ -1,12 +1,25 @@
 #include "output.hpp"
-#include "types.hpp"
-#include <algorithm>
-#include <cstdlib>
 
+#include "layer.hpp"
+#include "types.hpp"
+
+#include <algorithm>
 #include <set>
+
 #include <wlr-wrap-start.hpp>
+#include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr-wrap-end.hpp>
+
+static void output_mode_notify(wl_listener* listener, void* data) {
+	(void) data;
+
+	/* This function is called every time an output is ready to display a frame,
+	 * generally at the output's refresh rate (e.g. 60Hz). */
+	Output& output = *magpie_container_of(listener, output, mode);
+
+	output.update_layout();
+}
 
 static void output_frame_notify(wl_listener* listener, void* data) {
 	(void) data;
@@ -31,8 +44,10 @@ static void output_destroy_notify(wl_listener* listener, void* data) {
 
 	Output& output = *magpie_container_of(listener, output, destroy);
 
-	std::set<Output*>& outputs = output.server.outputs;
-	outputs.erase(&output);
+	output.server.outputs.erase(&output);
+	for (auto* layer : output.layers) {
+		wlr_layer_surface_v1_destroy(layer->layer_surface);
+	}
 
 	delete &output;
 }
@@ -43,6 +58,8 @@ Output::Output(Server& server, struct wlr_output* wlr_output) : server(server) {
 	this->wlr_output = wlr_output;
 	wlr_output->data = this;
 
+	listeners.mode.notify = output_mode_notify;
+	wl_signal_add(&wlr_output->events.mode, &listeners.mode);
 	listeners.frame.notify = output_frame_notify;
 	wl_signal_add(&wlr_output->events.frame, &listeners.frame);
 	listeners.destroy.notify = output_destroy_notify;
@@ -50,11 +67,12 @@ Output::Output(Server& server, struct wlr_output* wlr_output) : server(server) {
 }
 
 Output::~Output() noexcept {
+	wl_list_remove(&listeners.mode.link);
 	wl_list_remove(&listeners.frame.link);
 	wl_list_remove(&listeners.destroy.link);
 }
 
-void Output::update_areas() {
+void Output::update_layout() {
 	struct wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, wlr_output);
 
 	full_area.x = scene_output->x;
@@ -62,4 +80,8 @@ void Output::update_areas() {
 	wlr_output_effective_resolution(wlr_output, &full_area.width, &full_area.height);
 
 	usable_area = full_area;
+
+	for (auto* layer : layers) {
+		wlr_scene_layer_surface_v1_configure(layer->scene_layer_surface, &full_area, &usable_area);
+	}
 }

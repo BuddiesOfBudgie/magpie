@@ -1,5 +1,7 @@
 #include "surface.hpp"
+
 #include "layer.hpp"
+#include "output.hpp"
 #include "popup.hpp"
 #include "types.hpp"
 #include "view.hpp"
@@ -22,7 +24,7 @@ magpie_surface_t* new_magpie_surface_from_view(View& view) {
 magpie_surface_t* new_magpie_surface_from_layer(Layer& layer) {
 	magpie_surface_t* surface = (magpie_surface_t*) std::calloc(1, sizeof(magpie_surface_t));
 	surface->type = MAGPIE_SURFACE_TYPE_LAYER;
-	surface->server = &layer.server;
+	surface->server = &layer.output.server;
 	surface->layer = &layer;
 	surface->scene_node = &layer.scene_layer_surface->tree->node;
 	return surface;

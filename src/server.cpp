@@ -151,7 +151,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	 */
 	wlr_output_layout_add_auto(server.output_layout, wlr_output);
 
-	output->update_areas();
+	output->update_layout();
 }
 
 static void new_xdg_surface_notify(wl_listener* listener, void* data) {
@@ -175,7 +175,14 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 	struct wlr_layer_surface_v1* layer_surface = static_cast<struct wlr_layer_surface_v1*>(data);
 
 	/* Allocate a View for this surface */
-	server.layers.emplace(new Layer(server, layer_surface));
+	Output* output;
+	if (layer_surface->output == nullptr) {
+		output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
+		layer_surface->output = output->wlr_output;
+	} else {
+		output = static_cast<Output*>(layer_surface->output->data);
+	}
+	output->layers.emplace(new Layer(*output, layer_surface));
 }
 
 static void request_activation_notify(wl_listener* listener, void* data) {

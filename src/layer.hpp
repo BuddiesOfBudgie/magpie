@@ -16,22 +16,20 @@ class Layer {
 		wl_listener commit;
 		wl_listener new_popup;
 		wl_listener new_subsurface;
-		wl_listener output_destroy;
 	};
 
   private:
 	Listeners listeners;
 
   public:
-	Server& server;
-	Output* output;
+	Output& output;
 
 	struct wlr_layer_surface_v1* layer_surface;
 	struct wlr_scene_layer_surface_v1* scene_layer_surface;
 
 	std::set<LayerSubsurface*> subsurfaces;
 
-	Layer(Server& server, struct wlr_layer_surface_v1* surface);
+	Layer(Output& output, struct wlr_layer_surface_v1* surface);
 
 	~Layer() noexcept;
 };

@@ -12,6 +12,7 @@ class Output {
   public:
 	struct Listeners {
 		Output* parent;
+		wl_listener mode;
 		wl_listener frame;
 		wl_listener destroy;
 	};
@@ -24,11 +25,12 @@ class Output {
 	struct wlr_output* wlr_output;
 	struct wlr_box full_area;
 	struct wlr_box usable_area;
+	std::set<Layer*> layers;
 
 	Output(Server& server, struct wlr_output* wlr_output);
 	~Output() noexcept;
 
-	void update_areas();
+	void update_layout();
 };
 
 #endif

@@ -57,7 +57,6 @@ class Server {
 	struct wlr_foreign_toplevel_manager_v1* foreign_toplevel_manager;
 
 	struct wlr_layer_shell_v1* layer_shell;
-	std::set<Layer*> layers;
 
 	Seat* seat;
 
