@@ -6,16 +6,19 @@
 #include <vector>
 #include <wayland-server-core.h>
 
-struct seat_listener_container {
-	Seat* parent;
-	wl_listener new_input;
-	wl_listener request_cursor;
-	wl_listener request_set_selection;
-};
+
 
 class Seat {
+  public:
+	struct Listeners {
+		Seat* parent;
+		wl_listener new_input;
+		wl_listener request_cursor;
+		wl_listener request_set_selection;
+	};
+
   private:
-	seat_listener_container listeners;
+	Listeners listeners;
 
   public:
 	Server& server;

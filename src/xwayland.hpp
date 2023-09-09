@@ -20,15 +20,16 @@ enum atom_name {
 	ATOM_LAST,
 };
 
-struct xwayland_listener_container {
-	XWayland* parent;
-	wl_listener ready;
-	wl_listener new_surface;
-};
-
 class XWayland {
+  public:
+	struct Listeners {
+		XWayland* parent;
+		wl_listener ready;
+		wl_listener new_surface;
+	};
+
   private:
-	xwayland_listener_container listeners;
+	Listeners listeners;
 
   public:
 	Server& server;

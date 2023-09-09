@@ -9,11 +9,11 @@
 #include "wlr-wrap-end.hpp"
 
 static void foreign_toplevel_handle_request_maximize_notify(wl_listener* listener, void* data) {
-  	auto& event = *static_cast<struct wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
-  
-	ForeignToplevelHandle::listener_container* container = wl_container_of(listener, container, request_activate);
+	auto& event = *static_cast<struct wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
+
+	ForeignToplevelHandle::Listeners* container = wl_container_of(listener, container, request_activate);
 	ForeignToplevelHandle& handle = *container->parent;
-        
+
 	handle.view.set_maximized(event.maximized);
 }
 
@@ -25,7 +25,7 @@ static void foreign_toplevel_handle_request_minimize_notify(wl_listener* listene
 static void foreign_toplevel_handle_request_activate_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	ForeignToplevelHandle::listener_container* container = wl_container_of(listener, container, request_activate);
+	ForeignToplevelHandle::Listeners* container = wl_container_of(listener, container, request_activate);
 	ForeignToplevelHandle& handle = *container->parent;
 
 	handle.view.set_activated(true);

@@ -13,7 +13,7 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 
 	/* This function is called every time an output is ready to display a frame,
 	 * generally at the output's refresh rate (e.g. 60Hz). */
-	output_listener_container* container = wl_container_of(listener, container, frame);
+	Output::Listeners* container = wl_container_of(listener, container, frame);
 	Output& output = *container->parent;
 
 	struct wlr_scene* scene = output.server.scene;
@@ -31,7 +31,7 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 static void output_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	output_listener_container* container = wl_container_of(listener, container, destroy);
+	Output::Listeners* container = wl_container_of(listener, container, destroy);
 	Output& output = *container->parent;
 
 	wl_list_remove(&container->frame.link);

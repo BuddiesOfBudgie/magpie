@@ -31,7 +31,7 @@ class View {
 
 class XdgView : public View {
   public:
-	struct listener_container {
+	struct Listeners {
 		XdgView* parent;
 		wl_listener map;
 		wl_listener unmap;
@@ -48,7 +48,7 @@ class XdgView : public View {
 	};
 
   private:
-	listener_container listeners;
+	Listeners listeners;
 
   public:
 	Server& server;
@@ -68,7 +68,7 @@ class XdgView : public View {
 
 class XWaylandView : public View {
   public:
-	struct listener_container {
+	struct Listeners {
 		XWaylandView* parent;
 		wl_listener map;
 		wl_listener unmap;
@@ -84,7 +84,7 @@ class XWaylandView : public View {
 	};
 
   private:
-	listener_container listeners;
+	Listeners listeners;
 
   public:
 	Server& server;

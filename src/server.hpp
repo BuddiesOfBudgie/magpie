@@ -23,18 +23,19 @@ typedef enum {
 	MAGPIE_SCENE_LAYER_LOCK
 } magpie_scene_layer_t;
 
-struct server_listener_container {
-	Server* parent;
-	wl_listener xdg_shell_new_xdg_surface;
-	wl_listener layer_shell_new_layer_surface;
-	wl_listener activation_request_activation;
-	wl_listener backend_new_input;
-	wl_listener backend_new_output;
-};
-
 class Server {
+  public:
+	struct Listeners {
+		Server* parent;
+		wl_listener xdg_shell_new_xdg_surface;
+		wl_listener layer_shell_new_layer_surface;
+		wl_listener activation_request_activation;
+		wl_listener backend_new_input;
+		wl_listener backend_new_output;
+	};
+
   private:
-	server_listener_container listeners;
+	Listeners listeners;
 
   public:
 	wl_display* display;

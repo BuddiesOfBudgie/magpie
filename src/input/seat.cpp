@@ -37,7 +37,7 @@ void Seat::new_input_device(struct wlr_input_device* device) {
 }
 
 void request_cursor_notify(wl_listener* listener, void* data) {
-	seat_listener_container* container = wl_container_of(listener, container, request_cursor);
+	Seat::Listeners* container = wl_container_of(listener, container, request_cursor);
 	Seat& seat = *container->parent;
 
 	auto* event = static_cast<struct wlr_seat_pointer_request_set_cursor_event*>(data);
@@ -57,7 +57,7 @@ void request_set_selection_notify(wl_listener* listener, void* data) {
 	 * usually when the user copies something. wlroots allows compositors to
 	 * ignore such requests if they so choose, but in magpie we always honor
 	 */
-	seat_listener_container* container = wl_container_of(listener, container, request_set_selection);
+	Seat::Listeners* container = wl_container_of(listener, container, request_set_selection);
 	Seat& seat = *container->parent;
 
 	struct wlr_seat_request_set_selection_event* event = static_cast<struct wlr_seat_request_set_selection_event*>(data);

@@ -7,18 +7,19 @@
 
 enum CursorMode { MAGPIE_CURSOR_PASSTHROUGH, MAGPIE_CURSOR_MOVE, MAGPIE_CURSOR_RESIZE };
 
-struct cursor_listener_container {
-	Cursor* parent;
-	wl_listener motion;
-	wl_listener motion_absolute;
-	wl_listener button;
-	wl_listener axis;
-	wl_listener frame;
-};
-
 class Cursor {
+  public:
+	struct Listeners {
+		Cursor* parent;
+		wl_listener motion;
+		wl_listener motion_absolute;
+		wl_listener button;
+		wl_listener axis;
+		wl_listener frame;
+	};
+
   private:
-	cursor_listener_container listeners;
+	Listeners listeners;
 
 	void process_move(uint32_t time);
 	void process_resize(uint32_t time);

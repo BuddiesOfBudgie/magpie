@@ -7,7 +7,7 @@
 
 class ForeignToplevelHandle {
   public:
-	struct listener_container {
+	struct Listeners {
 		ForeignToplevelHandle* parent;
 		wl_listener request_maximize;
 		wl_listener request_minimize;
@@ -18,7 +18,7 @@ class ForeignToplevelHandle {
 	};
 
   private:
-	listener_container listeners;
+	Listeners listeners;
 
   public:
 	View& view;

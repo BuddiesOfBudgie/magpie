@@ -22,7 +22,7 @@ static void xwayland_surface_map_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is mapped, or ready to display on-screen. */
-	XWaylandView::listener_container* container = wl_container_of(listener, container, map);
+	XWaylandView::Listeners* container = wl_container_of(listener, container, map);
 	XWaylandView& view = *container->parent;
 
 	magpie_surface_t* surface = new_magpie_surface_from_view(view);
@@ -35,7 +35,8 @@ static void xwayland_surface_map_notify(wl_listener* listener, void* data) {
 	view.toplevel_handle->set_title(view.xwayland_surface->title);
 	view.toplevel_handle->set_app_id(view.xwayland_surface->_class);
 
-	struct wlr_scene_tree* scene_tree = wlr_scene_subsurface_tree_create(&view.server.scene->tree, view.xwayland_surface->surface);
+	struct wlr_scene_tree* scene_tree =
+		wlr_scene_subsurface_tree_create(&view.server.scene->tree, view.xwayland_surface->surface);
 	view.scene_node = &scene_tree->node;
 	view.scene_node->data = surface;
 
@@ -57,7 +58,7 @@ static void xwayland_surface_unmap_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is unmapped, and should no longer be shown. */
-	XWaylandView::listener_container* container = wl_container_of(listener, container, unmap);
+	XWaylandView::Listeners* container = wl_container_of(listener, container, unmap);
 	XWaylandView& view = *container->parent;
 
 	Server& server = view.server;
@@ -83,7 +84,7 @@ static void xwayland_surface_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is destroyed and should never be shown again. */
-	XWaylandView::listener_container* container = wl_container_of(listener, container, destroy);
+	XWaylandView::Listeners* container = wl_container_of(listener, container, destroy);
 	XWaylandView& view = *container->parent;
 
 	// just in case
@@ -93,7 +94,7 @@ static void xwayland_surface_destroy_notify(wl_listener* listener, void* data) {
 }
 
 static void xwayland_surface_request_configure_notify(wl_listener* listener, void* data) {
-	XWaylandView::listener_container* container = wl_container_of(listener, container, request_configure);
+	XWaylandView::Listeners* container = wl_container_of(listener, container, request_configure);
 	XWaylandView& view = *container->parent;
 
 	struct wlr_xwayland_surface* surface = view.xwayland_surface;
@@ -110,7 +111,7 @@ static void xwayland_surface_request_configure_notify(wl_listener* listener, voi
 static void xwayland_surface_set_geometry_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	XWaylandView::listener_container* container = wl_container_of(listener, container, set_geometry);
+	XWaylandView::Listeners* container = wl_container_of(listener, container, set_geometry);
 	XWaylandView& view = *container->parent;
 
 	struct wlr_xwayland_surface& surface = *view.xwayland_surface;
@@ -129,7 +130,7 @@ static void xwayland_surface_request_move_notify(wl_listener* listener, void* da
 	 * decorations. Note that a more sophisticated compositor should check the
 	 * provided serial against a list of button press serials sent to this
 	 * client, to prevent the client from requesting this whenever they want. */
-	XWaylandView::listener_container* container = wl_container_of(listener, container, request_move);
+	XWaylandView::Listeners* container = wl_container_of(listener, container, request_move);
 	XWaylandView& view = *container->parent;
 
 	wlr_xwayland_surface_set_maximized(view.xwayland_surface, false);
@@ -142,7 +143,7 @@ static void xwayland_surface_request_resize_notify(wl_listener* listener, void* 
 	 * decorations. Note that a more sophisticated compositor should check the
 	 * provided serial against a list of button press serials sent to this
 	 * client, to prevent the client from requesting this whenever they want. */
-	XWaylandView::listener_container* container = wl_container_of(listener, container, request_resize);
+	XWaylandView::Listeners* container = wl_container_of(listener, container, request_resize);
 	XWaylandView& view = *container->parent;
 
 	struct wlr_xwayland_resize_event* event = static_cast<struct wlr_xwayland_resize_event*>(data);
@@ -153,7 +154,7 @@ static void xwayland_surface_request_resize_notify(wl_listener* listener, void* 
 static void xwayland_surface_set_title_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	XWaylandView::listener_container* container = wl_container_of(listener, container, set_title);
+	XWaylandView::Listeners* container = wl_container_of(listener, container, set_title);
 	XWaylandView& view = *container->parent;
 
 	if (view.toplevel_handle != nullptr) {
@@ -164,7 +165,7 @@ static void xwayland_surface_set_title_notify(wl_listener* listener, void* data)
 static void xwayland_surface_set_class_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	XWaylandView::listener_container* container = wl_container_of(listener, container, set_class);
+	XWaylandView::Listeners* container = wl_container_of(listener, container, set_class);
 	XWaylandView& view = *container->parent;
 
 	if (view.toplevel_handle != nullptr) {
@@ -175,7 +176,7 @@ static void xwayland_surface_set_class_notify(wl_listener* listener, void* data)
 static void xwayland_surface_set_parent_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	XWaylandView::listener_container* container = wl_container_of(listener, container, set_parent);
+	XWaylandView::Listeners* container = wl_container_of(listener, container, set_parent);
 	XWaylandView& view = *container->parent;
 
 	if (view.toplevel_handle == nullptr)

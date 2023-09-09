@@ -6,18 +6,19 @@
 
 #include <wayland-server-core.h>
 
-struct popup_listener_container {
-	Popup* parent;
-	wl_listener map;
-	wl_listener unmap;
-	wl_listener destroy;
-	wl_listener commit;
-	wl_listener new_popup;
-};
-
 class Popup {
+  public:
+	struct Listeners {
+		Popup* parent;
+		wl_listener map;
+		wl_listener unmap;
+		wl_listener destroy;
+		wl_listener commit;
+		wl_listener new_popup;
+	};
+
   private:
-	popup_listener_container listeners;
+	Listeners listeners;
 
   public:
 	Server& server;

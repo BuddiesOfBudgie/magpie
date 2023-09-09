@@ -8,15 +8,16 @@
 #include <wlr/util/box.h>
 #include "wlr-wrap-end.hpp"
 
-struct output_listener_container {
-	Output* parent;
-	wl_listener frame;
-	wl_listener destroy;
-};
-
 class Output {
+  public:
+	struct Listeners {
+		Output* parent;
+		wl_listener frame;
+		wl_listener destroy;
+	};
+
   private:
-	output_listener_container listeners;
+	Listeners listeners;
 
   public:
 	Server& server;

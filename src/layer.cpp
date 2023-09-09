@@ -71,7 +71,7 @@ static void update_layer_layout(Server* server) {
 static void subsurface_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	layer_subsurface_listener_container* container = wl_container_of(listener, container, destroy);
+	LayerSubsurface::Listeners* container = wl_container_of(listener, container, destroy);
 	LayerSubsurface& subsurface = *container->parent;
 
 	wl_list_remove(&container->destroy.link);
@@ -92,7 +92,7 @@ static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	/* Called when the surface is mapped, or ready to display on-screen. */
-	layer_listener_container* container = wl_container_of(listener, container, map);
+	Layer::Listeners* container = wl_container_of(listener, container, map);
 	Layer& layer = *container->parent;
 
 	layer.server.layers.emplace(&layer);
@@ -102,7 +102,7 @@ static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, void* data)
 	(void) data;
 
 	/* Called when the surface is unmapped, and should no longer be shown. */
-	layer_listener_container* container = wl_container_of(listener, container, unmap);
+	Layer::Listeners* container = wl_container_of(listener, container, unmap);
 	Layer& layer = *container->parent;
 
 	layer.server.layers.erase(&layer);
@@ -112,7 +112,7 @@ static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void* dat
 	(void) data;
 
 	/* Called when the surface is destroyed and should never be shown again. */
-	layer_listener_container* container = wl_container_of(listener, container, destroy);
+	Layer::Listeners* container = wl_container_of(listener, container, destroy);
 	Layer& layer = *container->parent;
 
 	wl_list_remove(&container->map.link);
@@ -130,7 +130,7 @@ static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void* dat
 static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	layer_listener_container* container = wl_container_of(listener, container, commit);
+	Layer::Listeners* container = wl_container_of(listener, container, commit);
 	Layer& layer = *container->parent;
 
 	Server& server = layer.server;
@@ -148,7 +148,7 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data
 }
 
 static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* data) {
-	layer_listener_container* container = wl_container_of(listener, container, new_popup);
+	Layer::Listeners* container = wl_container_of(listener, container, new_popup);
 	Layer& layer = *container->parent;
 
 	magpie_surface_t* surface = static_cast<magpie_surface_t*>(layer.layer_surface->surface->data);
@@ -156,7 +156,7 @@ static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* d
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, void* data) {
-	layer_listener_container* container = wl_container_of(listener, container, new_subsurface);
+	Layer::Listeners* container = wl_container_of(listener, container, new_subsurface);
 	Layer& layer = *container->parent;
 
 	struct wlr_subsurface* subsurface = static_cast<struct wlr_subsurface*>(data);
@@ -166,7 +166,7 @@ static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, vo
 static void wlr_layer_surface_v1_output_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
-	layer_listener_container* container = wl_container_of(listener, container, output_destroy);
+	Layer::Listeners* container = wl_container_of(listener, container, output_destroy);
 	Layer& layer = *container->parent;
 
 	layer.layer_surface->output = nullptr;

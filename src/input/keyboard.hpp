@@ -5,16 +5,19 @@
 
 #include <wayland-server-core.h>
 
-struct keyboard_listener_container {
-	Keyboard* parent;
-	wl_listener modifiers;
-	wl_listener key;
-	wl_listener destroy;
-};
+
 
 class Keyboard {
+  public:
+	struct Listeners {
+		Keyboard* parent;
+		wl_listener modifiers;
+		wl_listener key;
+		wl_listener destroy;
+	};
+
   private:
-	keyboard_listener_container listeners;
+	Listeners listeners;
 
   public:
 	Seat& seat;
