@@ -11,6 +11,7 @@
 
 class View {
   public:
+	bool maximized;
 	struct wlr_box current;
 	struct wlr_box pending;
 	struct wlr_box previous;
@@ -22,11 +23,22 @@ class View {
 
 	virtual Server& get_server() = 0;
 	virtual struct wlr_box get_geometry() = 0;
-	virtual void set_size(int new_width, int new_height) = 0;
-	virtual void begin_interactive(CursorMode mode, uint32_t edges) = 0;
 
-	virtual void set_activated(bool activated) = 0;
-	virtual void set_maximized(bool maximized) = 0;
+	virtual void map() = 0;
+	virtual void unmap() = 0;
+
+	void begin_interactive(CursorMode mode, uint32_t edges);
+	void set_size(int new_width, int new_height);
+	void set_activated(bool activated);
+	void set_maximized(bool maximized);
+
+  private:
+	Output* find_output_for_maximize();
+
+  protected:
+	virtual void impl_set_size(int new_width, int new_height) = 0;
+	virtual void impl_set_activated(bool activated) = 0;
+	virtual void impl_set_maximized(bool maximized) = 0;
 };
 
 class XdgView : public View {
@@ -59,11 +71,13 @@ class XdgView : public View {
 
 	inline Server& get_server();
 	struct wlr_box get_geometry();
-	void set_size(int new_width, int new_height);
-	void begin_interactive(CursorMode mode, uint32_t edges);
+	void map();
+	void unmap();
 
-	void set_activated(bool activated);
-	void set_maximized(bool maximized);
+  protected:
+	void impl_set_size(int new_width, int new_height);
+	void impl_set_activated(bool activated);
+	void impl_set_maximized(bool maximized);
 };
 
 class XWaylandView : public View {
@@ -95,11 +109,13 @@ class XWaylandView : public View {
 
 	inline Server& get_server();
 	struct wlr_box get_geometry();
-	void set_size(int new_width, int new_height);
-	void begin_interactive(CursorMode mode, uint32_t edges);
+	void map();
+	void unmap();
 
-	void set_activated(bool activated);
-	void set_maximized(bool maximized);
+  protected:
+	void impl_set_size(int new_width, int new_height);
+	void impl_set_activated(bool activated);
+	void impl_set_maximized(bool maximized);
 };
 
 #endif
