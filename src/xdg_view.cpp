@@ -92,7 +92,8 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 	 * client-side decorations. */
 	XdgView& view = *magpie_container_of(listener, view, request_maximize);
 
-	view.set_maximized(true);
+	view.set_maximized(!view.xdg_toplevel->current.maximized);
+	wlr_xdg_surface_schedule_configure(view.xdg_toplevel->base);
 }
 
 static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* data) {
