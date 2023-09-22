@@ -30,9 +30,9 @@ Output* View::find_output_for_maximize() {
 			continue;
 		}
 
-		struct wlr_box output_box;
+		wlr_box output_box;
 		wlr_output_layout_get_box(server.output_layout, output->wlr_output, &output_box);
-		struct wlr_box intersection;
+		wlr_box intersection;
 		wlr_box_intersection(&intersection, &previous, &output_box);
 		long intersection_area = intersection.width * intersection.height;
 
@@ -65,7 +65,7 @@ void View::begin_interactive(CursorMode mode, uint32_t edges) {
 	Server& server = get_server();
 
 	Cursor* cursor = server.seat->cursor;
-	struct wlr_surface* focused_surface = server.seat->wlr_seat->pointer_state.focused_surface;
+	wlr_surface* focused_surface = server.seat->wlr_seat->pointer_state.focused_surface;
 
 	if (surface != wlr_surface_get_root_surface(focused_surface)) {
 		/* Deny move/resize requests from unfocused clients. */
@@ -79,7 +79,7 @@ void View::begin_interactive(CursorMode mode, uint32_t edges) {
 		server.grab_x = cursor->wlr_cursor->x - current.x;
 		server.grab_y = cursor->wlr_cursor->y - current.y;
 	} else {
-		struct wlr_box geo_box = get_geometry();
+		wlr_box geo_box = get_geometry();
 
 		double border_x = (current.x + geo_box.x) + ((edges & WLR_EDGE_RIGHT) ? geo_box.width : 0);
 		double border_y = (current.y + geo_box.y) + ((edges & WLR_EDGE_BOTTOM) ? geo_box.height : 0);
@@ -110,7 +110,7 @@ void View::set_maximized(bool maximized) {
 		return;
 	}
 
-	struct wlr_surface* focused_surface = server.seat->wlr_seat->pointer_state.focused_surface;
+	wlr_surface* focused_surface = server.seat->wlr_seat->pointer_state.focused_surface;
 	if (surface != wlr_surface_get_root_surface(focused_surface)) {
 		/* Deny maximize requests from unfocused clients. */
 		return;
@@ -128,7 +128,7 @@ void View::set_maximized(bool maximized) {
 		previous.y = current.y;
 
 		Output* best_output = find_output_for_maximize();
-		struct wlr_box output_box;
+		wlr_box output_box;
 		wlr_output_layout_get_box(server.output_layout, best_output->wlr_output, &output_box);
 
 		set_size(output_box.width, output_box.height);

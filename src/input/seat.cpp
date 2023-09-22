@@ -15,7 +15,7 @@
 #include <wlr/types/wlr_seat.h>
 #include "wlr-wrap-end.hpp"
 
-void Seat::new_input_device(struct wlr_input_device* device) {
+void Seat::new_input_device(wlr_input_device* device) {
 	switch (device->type) {
 		case WLR_INPUT_DEVICE_KEYBOARD:
 			keyboards.push_back(new Keyboard(*this, wlr_keyboard_from_input_device(device)));
@@ -39,8 +39,8 @@ void Seat::new_input_device(struct wlr_input_device* device) {
 void request_cursor_notify(wl_listener* listener, void* data) {
 	Seat& seat = *magpie_container_of(listener, seat, request_cursor);
 
-	auto* event = static_cast<struct wlr_seat_pointer_request_set_cursor_event*>(data);
-	struct wlr_seat_client* focused_client = seat.wlr_seat->pointer_state.focused_client;
+	auto* event = static_cast<wlr_seat_pointer_request_set_cursor_event*>(data);
+	wlr_seat_client* focused_client = seat.wlr_seat->pointer_state.focused_client;
 
 	if (focused_client == event->seat_client) {
 		/* Once we've vetted the client, we can tell the cursor to use the
@@ -58,7 +58,7 @@ void request_set_selection_notify(wl_listener* listener, void* data) {
 	 */
 	Seat& seat = *magpie_container_of(listener, seat, request_set_selection);
 
-	struct wlr_seat_request_set_selection_event* event = static_cast<struct wlr_seat_request_set_selection_event*>(data);
+	wlr_seat_request_set_selection_event* event = static_cast<wlr_seat_request_set_selection_event*>(data);
 	wlr_seat_set_selection(seat.wlr_seat, event->source, event->serial);
 }
 

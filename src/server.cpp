@@ -36,24 +36,24 @@
 #include <wlr/xwayland.h>
 #include "wlr-wrap-end.hpp"
 
-void Server::focus_view(View& view, struct wlr_surface* surface) {
+void Server::focus_view(View& view, wlr_surface* surface) {
 	Server& server = view.get_server();
-	struct wlr_seat* seat = server.seat->wlr_seat;
-	struct wlr_surface* prev_surface = seat->keyboard_state.focused_surface;
+	wlr_seat* seat = server.seat->wlr_seat;
+	wlr_surface* prev_surface = seat->keyboard_state.focused_surface;
 	if (prev_surface == surface) {
 		/* Don't re-focus an already focused surface. */
 		return;
 	}
 
 	if (prev_surface) {
-		struct wlr_surface* previous = seat->keyboard_state.focused_surface;
+		wlr_surface* previous = seat->keyboard_state.focused_surface;
 
 		if (wlr_surface_is_xdg_surface(previous)) {
-			struct wlr_xdg_surface* xdg_previous = wlr_xdg_surface_from_wlr_surface(previous);
+			wlr_xdg_surface* xdg_previous = wlr_xdg_surface_from_wlr_surface(previous);
 			assert(xdg_previous->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 			wlr_xdg_toplevel_set_activated(xdg_previous->toplevel, false);
 		} else if (wlr_surface_is_xwayland_surface(previous)) {
-			struct wlr_xwayland_surface* xwayland_previous = wlr_xwayland_surface_from_wlr_surface(previous);
+			wlr_xwayland_surface* xwayland_previous = wlr_xwayland_surface_from_wlr_surface(previous);
 			wlr_xwayland_surface_activate(xwayland_previous, false);
 		}
 	}
@@ -74,22 +74,22 @@ void Server::focus_view(View& view, struct wlr_surface* surface) {
 	 * track of this and automatically send key events to the appropriate
 	 * clients without additional work on your part.
 	 */
-	struct wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat);
+	wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat);
 	if (keyboard != nullptr) {
 		wlr_seat_keyboard_notify_enter(seat, view.surface, keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
 	}
 }
 
-magpie_surface_t* Server::surface_at(double lx, double ly, struct wlr_surface** surface, double* sx, double* sy) {
+magpie_surface_t* Server::surface_at(double lx, double ly, wlr_surface** surface, double* sx, double* sy) {
 	/* This returns the topmost node in the scene at the given layout coords.
 	 * we only care about surface nodes as we are specifically looking for a
 	 * surface in the surface tree of a magpie_view. */
-	struct wlr_scene_node* node = wlr_scene_node_at(&scene->tree.node, lx, ly, sx, sy);
+	wlr_scene_node* node = wlr_scene_node_at(&scene->tree.node, lx, ly, sx, sy);
 	if (node == NULL || node->type != WLR_SCENE_NODE_BUFFER) {
 		return NULL;
 	}
-	struct wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
-	struct wlr_scene_surface* scene_surface = wlr_scene_surface_from_buffer(scene_buffer);
+	wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
+	wlr_scene_surface* scene_surface = wlr_scene_surface_from_buffer(scene_buffer);
 	if (!scene_surface) {
 		return NULL;
 	}
@@ -97,7 +97,7 @@ magpie_surface_t* Server::surface_at(double lx, double ly, struct wlr_surface** 
 	*surface = scene_surface->surface;
 	/* Find the node corresponding to the magpie_view at the root of this
 	 * surface tree, it is the only one for which we set the data field. */
-	struct wlr_scene_tree* tree = node->parent;
+	wlr_scene_tree* tree = node->parent;
 	while (tree != NULL && tree->node.data == NULL) {
 		tree = tree->node.parent;
 	}
@@ -107,7 +107,7 @@ magpie_surface_t* Server::surface_at(double lx, double ly, struct wlr_surface** 
 void new_input_notify(wl_listener* listener, void* data) {
 	Server& server = *magpie_container_of(listener, server, backend_new_input);
 
-	struct wlr_input_device* device = static_cast<struct wlr_input_device*>(data);
+	wlr_input_device* device = static_cast<wlr_input_device*>(data);
 	server.seat->new_input_device(device);
 }
 
@@ -116,28 +116,28 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	 * monitor) becomes available. */
 	Server& server = *magpie_container_of(listener, server, backend_new_output);
 
-	struct wlr_output* wlr_output = static_cast<struct wlr_output*>(data);
+	wlr_output* new_output = static_cast<wlr_output*>(data);
 
 	/* Configures the output created by the backend to use our allocator
 	 * and our renderer. Must be done once, before commiting the output */
-	wlr_output_init_render(wlr_output, server.allocator, server.renderer);
+	wlr_output_init_render(new_output, server.allocator, server.renderer);
 
 	/* Some backends don't have modes. DRM+KMS does, and we need to set a mode
 	 * before we can use the output. The mode is a tuple of (width, height,
 	 * refresh rate), and each monitor supports only a specific set of modes. We
 	 * just pick the monitor's preferred mode, a more sophisticated compositor
 	 * would let the user configure it. */
-	if (!wl_list_empty(&wlr_output->modes)) {
-		struct wlr_output_mode* mode = wlr_output_preferred_mode(wlr_output);
-		wlr_output_set_mode(wlr_output, mode);
-		wlr_output_enable(wlr_output, true);
-		if (!wlr_output_commit(wlr_output)) {
+	if (!wl_list_empty(&new_output->modes)) {
+		wlr_output_mode* mode = wlr_output_preferred_mode(new_output);
+		wlr_output_set_mode(new_output, mode);
+		wlr_output_enable(new_output, true);
+		if (!wlr_output_commit(new_output)) {
 			return;
 		}
 	}
 
 	/* Allocates and configures our state for this output */
-	Output* output = new Output(server, wlr_output);
+	Output* output = new Output(server, new_output);
 	server.outputs.emplace(output);
 
 	/* Adds this to the output layout. The add_auto function arranges outputs
@@ -149,7 +149,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	 * display, which Wayland clients can see to find out information about the
 	 * output (such as DPI, scale factor, manufacturer, etc).
 	 */
-	wlr_output_layout_add_auto(server.output_layout, wlr_output);
+	wlr_output_layout_add_auto(server.output_layout, new_output);
 
 	output->update_layout();
 }
@@ -159,7 +159,7 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 	 * client, either a toplevel (application window) or popup. */
 	Server& server = *magpie_container_of(listener, server, xdg_shell_new_xdg_surface);
 
-	struct wlr_xdg_surface* xdg_surface = static_cast<struct wlr_xdg_surface*>(data);
+	wlr_xdg_surface* xdg_surface = static_cast<wlr_xdg_surface*>(data);
 
 	if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
 		new XdgView(server, xdg_surface->toplevel);
@@ -172,7 +172,7 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 static void new_layer_surface_notify(wl_listener* listener, void* data) {
 	Server& server = *magpie_container_of(listener, server, layer_shell_new_layer_surface);
 
-	struct wlr_layer_surface_v1* layer_surface = static_cast<struct wlr_layer_surface_v1*>(data);
+	wlr_layer_surface_v1* layer_surface = static_cast<wlr_layer_surface_v1*>(data);
 
 	/* Allocate a View for this surface */
 	Output* output;
@@ -188,14 +188,13 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 static void request_activation_notify(wl_listener* listener, void* data) {
 	Server& server = *magpie_container_of(listener, server, activation_request_activation);
 
-	struct wlr_xdg_activation_v1_request_activate_event* event =
-		static_cast<struct wlr_xdg_activation_v1_request_activate_event*>(data);
+	wlr_xdg_activation_v1_request_activate_event* event = static_cast<wlr_xdg_activation_v1_request_activate_event*>(data);
 
 	if (!wlr_surface_is_xdg_surface(event->surface)) {
 		return;
 	}
 
-	struct wlr_xdg_surface* xdg_surface = wlr_xdg_surface_from_wlr_surface(event->surface);
+	wlr_xdg_surface* xdg_surface = wlr_xdg_surface_from_wlr_surface(event->surface);
 	magpie_surface_t* surface = static_cast<magpie_surface_t*>(xdg_surface->surface->data);
 	if (surface->type != MAGPIE_SURFACE_TYPE_VIEW || !xdg_surface->mapped) {
 		return;

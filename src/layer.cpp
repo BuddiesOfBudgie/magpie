@@ -85,7 +85,7 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data
 	Layer& layer = *magpie_container_of(listener, layer, commit);
 
 	Server& server = layer.output.server;
-	struct wlr_layer_surface_v1* surface = layer.layer_surface;
+	wlr_layer_surface_v1* surface = layer.layer_surface;
 
 	uint32_t committed = surface->current.committed;
 	if (committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) {
@@ -102,17 +102,17 @@ static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* d
 	Layer& layer = *magpie_container_of(listener, layer, new_popup);
 
 	magpie_surface_t* surface = static_cast<magpie_surface_t*>(layer.layer_surface->surface->data);
-	new Popup(*surface, static_cast<struct wlr_xdg_popup*>(data));
+	new Popup(*surface, static_cast<wlr_xdg_popup*>(data));
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, void* data) {
 	Layer& layer = *magpie_container_of(listener, layer, new_subsurface);
 
-	struct wlr_subsurface* subsurface = static_cast<struct wlr_subsurface*>(data);
+	wlr_subsurface* subsurface = static_cast<wlr_subsurface*>(data);
 	layer.subsurfaces.emplace(new LayerSubsurface(layer, subsurface));
 }
 
-Layer::Layer(Output& output, struct wlr_layer_surface_v1* surface) : output(output) {
+Layer::Layer(Output& output, wlr_layer_surface_v1* surface) : output(output) {
 	listeners.parent = this;
 
 	layer_surface = surface;

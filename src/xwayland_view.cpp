@@ -46,8 +46,8 @@ static void xwayland_surface_destroy_notify(wl_listener* listener, void* data) {
 static void xwayland_surface_request_configure_notify(wl_listener* listener, void* data) {
 	XWaylandView& view = *magpie_container_of(listener, view, request_configure);
 
-	struct wlr_xwayland_surface* surface = view.xwayland_surface;
-	struct wlr_xwayland_surface_configure_event* event = static_cast<struct wlr_xwayland_surface_configure_event*>(data);
+	wlr_xwayland_surface* surface = view.xwayland_surface;
+	wlr_xwayland_surface_configure_event* event = static_cast<wlr_xwayland_surface_configure_event*>(data);
 
 	wlr_xwayland_surface_configure(surface, event->x, event->y, event->width, event->height);
 	view.current = {event->x, event->y, event->width, event->height};
@@ -62,7 +62,7 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, void* da
 
 	XWaylandView& view = *magpie_container_of(listener, view, set_geometry);
 
-	struct wlr_xwayland_surface& surface = *view.xwayland_surface;
+	wlr_xwayland_surface& surface = *view.xwayland_surface;
 
 	view.current = {surface.x, surface.y, surface.width, surface.height};
 	if (surface.mapped) {
@@ -92,7 +92,7 @@ static void xwayland_surface_request_move_notify(wl_listener* listener, void* da
 static void xwayland_surface_request_resize_notify(wl_listener* listener, void* data) {
 	XWaylandView& view = *magpie_container_of(listener, view, request_resize);
 
-	struct wlr_xwayland_resize_event* event = static_cast<struct wlr_xwayland_resize_event*>(data);
+	wlr_xwayland_resize_event* event = static_cast<wlr_xwayland_resize_event*>(data);
 	wlr_xwayland_surface_set_maximized(view.xwayland_surface, false);
 	view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
 }
@@ -137,7 +137,7 @@ static void xwayland_surface_set_parent_notify(wl_listener* listener, void* data
 	view.toplevel_handle->set_parent(nullptr);
 }
 
-XWaylandView::XWaylandView(Server& server, struct wlr_xwayland_surface* xwayland_surface) : server(server) {
+XWaylandView::XWaylandView(Server& server, wlr_xwayland_surface* xwayland_surface) : server(server) {
 	listeners.parent = this;
 
 	this->xwayland_surface = xwayland_surface;
@@ -183,8 +183,8 @@ Server& XWaylandView::get_server() {
 	return server;
 }
 
-struct wlr_box XWaylandView::get_geometry() {
-	struct wlr_box box;
+wlr_box XWaylandView::get_geometry() {
+	wlr_box box;
 	box.x = xwayland_surface->x;
 	box.y = xwayland_surface->y;
 	box.width = xwayland_surface->width;
@@ -203,7 +203,7 @@ void XWaylandView::map() {
 	toplevel_handle->set_title(xwayland_surface->title);
 	toplevel_handle->set_app_id(xwayland_surface->_class);
 
-	struct wlr_scene_tree* scene_tree = wlr_scene_subsurface_tree_create(&server.scene->tree, xwayland_surface->surface);
+	wlr_scene_tree* scene_tree = wlr_scene_subsurface_tree_create(&server.scene->tree, xwayland_surface->surface);
 	scene_node = &scene_tree->node;
 	scene_node->data = surface;
 

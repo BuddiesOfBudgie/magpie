@@ -49,7 +49,7 @@ static bool handle_compositor_keybinding(Keyboard& keyboard, uint32_t modifiers,
 		}
 	} else if (sym >= XKB_KEY_XF86Switch_VT_1 && sym <= XKB_KEY_XF86Switch_VT_12) {
 		if (wlr_backend_is_multi(keyboard.seat.server.backend)) {
-			struct wlr_session* session = wlr_backend_get_session(keyboard.seat.server.backend);
+			wlr_session* session = wlr_backend_get_session(keyboard.seat.server.backend);
 			if (session) {
 				unsigned vt = sym - XKB_KEY_XF86Switch_VT_1 + 1;
 				wlr_session_change_vt(session, vt);
@@ -65,8 +65,8 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 	/* This event is raised when a key is pressed or released. */
 	Keyboard& keyboard = *magpie_container_of(listener, keyboard, key);
 
-	struct wlr_keyboard_key_event* event = static_cast<struct wlr_keyboard_key_event*>(data);
-	struct wlr_seat* seat = keyboard.seat.wlr_seat;
+	wlr_keyboard_key_event* event = static_cast<wlr_keyboard_key_event*>(data);
+	wlr_seat* seat = keyboard.seat.wlr_seat;
 
 	wlr_idle_notifier_v1_notify_activity(keyboard.seat.server.idle_notifier, seat);
 
@@ -120,8 +120,8 @@ Keyboard::Keyboard(Seat& seat, struct wlr_keyboard* wlr_keyboard) : seat(seat) {
 
 	/* We need to prepare an XKB keymap and assign it to the keyboard. This
 	 * assumes the defaults (e.g. layout = "us"). */
-	struct xkb_context* context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-	struct xkb_keymap* keymap = xkb_keymap_new_from_names(context, NULL, XKB_KEYMAP_COMPILE_NO_FLAGS);
+	xkb_context* context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+	xkb_keymap* keymap = xkb_keymap_new_from_names(context, NULL, XKB_KEYMAP_COMPILE_NO_FLAGS);
 
 	wlr_keyboard_set_keymap(wlr_keyboard, keymap);
 	xkb_keymap_unref(keymap);

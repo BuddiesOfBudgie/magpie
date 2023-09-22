@@ -28,13 +28,13 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 	 * generally at the output's refresh rate (e.g. 60Hz). */
 	Output& output = *magpie_container_of(listener, output, frame);
 
-	struct wlr_scene* scene = output.server.scene;
-	struct wlr_scene_output* scene_output = wlr_scene_get_scene_output(scene, output.wlr_output);
+	wlr_scene* scene = output.server.scene;
+	wlr_scene_output* scene_output = wlr_scene_get_scene_output(scene, output.wlr_output);
 
 	/* Render the scene if needed and commit the output */
 	wlr_scene_output_commit(scene_output);
 
-	struct timespec now;
+	timespec now;
 	timespec_get(&now, TIME_UTC);
 	wlr_scene_output_send_frame_done(scene_output, &now);
 }
@@ -73,7 +73,7 @@ Output::~Output() noexcept {
 }
 
 void Output::update_layout() {
-	struct wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, wlr_output);
+	wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, wlr_output);
 
 	full_area.x = scene_output->x;
 	full_area.y = scene_output->y;

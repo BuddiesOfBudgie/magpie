@@ -59,7 +59,7 @@ void Cursor::process_resize(uint32_t time) {
 		}
 	}
 
-	struct wlr_box geo_box = view.get_geometry();
+	wlr_box geo_box = view.get_geometry();
 	view.current.x = new_left - geo_box.x;
 	view.current.y = new_top - geo_box.y;
 	wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
@@ -94,7 +94,7 @@ void Cursor::process_motion(uint32_t time) {
 
 	/* Otherwise, find the view under the pointer and send the event along. */
 	double sx, sy;
-	struct wlr_surface* surface = NULL;
+	wlr_surface* surface = NULL;
 	magpie_surface_t* magpie_surface = seat.server.surface_at(wlr_cursor->x, wlr_cursor->y, &surface, &sx, &sy);
 	if (!magpie_surface) {
 		/* If there's no view under the cursor, set the cursor image to a
@@ -128,7 +128,7 @@ void cursor_axis_notify(wl_listener* listener, void* data) {
 	 * for example when you move the scroll wheel. */
 	Cursor& cursor = *magpie_container_of(listener, cursor, axis);
 
-	struct wlr_pointer_axis_event* event = static_cast<struct wlr_pointer_axis_event*>(data);
+	wlr_pointer_axis_event* event = static_cast<wlr_pointer_axis_event*>(data);
 	/* Notify the client with pointer focus of the axis event. */
 	wlr_seat_pointer_notify_axis(
 		cursor.seat.wlr_seat, event->time_msec, event->orientation, event->delta, event->delta_discrete, event->source);
@@ -156,7 +156,7 @@ void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
 	 * emits these events. */
 	Cursor& cursor = *magpie_container_of(listener, cursor, motion_absolute);
 
-	struct wlr_pointer_motion_absolute_event* event = static_cast<struct wlr_pointer_motion_absolute_event*>(data);
+	wlr_pointer_motion_absolute_event* event = static_cast<wlr_pointer_motion_absolute_event*>(data);
 	wlr_cursor_warp_absolute(cursor.wlr_cursor, &event->pointer->base, event->x, event->y);
 	cursor.process_motion(event->time_msec);
 }
@@ -175,12 +175,12 @@ void cursor_button_notify(wl_listener* listener, void* data) {
 	Cursor& cursor = *magpie_container_of(listener, cursor, button);
 
 	Server& server = cursor.seat.server;
-	struct wlr_pointer_button_event* event = static_cast<struct wlr_pointer_button_event*>(data);
+	wlr_pointer_button_event* event = static_cast<wlr_pointer_button_event*>(data);
 
 	/* Notify the client with pointer focus that a button press has occurred */
 	wlr_seat_pointer_notify_button(server.seat->wlr_seat, event->time_msec, event->button, event->state);
 	double sx, sy;
-	struct wlr_surface* surface = NULL;
+	wlr_surface* surface = NULL;
 	magpie_surface_t* magpie_surface = server.surface_at(cursor.wlr_cursor->x, cursor.wlr_cursor->y, &surface, &sx, &sy);
 	if (event->state == WLR_BUTTON_RELEASED) {
 		/* If you released any buttons, we exit interactive move/resize mode. */
@@ -198,7 +198,7 @@ void cursor_motion_notify(wl_listener* listener, void* data) {
 	 * pointer motion event (i.e. a delta) */
 	Cursor& cursor = *magpie_container_of(listener, cursor, motion);
 
-	struct wlr_pointer_motion_event* event = static_cast<struct wlr_pointer_motion_event*>(data);
+	wlr_pointer_motion_event* event = static_cast<wlr_pointer_motion_event*>(data);
 
 	/* The cursor doesn't move unless we tell it to. The cursor automatically
 	 * handles constraining the motion to the output layout, as well as any
@@ -209,7 +209,7 @@ void cursor_motion_notify(wl_listener* listener, void* data) {
 	cursor.process_motion(event->time_msec);
 }
 
-void Cursor::attach_input_device(struct wlr_input_device* device) {
+void Cursor::attach_input_device(wlr_input_device* device) {
 	wlr_cursor_attach_input_device(wlr_cursor, device);
 }
 

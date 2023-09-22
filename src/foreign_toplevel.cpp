@@ -9,7 +9,7 @@
 #include "wlr-wrap-end.hpp"
 
 static void foreign_toplevel_handle_request_maximize_notify(wl_listener* listener, void* data) {
-	auto& event = *static_cast<struct wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
+	auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
 
 	ForeignToplevelHandle& handle = *magpie_container_of(listener, handle, request_activate);
 

@@ -64,9 +64,8 @@ static void xdg_toplevel_request_move_notify(wl_listener* listener, void* data) 
  * provided serial against a list of button press serials sent to this
  * client, to prevent the client from requesting this whenever they want. */
 static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data) {
-
 	XdgView& view = *magpie_container_of(listener, view, request_resize);
-	struct wlr_xdg_toplevel_resize_event* event = static_cast<struct wlr_xdg_toplevel_resize_event*>(data);
+	wlr_xdg_toplevel_resize_event* event = static_cast<wlr_xdg_toplevel_resize_event*>(data);
 	view.set_maximized(false);
 	view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
 }
@@ -120,7 +119,7 @@ static void xdg_toplevel_set_parent_notify(wl_listener* listener, void* data) {
 	view.toplevel_handle->set_parent(nullptr);
 }
 
-XdgView::XdgView(Server& server, struct wlr_xdg_toplevel* toplevel) : server(server) {
+XdgView::XdgView(Server& server, wlr_xdg_toplevel* toplevel) : server(server) {
 	listeners.parent = this;
 
 	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, toplevel->base);
@@ -189,7 +188,7 @@ Server& XdgView::get_server() {
 	return server;
 }
 
-struct wlr_box XdgView::get_geometry() {
+wlr_box XdgView::get_geometry() {
 	wlr_box box;
 	wlr_xdg_surface_get_geometry(xdg_toplevel->base, &box);
 	return box;

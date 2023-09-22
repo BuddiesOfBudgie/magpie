@@ -37,7 +37,7 @@ static void popup_new_popup_notify(wl_listener* listener, void* data) {
 	new Popup(popup.parent, static_cast<wlr_xdg_popup*>(data));
 }
 
-Popup::Popup(magpie_surface_t& parent_surface, struct wlr_xdg_popup* xdg_popup)
+Popup::Popup(magpie_surface_t& parent_surface, wlr_xdg_popup* xdg_popup)
 	: server(*parent_surface.server), parent(parent_surface) {
 	listeners.parent = this;
 
