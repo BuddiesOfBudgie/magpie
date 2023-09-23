@@ -3,7 +3,10 @@
 
 #include "types.hpp"
 
-#include <wayland-server-core.h>
+#include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_xcursor_manager.h>
+#include "wlr-wrap-end.hpp"
 
 enum CursorMode { MAGPIE_CURSOR_PASSTHROUGH, MAGPIE_CURSOR_MOVE, MAGPIE_CURSOR_RESIZE };
 
@@ -16,6 +19,7 @@ class Cursor {
 		wl_listener button;
 		wl_listener axis;
 		wl_listener frame;
+		wl_listener new_constraint;
 	};
 
   private:
@@ -25,14 +29,14 @@ class Cursor {
 	void process_resize(uint32_t time);
 
   public:
-	Seat& seat;
-	struct wlr_cursor* wlr_cursor;
-	struct wlr_xcursor_manager* cursor_mgr;
+	const Seat& seat;
 	CursorMode mode;
+	wlr_cursor* cursor;
+	wlr_xcursor_manager* cursor_mgr;
 
-	Cursor(Seat& seat);
+	Cursor(Seat& seat) noexcept;
 
-	void attach_input_device(struct wlr_input_device* device);
+	void attach_input_device(wlr_input_device* device);
 	void process_motion(uint32_t time);
 	void reset_mode();
 };

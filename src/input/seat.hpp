@@ -4,7 +4,10 @@
 #include "types.hpp"
 
 #include <vector>
-#include <wayland-server-core.h>
+
+#include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_seat.h>
+#include "wlr-wrap-end.hpp"
 
 class Seat {
   public:
@@ -13,6 +16,7 @@ class Seat {
 		wl_listener new_input;
 		wl_listener request_cursor;
 		wl_listener request_set_selection;
+		wl_listener destroy;
 	};
 
   private:
@@ -20,13 +24,14 @@ class Seat {
 
   public:
 	Server& server;
-	struct wlr_seat* wlr_seat;
+	wlr_seat* seat;
 	Cursor* cursor;
 	std::vector<Keyboard*> keyboards;
 
-	Seat(Server& server);
+	Seat(Server& server) noexcept;
+	~Seat() noexcept;
 
-	void new_input_device(struct wlr_input_device* device);
+	void new_input_device(wlr_input_device* device);
 };
 
 #endif

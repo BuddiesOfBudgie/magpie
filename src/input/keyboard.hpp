@@ -3,7 +3,9 @@
 
 #include "types.hpp"
 
-#include <wayland-server-core.h>
+#include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_keyboard.h>
+#include "wlr-wrap-end.hpp"
 
 class Keyboard {
   public:
@@ -19,9 +21,9 @@ class Keyboard {
 
   public:
 	Seat& seat;
-	struct wlr_keyboard* wlr_keyboard;
+	wlr_keyboard* keyboard;
 
-	Keyboard(Seat& seat, struct wlr_keyboard* wlr_keyboard);
+	Keyboard(Seat& seat, wlr_keyboard* keyboard) noexcept;
 	~Keyboard() noexcept;
 };
 

@@ -1,6 +1,7 @@
 #include "output.hpp"
 
 #include "layer.hpp"
+#include "server.hpp"
 #include "types.hpp"
 
 #include <algorithm>
@@ -11,25 +12,23 @@
 #include <wlr/types/wlr_scene.h>
 #include <wlr-wrap-end.hpp>
 
+/* This function is called every time an output is ready to display a frame,
+ * generally at the output's refresh rate (e.g. 60Hz). */
 static void output_mode_notify(wl_listener* listener, void* data) {
-	(void) data;
-
-	/* This function is called every time an output is ready to display a frame,
-	 * generally at the output's refresh rate (e.g. 60Hz). */
 	Output& output = *magpie_container_of(listener, output, mode);
+	(void) data;
 
 	output.update_layout();
 }
 
+/* This function is called every time an output is ready to display a frame,
+ * generally at the output's refresh rate (e.g. 60Hz). */
 static void output_frame_notify(wl_listener* listener, void* data) {
+	Output& output = *magpie_container_of(listener, output, frame);
 	(void) data;
 
-	/* This function is called every time an output is ready to display a frame,
-	 * generally at the output's refresh rate (e.g. 60Hz). */
-	Output& output = *magpie_container_of(listener, output, frame);
-
 	wlr_scene* scene = output.server.scene;
-	wlr_scene_output* scene_output = wlr_scene_get_scene_output(scene, output.wlr_output);
+	wlr_scene_output* scene_output = wlr_scene_get_scene_output(scene, output.output);
 
 	/* Render the scene if needed and commit the output */
 	wlr_scene_output_commit(scene_output);
@@ -40,9 +39,8 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 }
 
 static void output_destroy_notify(wl_listener* listener, void* data) {
-	(void) data;
-
 	Output& output = *magpie_container_of(listener, output, destroy);
+	(void) data;
 
 	output.server.outputs.erase(&output);
 	for (auto* layer : output.layers) {
@@ -52,18 +50,18 @@ static void output_destroy_notify(wl_listener* listener, void* data) {
 	delete &output;
 }
 
-Output::Output(Server& server, struct wlr_output* wlr_output) : server(server) {
+Output::Output(Server& server, wlr_output* output) noexcept : server(server) {
 	listeners.parent = this;
 
-	this->wlr_output = wlr_output;
-	wlr_output->data = this;
+	this->output = output;
+	output->data = this;
 
 	listeners.mode.notify = output_mode_notify;
-	wl_signal_add(&wlr_output->events.mode, &listeners.mode);
+	wl_signal_add(&output->events.mode, &listeners.mode);
 	listeners.frame.notify = output_frame_notify;
-	wl_signal_add(&wlr_output->events.frame, &listeners.frame);
+	wl_signal_add(&output->events.frame, &listeners.frame);
 	listeners.destroy.notify = output_destroy_notify;
-	wl_signal_add(&wlr_output->events.destroy, &listeners.destroy);
+	wl_signal_add(&output->events.destroy, &listeners.destroy);
 }
 
 Output::~Output() noexcept {
@@ -73,11 +71,11 @@ Output::~Output() noexcept {
 }
 
 void Output::update_layout() {
-	wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, wlr_output);
+	wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, output);
 
 	full_area.x = scene_output->x;
 	full_area.y = scene_output->y;
-	wlr_output_effective_resolution(wlr_output, &full_area.width, &full_area.height);
+	wlr_output_effective_resolution(output, &full_area.width, &full_area.height);
 
 	usable_area = full_area;
 

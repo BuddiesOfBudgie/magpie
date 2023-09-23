@@ -10,35 +10,11 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstdlib>
-
-#include "wlr-wrap-start.hpp"
 #include <wayland-server.h>
-#include <wlr/render/allocator.h>
-#include <wlr/render/wlr_renderer.h>
-#include <wlr/types/wlr_cursor.h>
-#include <wlr/types/wlr_data_control_v1.h>
-#include <wlr/types/wlr_data_device.h>
-#include <wlr/types/wlr_foreign_toplevel_management_v1.h>
-#include <wlr/types/wlr_idle.h>
-#include <wlr/types/wlr_idle_inhibit_v1.h>
-#include <wlr/types/wlr_idle_notify_v1.h>
-#include <wlr/types/wlr_layer_shell_v1.h>
-#include <wlr/types/wlr_output_layout.h>
-#include <wlr/types/wlr_scene.h>
-#include <wlr/types/wlr_single_pixel_buffer_v1.h>
-#include <wlr/types/wlr_subcompositor.h>
-#include <wlr/types/wlr_viewporter.h>
-#include <wlr/types/wlr_xcursor_manager.h>
-#include <wlr/types/wlr_xdg_activation_v1.h>
-#include <wlr/types/wlr_xdg_output_v1.h>
-#include <wlr/types/wlr_xdg_shell.h>
-#include <wlr/xwayland.h>
-#include "wlr-wrap-end.hpp"
 
 void Server::focus_view(View& view, wlr_surface* surface) {
 	Server& server = view.get_server();
-	wlr_seat* seat = server.seat->wlr_seat;
+	wlr_seat* seat = server.seat->seat;
 	wlr_surface* prev_surface = seat->keyboard_state.focused_surface;
 	if (prev_surface == surface) {
 		/* Don't re-focus an already focused surface. */
@@ -60,7 +36,7 @@ void Server::focus_view(View& view, wlr_surface* surface) {
 
 	/* Move the view to the front */
 	wlr_scene_node_raise_to_top(view.scene_node);
-	std::remove(server.views.begin(), server.views.end(), &view);
+	(void) std::remove(server.views.begin(), server.views.end(), &view);
 	for (auto* view : server.views) {
 		view->set_activated(false);
 	}
@@ -80,7 +56,7 @@ void Server::focus_view(View& view, wlr_surface* surface) {
 	}
 }
 
-magpie_surface_t* Server::surface_at(double lx, double ly, wlr_surface** surface, double* sx, double* sy) {
+Surface* Server::surface_at(const double lx, const double ly, wlr_surface** surface, double* sx, double* sy) {
 	/* This returns the topmost node in the scene at the given layout coords.
 	 * we only care about surface nodes as we are specifically looking for a
 	 * surface in the surface tree of a magpie_view. */
@@ -101,22 +77,22 @@ magpie_surface_t* Server::surface_at(double lx, double ly, wlr_surface** surface
 	while (tree != NULL && tree->node.data == NULL) {
 		tree = tree->node.parent;
 	}
-	return static_cast<magpie_surface_t*>(tree->node.data);
+	return static_cast<Surface*>(tree->node.data);
 }
 
-void new_input_notify(wl_listener* listener, void* data) {
+static void new_input_notify(wl_listener* listener, void* data) {
 	Server& server = *magpie_container_of(listener, server, backend_new_input);
 
-	wlr_input_device* device = static_cast<wlr_input_device*>(data);
+	auto* device = static_cast<wlr_input_device*>(data);
 	server.seat->new_input_device(device);
 }
 
+/* This event is raised by the backend when a new output (aka a display or
+ * monitor) becomes available. */
 static void new_output_notify(wl_listener* listener, void* data) {
-	/* This event is raised by the backend when a new output (aka a display or
-	 * monitor) becomes available. */
 	Server& server = *magpie_container_of(listener, server, backend_new_output);
 
-	wlr_output* new_output = static_cast<wlr_output*>(data);
+	auto* new_output = static_cast<wlr_output*>(data);
 
 	/* Configures the output created by the backend to use our allocator
 	 * and our renderer. Must be done once, before commiting the output */
@@ -154,31 +130,29 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	output->update_layout();
 }
 
+/* This event is raised when wlr_xdg_shell receives a new xdg surface from a
+ * client, either a toplevel (application window) or popup. */
 static void new_xdg_surface_notify(wl_listener* listener, void* data) {
-	/* This event is raised when wlr_xdg_shell receives a new xdg surface from a
-	 * client, either a toplevel (application window) or popup. */
 	Server& server = *magpie_container_of(listener, server, xdg_shell_new_xdg_surface);
-
-	wlr_xdg_surface* xdg_surface = static_cast<wlr_xdg_surface*>(data);
+	auto* xdg_surface = static_cast<wlr_xdg_surface*>(data);
 
 	if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
 		new XdgView(server, xdg_surface->toplevel);
 	} else if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
-		magpie_surface_t* surface = static_cast<magpie_surface_t*>(xdg_surface->popup->parent->data);
+		auto* surface = static_cast<Surface*>(xdg_surface->popup->parent->data);
 		new Popup(*surface, xdg_surface->popup);
 	}
 }
 
 static void new_layer_surface_notify(wl_listener* listener, void* data) {
 	Server& server = *magpie_container_of(listener, server, layer_shell_new_layer_surface);
-
-	wlr_layer_surface_v1* layer_surface = static_cast<wlr_layer_surface_v1*>(data);
+	auto* layer_surface = static_cast<wlr_layer_surface_v1*>(data);
 
 	/* Allocate a View for this surface */
 	Output* output;
 	if (layer_surface->output == nullptr) {
 		output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
-		layer_surface->output = output->wlr_output;
+		layer_surface->output = output->output;
 	} else {
 		output = static_cast<Output*>(layer_surface->output->data);
 	}
@@ -187,15 +161,14 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 
 static void request_activation_notify(wl_listener* listener, void* data) {
 	Server& server = *magpie_container_of(listener, server, activation_request_activation);
-
-	wlr_xdg_activation_v1_request_activate_event* event = static_cast<wlr_xdg_activation_v1_request_activate_event*>(data);
+	auto* event = static_cast<wlr_xdg_activation_v1_request_activate_event*>(data);
 
 	if (!wlr_surface_is_xdg_surface(event->surface)) {
 		return;
 	}
 
 	wlr_xdg_surface* xdg_surface = wlr_xdg_surface_from_wlr_surface(event->surface);
-	magpie_surface_t* surface = static_cast<magpie_surface_t*>(xdg_surface->surface->data);
+	auto* surface = static_cast<Surface*>(xdg_surface->surface->data);
 	if (surface->type != MAGPIE_SURFACE_TYPE_VIEW || !xdg_surface->mapped) {
 		return;
 	}

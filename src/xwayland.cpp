@@ -8,7 +8,6 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/util/log.h>
-#include <wlr/xwayland/xwayland.h>
 #include "wlr-wrap-end.hpp"
 
 static const char* atom_map[ATOM_LAST] = {
@@ -26,11 +25,10 @@ static const char* atom_map[ATOM_LAST] = {
 };
 
 static void ready_notify(wl_listener* listener, void* data) {
+	XWayland& xwayland = *magpie_container_of(listener, xwayland, ready);
 	(void) data;
 
-	XWayland& xwayland = *magpie_container_of(listener, xwayland, ready);
-
-	wlr_xwayland_set_seat(xwayland.wlr_xwayland, xwayland.server.seat->wlr_seat);
+	wlr_xwayland_set_seat(xwayland.xwayland, xwayland.server.seat->seat);
 
 	xcb_connection_t* xcb_conn = xcb_connect(NULL, NULL);
 	int err = xcb_connection_has_error(xcb_conn);
@@ -63,21 +61,20 @@ static void ready_notify(wl_listener* listener, void* data) {
 
 static void new_surface_notify(wl_listener* listener, void* data) {
 	XWayland& xwayland = *magpie_container_of(listener, xwayland, new_surface);
-
-	wlr_xwayland_surface* xwayland_surface = static_cast<wlr_xwayland_surface*>(data);
+	auto* xwayland_surface = static_cast<wlr_xwayland_surface*>(data);
 
 	new XWaylandView(xwayland.server, xwayland_surface);
 }
 
-XWayland::XWayland(Server& server) : server(server) {
+XWayland::XWayland(Server& server) noexcept : server(server) {
 	listeners.parent = this;
 
-	wlr_xwayland = wlr_xwayland_create(server.display, server.compositor, true);
+	xwayland = wlr_xwayland_create(server.display, server.compositor, true);
 
 	listeners.ready.notify = ready_notify;
-	wl_signal_add(&wlr_xwayland->events.ready, &listeners.ready);
+	wl_signal_add(&xwayland->events.ready, &listeners.ready);
 	listeners.new_surface.notify = new_surface_notify;
-	wl_signal_add(&wlr_xwayland->events.new_surface, &listeners.new_surface);
+	wl_signal_add(&xwayland->events.new_surface, &listeners.new_surface);
 
-	setenv("DISPLAY", wlr_xwayland->display_name, true);
+	setenv("DISPLAY", xwayland->display_name, true);
 }

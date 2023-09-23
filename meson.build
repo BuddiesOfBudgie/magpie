@@ -33,6 +33,14 @@ xdg_shell_protocol = custom_target(
     build_by_default: false,
 )
 
+wlr_pointer_constraints_protocol = custom_target(
+    'wlr_pointer_constraints_unstable_v1_protocol_h',
+    input: join_paths(wayland_protocol_dir, 'unstable', 'pointer-constraints', 'pointer-constraints-unstable-v1.xml'),
+    output: 'pointer-constraints-unstable-v1-protocol.h',
+    command: [wayland_scanner, 'server-header', '@INPUT@', '@OUTPUT@'],
+    build_by_default: false,
+)
+
 wlr_layer_shell_protocol = custom_target(
     'wlr_layer_shell_unstable_v1_protocol_h',
     input: join_paths(meson.source_root(), 'protocols', 'wlr-layer-shell-unstable-v1.xml'),

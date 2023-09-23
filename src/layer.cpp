@@ -5,7 +5,6 @@
 #include "server.hpp"
 #include "surface.hpp"
 #include "types.hpp"
-#include "xdg-shell-protocol.h"
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_layer_shell_v1.h>
@@ -30,59 +29,54 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(enum zwlr_layer_shell_v1
 }
 
 static void subsurface_destroy_notify(wl_listener* listener, void* data) {
+	LayerSubsurface& subsurface = *magpie_container_of(listener, subsurface, destroy);
 	(void) data;
 
-	LayerSubsurface& subsurface = *magpie_container_of(listener, subsurface, destroy);
-
-	subsurface.parent_layer.subsurfaces.erase(&subsurface);
+	subsurface.parent.subsurfaces.erase(&subsurface);
 	delete &subsurface;
 }
 
-LayerSubsurface::LayerSubsurface(Layer& parent_layer, struct wlr_subsurface* wlr_subsurface) : parent_layer(parent_layer) {
+LayerSubsurface::LayerSubsurface(Layer& parent, wlr_subsurface* subsurface) noexcept : parent(parent) {
 	listeners.parent = this;
 
-	this->wlr_subsurface = wlr_subsurface;
+	this->subsurface = subsurface;
 
 	listeners.destroy.notify = subsurface_destroy_notify;
-	wl_signal_add(&wlr_subsurface->events.destroy, &listeners.destroy);
+	wl_signal_add(&subsurface->events.destroy, &listeners.destroy);
 }
 
 LayerSubsurface::~LayerSubsurface() noexcept {
 	wl_list_remove(&listeners.destroy.link);
 }
 
+/* Called when the surface is mapped, or ready to display on-screen. */
 static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void* data) {
-	(void) data;
-
-	/* Called when the surface is mapped, or ready to display on-screen. */
 	Layer& layer = *magpie_container_of(listener, layer, map);
+	(void) data;
 
 	wlr_scene_node_set_enabled(&layer.scene_layer_surface->tree->node, true);
 }
 
+/* Called when the surface is unmapped, and should no longer be shown. */
 static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, void* data) {
-	(void) data;
-
-	/* Called when the surface is unmapped, and should no longer be shown. */
 	Layer& layer = *magpie_container_of(listener, layer, unmap);
+	(void) data;
 
 	wlr_scene_node_set_enabled(&layer.scene_layer_surface->tree->node, false);
 }
 
+/* Called when the surface is destroyed and should never be shown again. */
 static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void* data) {
-	(void) data;
-
-	/* Called when the surface is destroyed and should never be shown again. */
 	Layer& layer = *magpie_container_of(listener, layer, destroy);
+	(void) data;
 
 	layer.output.layers.erase(&layer);
 	delete &layer;
 }
 
 static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data) {
-	(void) data;
-
 	Layer& layer = *magpie_container_of(listener, layer, commit);
+	(void) data;
 
 	Server& server = layer.output.server;
 	wlr_layer_surface_v1* surface = layer.layer_surface;
@@ -100,19 +94,19 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data
 
 static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* data) {
 	Layer& layer = *magpie_container_of(listener, layer, new_popup);
+	auto* surface = static_cast<Surface*>(layer.layer_surface->surface->data);
 
-	magpie_surface_t* surface = static_cast<magpie_surface_t*>(layer.layer_surface->surface->data);
 	new Popup(*surface, static_cast<wlr_xdg_popup*>(data));
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, void* data) {
 	Layer& layer = *magpie_container_of(listener, layer, new_subsurface);
+	auto* subsurface = static_cast<wlr_subsurface*>(data);
 
-	wlr_subsurface* subsurface = static_cast<wlr_subsurface*>(data);
 	layer.subsurfaces.emplace(new LayerSubsurface(layer, subsurface));
 }
 
-Layer::Layer(Output& output, wlr_layer_surface_v1* surface) : output(output) {
+Layer::Layer(Output& output, wlr_layer_surface_v1* surface) noexcept : output(output) {
 	listeners.parent = this;
 
 	layer_surface = surface;
@@ -120,7 +114,7 @@ Layer::Layer(Output& output, wlr_layer_surface_v1* surface) : output(output) {
 	magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface->current.layer);
 	scene_layer_surface = wlr_scene_layer_surface_v1_create(output.server.scene_layers[chosen_layer], surface);
 
-	magpie_surface_t* magpie_surface = new_magpie_surface_from_layer(*this);
+	Surface* magpie_surface = new Surface(*this);
 	scene_layer_surface->tree->node.data = magpie_surface;
 	surface->surface->data = magpie_surface;
 

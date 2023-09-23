@@ -1,10 +1,12 @@
 #ifndef MAGPIE_POPUP_HPP
 #define MAGPIE_POPUP_HPP
 
-#include "surface.hpp"
 #include "types.hpp"
 
-#include <wayland-server-core.h>
+#include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_scene.h>
+#include <wlr/types/wlr_xdg_shell.h>
+#include "wlr-wrap-end.hpp"
 
 class Popup {
   public:
@@ -22,12 +24,12 @@ class Popup {
 
   public:
 	Server& server;
-	magpie_surface_t& parent;
+	Surface& parent;
 
-	struct wlr_xdg_popup* xdg_popup;
-	struct wlr_scene_node* scene_node;
+	wlr_xdg_popup* xdg_popup;
+	wlr_scene_node* scene_node;
 
-	Popup(magpie_surface_t& parent, struct wlr_xdg_popup* xdg_popup);
+	Popup(Surface& parent, wlr_xdg_popup* xdg_popup) noexcept;
 	~Popup() noexcept;
 };
 

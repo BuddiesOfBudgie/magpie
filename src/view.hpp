@@ -4,41 +4,45 @@
 #include "input/cursor.hpp"
 #include "types.hpp"
 
+#include <optional>
+
 #include "wlr-wrap-start.hpp"
-#include <wlr/xwayland.h>
+#include <wlr/types/wlr_scene.h>
+#include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/box.h>
+#include <wlr/xwayland.h>
 #include "wlr-wrap-end.hpp"
 
 class View {
   public:
 	bool maximized;
-	struct wlr_box current;
-	struct wlr_box pending;
-	struct wlr_box previous;
-	struct wlr_surface* surface;
-	struct wlr_scene_node* scene_node;
+	wlr_box current;
+	wlr_box pending;
+	wlr_box previous;
+	wlr_surface* surface;
+	wlr_scene_node* scene_node;
 	ForeignToplevelHandle* toplevel_handle;
 
 	virtual ~View() noexcept {};
 
 	virtual Server& get_server() = 0;
-	virtual struct wlr_box get_geometry() = 0;
+	virtual const wlr_box get_geometry() = 0;
 
 	virtual void map() = 0;
 	virtual void unmap() = 0;
 
-	void begin_interactive(CursorMode mode, uint32_t edges);
-	void set_size(int new_width, int new_height);
-	void set_activated(bool activated);
-	void set_maximized(bool maximized);
+	void begin_interactive(const CursorMode mode, const uint32_t edges);
+	void set_size(const int new_width, const int new_height);
+	void set_activated(const bool activated);
+	void set_maximized(const bool maximized);
 
   private:
-	Output* find_output_for_maximize();
+	const std::optional<const Output*> find_output_for_maximize();
 
   protected:
-	virtual void impl_set_size(int new_width, int new_height) = 0;
-	virtual void impl_set_activated(bool activated) = 0;
-	virtual void impl_set_maximized(bool maximized) = 0;
+	virtual void impl_set_size(const int new_width, const int new_height) = 0;
+	virtual void impl_set_activated(const bool activated) = 0;
+	virtual void impl_set_maximized(const bool maximized) = 0;
 };
 
 class XdgView : public View {
@@ -64,13 +68,13 @@ class XdgView : public View {
 
   public:
 	Server& server;
-	struct wlr_xdg_toplevel* xdg_toplevel;
+	wlr_xdg_toplevel* xdg_toplevel;
 
-	XdgView(Server& server, struct wlr_xdg_toplevel* toplevel);
+	XdgView(Server& server, wlr_xdg_toplevel* toplevel) noexcept;
 	~XdgView() noexcept;
 
 	inline Server& get_server();
-	struct wlr_box get_geometry();
+	const wlr_box get_geometry();
 	void map();
 	void unmap();
 
@@ -102,13 +106,13 @@ class XWaylandView : public View {
 
   public:
 	Server& server;
-	struct wlr_xwayland_surface* xwayland_surface;
+	wlr_xwayland_surface* xwayland_surface;
 
-	XWaylandView(Server& server, struct wlr_xwayland_surface* surface);
+	XWaylandView(Server& server, wlr_xwayland_surface* surface) noexcept;
 	~XWaylandView() noexcept;
 
 	inline Server& get_server();
-	struct wlr_box get_geometry();
+	const wlr_box get_geometry();
 	void map();
 	void unmap();
 

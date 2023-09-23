@@ -3,7 +3,9 @@
 
 #include "types.hpp"
 
-#include <wayland-server-core.h>
+#include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_foreign_toplevel_management_v1.h>
+#include "wlr-wrap-end.hpp"
 
 class ForeignToplevelHandle {
   public:
@@ -22,20 +24,20 @@ class ForeignToplevelHandle {
 
   public:
 	View& view;
-	struct wlr_foreign_toplevel_handle_v1* wlr_handle;
+	wlr_foreign_toplevel_handle_v1* handle;
 
-	ForeignToplevelHandle(View& view);
+	ForeignToplevelHandle(View& view) noexcept;
 	~ForeignToplevelHandle() noexcept;
 
-	void set_title(char* title);
-	void set_app_id(char* app_id);
-	void set_parent(ForeignToplevelHandle* parent);
+	void set_title(const char* title);
+	void set_app_id(const char* app_id);
+	void set_parent(const ForeignToplevelHandle* parent);
 	void set_maximized(bool maximized);
 	void set_minimized(bool minimized);
 	void set_activated(bool activated);
 	void set_fullscreen(bool fullscreen);
-	void output_enter(Output& output);
-	void output_leave(Output& output);
+	void output_enter(const Output& output);
+	void output_leave(const Output& output);
 };
 
 #endif

@@ -19,7 +19,7 @@ class LayerSubsurface;
 
 class Popup;
 
-typedef struct magpie_surface magpie_surface_t;
+struct Surface;
 
 #define magpie_container_of(ptr, sample, member)                                                                               \
 	(__extension__({                                                                                                           \

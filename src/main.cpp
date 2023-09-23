@@ -2,9 +2,7 @@
 
 #include "server.hpp"
 
-#include <cassert>
 #include <cstdio>
-#include <cstdlib>
 #include <getopt.h>
 #include <unistd.h>
 
@@ -26,8 +24,9 @@ int main(int argc, char** argv) {
 				return 0;
 		}
 	}
+
 	if (optind < argc) {
-		printf("Usage: %s [-s startup command]\n", argv[0]);
+		std::printf("Usage: %s [-s startup command]\n", argv[0]);
 		return 0;
 	}
 
@@ -37,7 +36,10 @@ int main(int argc, char** argv) {
 
 	/* Add a Unix socket to the Wayland display. */
 	const char* socket = wl_display_add_socket_auto(server.display);
-	assert(socket);
+	if (socket == nullptr) {
+		std::printf("Unix socket for display failed to initialize\n");
+		return 1;
+	}
 
 	/* Start the backend. This will enumerate outputs and inputs, become the DRM master, etc */
 	if (!wlr_backend_start(server.backend)) {
@@ -46,13 +48,11 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	printf("Running compositor on wayland display '%s'\n", socket);
+	std::printf("Running compositor on wayland display '%s'\n", socket);
 	setenv("WAYLAND_DISPLAY", socket, true);
 
-	if (startup_cmd) {
-		if (fork() == 0) {
-			execl("/bin/sh", "/bin/sh", "-c", startup_cmd, (void*) NULL);
-		}
+	if (startup_cmd && fork() == 0) {
+		execl("/bin/sh", "/bin/sh", "-c", startup_cmd, nullptr);
 	}
 
 	/* Run the Wayland event loop. This does not return until you exit the

@@ -1,10 +1,12 @@
 #ifndef MAGPIE_OUTPUT_HPP
 #define MAGPIE_OUTPUT_HPP
 
-#include "server.hpp"
 #include "types.hpp"
 
+#include <set>
+
 #include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_output.h>
 #include <wlr/util/box.h>
 #include "wlr-wrap-end.hpp"
 
@@ -22,12 +24,12 @@ class Output {
 
   public:
 	Server& server;
-	struct wlr_output* wlr_output;
-	struct wlr_box full_area;
-	struct wlr_box usable_area;
+	wlr_output* output;
+	wlr_box full_area;
+	wlr_box usable_area;
 	std::set<Layer*> layers;
 
-	Output(Server& server, struct wlr_output* wlr_output);
+	Output(Server& server, wlr_output* output) noexcept;
 	~Output() noexcept;
 
 	void update_layout();

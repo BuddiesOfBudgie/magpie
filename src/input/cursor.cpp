@@ -2,20 +2,19 @@
 
 #include "seat.hpp"
 #include "server.hpp"
+#include "surface.hpp"
 #include "view.hpp"
 
 #include "wlr-wrap-start.hpp"
-#include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_seat.h>
-#include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
 #include "wlr-wrap-end.hpp"
 
-void Cursor::process_resize(uint32_t time) {
+void Cursor::process_resize(const uint32_t time) {
 	(void) time;
 
 	/*
@@ -29,8 +28,8 @@ void Cursor::process_resize(uint32_t time) {
 	 * commit any movement that was prepared.
 	 */
 	View& view = *seat.server.grabbed_view;
-	double border_x = wlr_cursor->x - seat.server.grab_x;
-	double border_y = wlr_cursor->y - seat.server.grab_y;
+	double border_x = cursor->x - seat.server.grab_x;
+	double border_y = cursor->y - seat.server.grab_y;
 	int new_left = seat.server.grab_geobox.x;
 	int new_right = seat.server.grab_geobox.x + seat.server.grab_geobox.width;
 	int new_top = seat.server.grab_geobox.y;
@@ -69,119 +68,66 @@ void Cursor::process_resize(uint32_t time) {
 	view.set_size(new_width, new_height);
 }
 
-void Cursor::process_move(uint32_t time) {
+void Cursor::process_move(const uint32_t time) {
 	(void) time;
 
 	/* Move the grabbed view to the new position. */
 	View* view = seat.server.grabbed_view;
-	view->current.x = wlr_cursor->x - seat.server.grab_x;
-	view->current.y = fmax(wlr_cursor->y - seat.server.grab_y, 0);
-	wlr_xcursor_manager_set_cursor_image(cursor_mgr, "fleur", wlr_cursor);
+	view->current.x = cursor->x - seat.server.grab_x;
+	view->current.y = fmax(cursor->y - seat.server.grab_y, 0);
+	wlr_xcursor_manager_set_cursor_image(cursor_mgr, "fleur", cursor);
 	wlr_scene_node_set_position(view->scene_node, view->current.x, view->current.y);
 }
 
-void Cursor::process_motion(uint32_t time) {
-	wlr_idle_notifier_v1_notify_activity(seat.server.idle_notifier, seat.wlr_seat);
-
-	/* If the mode is non-passthrough, delegate to those functions. */
-	if (mode == MAGPIE_CURSOR_MOVE) {
-		process_move(time);
-		return;
-	} else if (mode == MAGPIE_CURSOR_RESIZE) {
-		process_resize(time);
-		return;
-	}
-
-	/* Otherwise, find the view under the pointer and send the event along. */
-	double sx, sy;
-	wlr_surface* surface = NULL;
-	magpie_surface_t* magpie_surface = seat.server.surface_at(wlr_cursor->x, wlr_cursor->y, &surface, &sx, &sy);
-	if (!magpie_surface) {
-		/* If there's no view under the cursor, set the cursor image to a
-		 * default. This is what makes the cursor image appear when you move it
-		 * around the screen, not over any views. */
-		wlr_xcursor_manager_set_cursor_image(cursor_mgr, "left_ptr", wlr_cursor);
-	}
-	if (surface) {
-		/*
-		 * Send pointer enter and motion events.
-		 *
-		 * The enter event gives the surface "pointer focus", which is distinct
-		 * from keyboard focus. You get pointer focus by moving the pointer over
-		 * a window.
-		 *
-		 * Note that wlroots will avoid sending duplicate enter/motion events if
-		 * the surface has already has pointer focus or if the client is already
-		 * aware of the coordinates passed.
-		 */
-		wlr_seat_pointer_notify_enter(seat.wlr_seat, surface, sx, sy);
-		wlr_seat_pointer_notify_motion(seat.wlr_seat, time, sx, sy);
-	} else {
-		/* Clear pointer focus so future button events and such are not sent to
-		 * the last client to have the cursor over it. */
-		wlr_seat_pointer_clear_focus(seat.wlr_seat);
-	}
-}
-
-void cursor_axis_notify(wl_listener* listener, void* data) {
-	/* This event is forwarded by the cursor when a pointer emits an axis event,
-	 * for example when you move the scroll wheel. */
+/* This event is forwarded by the cursor when a pointer emits an axis event,
+ * for example when you move the scroll wheel. */
+static void cursor_axis_notify(wl_listener* listener, void* data) {
 	Cursor& cursor = *magpie_container_of(listener, cursor, axis);
+	auto* event = static_cast<wlr_pointer_axis_event*>(data);
 
-	wlr_pointer_axis_event* event = static_cast<wlr_pointer_axis_event*>(data);
 	/* Notify the client with pointer focus of the axis event. */
 	wlr_seat_pointer_notify_axis(
-		cursor.seat.wlr_seat, event->time_msec, event->orientation, event->delta, event->delta_discrete, event->source);
+		cursor.seat.seat, event->time_msec, event->orientation, event->delta, event->delta_discrete, event->source);
 }
 
-void cursor_frame_notify(wl_listener* listener, void* data) {
+/* This event is forwarded by the cursor when a pointer emits an frame
+ * event. Frame events are sent after regular pointer events to group
+ * multiple events together. For instance, two axis events may happen at the
+ * same time, in which case a frame event won't be sent in between. */
+static void cursor_frame_notify(wl_listener* listener, void* data) {
+	Cursor& cursor = *magpie_container_of(listener, cursor, frame);
 	(void) data;
 
-	/* This event is forwarded by the cursor when a pointer emits an frame
-	 * event. Frame events are sent after regular pointer events to group
-	 * multiple events together. For instance, two axis events may happen at the
-	 * same time, in which case a frame event won't be sent in between. */
-	Cursor& cursor = *magpie_container_of(listener, cursor, frame);
-
 	/* Notify the client with pointer focus of the frame event. */
-	wlr_seat_pointer_notify_frame(cursor.seat.wlr_seat);
+	wlr_seat_pointer_notify_frame(cursor.seat.seat);
 }
 
-void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
-	/* This event is forwarded by the cursor when a pointer emits an _absolute_
-	 * motion event, from 0..1 on each axis. This happens, for example, when
-	 * wlroots is running under a Wayland window rather than KMS+DRM, and you
-	 * move the mouse over the window. You could enter the window from any edge,
-	 * so we have to warp the mouse there. There is also some hardware which
-	 * emits these events. */
+/* This event is forwarded by the cursor when a pointer emits an _absolute_
+ * motion event, from 0..1 on each axis. This happens, for example, when
+ * wlroots is running under a Wayland window rather than KMS+DRM, and you
+ * move the mouse over the window. You could enter the window from any edge,
+ * so we have to warp the mouse there. There is also some hardware which
+ * emits these events. */
+static void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
 	Cursor& cursor = *magpie_container_of(listener, cursor, motion_absolute);
 
-	wlr_pointer_motion_absolute_event* event = static_cast<wlr_pointer_motion_absolute_event*>(data);
-	wlr_cursor_warp_absolute(cursor.wlr_cursor, &event->pointer->base, event->x, event->y);
+	auto* event = static_cast<wlr_pointer_motion_absolute_event*>(data);
+	wlr_cursor_warp_absolute(cursor.cursor, &event->pointer->base, event->x, event->y);
 	cursor.process_motion(event->time_msec);
 }
 
-void Cursor::reset_mode() {
-	/* Reset the cursor mode to passthrough. */
-	if (mode != MAGPIE_CURSOR_PASSTHROUGH) {
-		wlr_xcursor_manager_set_cursor_image(cursor_mgr, "left_ptr", wlr_cursor);
-	}
-	mode = MAGPIE_CURSOR_PASSTHROUGH;
-	seat.server.grabbed_view = NULL;
-}
-
-void cursor_button_notify(wl_listener* listener, void* data) {
-	/* This event is forwarded by the cursor when a pointer emits a button event. */
+/* This event is forwarded by the cursor when a pointer emits a button event. */
+static void cursor_button_notify(wl_listener* listener, void* data) {
 	Cursor& cursor = *magpie_container_of(listener, cursor, button);
+	auto* event = static_cast<wlr_pointer_button_event*>(data);
 
 	Server& server = cursor.seat.server;
-	wlr_pointer_button_event* event = static_cast<wlr_pointer_button_event*>(data);
 
 	/* Notify the client with pointer focus that a button press has occurred */
-	wlr_seat_pointer_notify_button(server.seat->wlr_seat, event->time_msec, event->button, event->state);
+	wlr_seat_pointer_notify_button(server.seat->seat, event->time_msec, event->button, event->state);
 	double sx, sy;
 	wlr_surface* surface = NULL;
-	magpie_surface_t* magpie_surface = server.surface_at(cursor.wlr_cursor->x, cursor.wlr_cursor->y, &surface, &sx, &sy);
+	Surface* magpie_surface = server.surface_at(cursor.cursor->x, cursor.cursor->y, &surface, &sx, &sy);
 	if (event->state == WLR_BUTTON_RELEASED) {
 		/* If you released any buttons, we exit interactive move/resize mode. */
 		if (cursor.mode != MAGPIE_CURSOR_PASSTHROUGH) {
@@ -193,35 +139,30 @@ void cursor_button_notify(wl_listener* listener, void* data) {
 	}
 }
 
-void cursor_motion_notify(wl_listener* listener, void* data) {
-	/* This event is forwarded by the cursor when a pointer emits a _relative_
-	 * pointer motion event (i.e. a delta) */
+/* This event is forwarded by the cursor when a pointer emits a _relative_
+ * pointer motion event (i.e. a delta) */
+static void cursor_motion_notify(wl_listener* listener, void* data) {
 	Cursor& cursor = *magpie_container_of(listener, cursor, motion);
-
-	wlr_pointer_motion_event* event = static_cast<wlr_pointer_motion_event*>(data);
+	auto* event = static_cast<wlr_pointer_motion_event*>(data);
 
 	/* The cursor doesn't move unless we tell it to. The cursor automatically
 	 * handles constraining the motion to the output layout, as well as any
 	 * special configuration applied for the specific input device which
 	 * generated the event. You can pass NULL for the device if you want to move
 	 * the cursor around without any input. */
-	wlr_cursor_move(cursor.wlr_cursor, &event->pointer->base, event->delta_x, event->delta_y);
+	wlr_cursor_move(cursor.cursor, &event->pointer->base, event->delta_x, event->delta_y);
 	cursor.process_motion(event->time_msec);
 }
 
-void Cursor::attach_input_device(wlr_input_device* device) {
-	wlr_cursor_attach_input_device(wlr_cursor, device);
-}
-
-Cursor::Cursor(Seat& seat) : seat(seat) {
+Cursor::Cursor(Seat& seat) noexcept : seat(seat) {
 	listeners.parent = this;
 
 	/*
 	 * Creates a cursor, which is a wlroots utility for tracking the cursor
 	 * image shown on screen.
 	 */
-	wlr_cursor = wlr_cursor_create();
-	wlr_cursor_attach_output_layout(wlr_cursor, seat.server.output_layout);
+	cursor = wlr_cursor_create();
+	wlr_cursor_attach_output_layout(cursor, seat.server.output_layout);
 
 	/* Creates an xcursor manager, another wlroots utility which loads up
 	 * Xcursor themes to source cursor images from and makes sure that cursor
@@ -244,13 +185,68 @@ Cursor::Cursor(Seat& seat) : seat(seat) {
 	 */
 	mode = MAGPIE_CURSOR_PASSTHROUGH;
 	listeners.motion.notify = cursor_motion_notify;
-	wl_signal_add(&wlr_cursor->events.motion, &listeners.motion);
+	wl_signal_add(&cursor->events.motion, &listeners.motion);
 	listeners.motion_absolute.notify = cursor_motion_absolute_notify;
-	wl_signal_add(&wlr_cursor->events.motion_absolute, &listeners.motion_absolute);
+	wl_signal_add(&cursor->events.motion_absolute, &listeners.motion_absolute);
 	listeners.button.notify = cursor_button_notify;
-	wl_signal_add(&wlr_cursor->events.button, &listeners.button);
+	wl_signal_add(&cursor->events.button, &listeners.button);
 	listeners.axis.notify = cursor_axis_notify;
-	wl_signal_add(&wlr_cursor->events.axis, &listeners.axis);
+	wl_signal_add(&cursor->events.axis, &listeners.axis);
 	listeners.frame.notify = cursor_frame_notify;
-	wl_signal_add(&wlr_cursor->events.frame, &listeners.frame);
+	wl_signal_add(&cursor->events.frame, &listeners.frame);
+}
+
+void Cursor::attach_input_device(wlr_input_device* device) {
+	wlr_cursor_attach_input_device(cursor, device);
+}
+
+void Cursor::process_motion(const uint32_t time) {
+	wlr_idle_notifier_v1_notify_activity(seat.server.idle_notifier, seat.seat);
+
+	/* If the mode is non-passthrough, delegate to those functions. */
+	if (mode == MAGPIE_CURSOR_MOVE) {
+		process_move(time);
+		return;
+	} else if (mode == MAGPIE_CURSOR_RESIZE) {
+		process_resize(time);
+		return;
+	}
+
+	/* Otherwise, find the view under the pointer and send the event along. */
+	double sx, sy;
+	wlr_surface* surface = NULL;
+	Surface* magpie_surface = seat.server.surface_at(cursor->x, cursor->y, &surface, &sx, &sy);
+	if (!magpie_surface) {
+		/* If there's no view under the cursor, set the cursor image to a
+		 * default. This is what makes the cursor image appear when you move it
+		 * around the screen, not over any views. */
+		wlr_xcursor_manager_set_cursor_image(cursor_mgr, "left_ptr", cursor);
+	}
+	if (surface) {
+		/*
+		 * Send pointer enter and motion events.
+		 *
+		 * The enter event gives the surface "pointer focus", which is distinct
+		 * from keyboard focus. You get pointer focus by moving the pointer over
+		 * a window.
+		 *
+		 * Note that wlroots will avoid sending duplicate enter/motion events if
+		 * the surface has already has pointer focus or if the client is already
+		 * aware of the coordinates passed.
+		 */
+		wlr_seat_pointer_notify_enter(seat.seat, surface, sx, sy);
+		wlr_seat_pointer_notify_motion(seat.seat, time, sx, sy);
+	} else {
+		/* Clear pointer focus so future button events and such are not sent to
+		 * the last client to have the cursor over it. */
+		wlr_seat_pointer_clear_focus(seat.seat);
+	}
+}
+
+void Cursor::reset_mode() {
+	if (mode != MAGPIE_CURSOR_PASSTHROUGH) {
+		wlr_xcursor_manager_set_cursor_image(cursor_mgr, "left_ptr", cursor);
+	}
+	mode = MAGPIE_CURSOR_PASSTHROUGH;
+	seat.server.grabbed_view = NULL;
 }

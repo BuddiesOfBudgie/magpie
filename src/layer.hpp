@@ -4,7 +4,15 @@
 #include "types.hpp"
 
 #include <set>
-#include <wayland-server-core.h>
+
+#include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_layer_shell_v1.h>
+#include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_scene.h>
+#include <wlr/types/wlr_subcompositor.h>
+#include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/util/log.h>
+#include "wlr-wrap-end.hpp"
 
 class Layer {
   public:
@@ -24,13 +32,12 @@ class Layer {
   public:
 	Output& output;
 
-	struct wlr_layer_surface_v1* layer_surface;
-	struct wlr_scene_layer_surface_v1* scene_layer_surface;
+	wlr_layer_surface_v1* layer_surface;
+	wlr_scene_layer_surface_v1* scene_layer_surface;
 
 	std::set<LayerSubsurface*> subsurfaces;
 
-	Layer(Output& output, struct wlr_layer_surface_v1* surface);
-
+	Layer(Output& output, wlr_layer_surface_v1* surface) noexcept;
 	~Layer() noexcept;
 };
 
@@ -48,11 +55,10 @@ class LayerSubsurface {
 	Listeners listeners;
 
   public:
-	Layer& parent_layer;
-	struct wlr_subsurface* wlr_subsurface;
+	Layer& parent;
+	wlr_subsurface* subsurface;
 
-	LayerSubsurface(Layer& parent_layer, struct wlr_subsurface* wlr_subsurface);
-
+	LayerSubsurface(Layer& parent_layer, wlr_subsurface* subsurface) noexcept;
 	~LayerSubsurface() noexcept;
 };
 

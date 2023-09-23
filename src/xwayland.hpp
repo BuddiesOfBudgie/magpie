@@ -2,8 +2,12 @@
 #define MAGPIE_XWAYLAND_H
 
 #include "types.hpp"
-#include <wayland-server-core.h>
+
 #include <xcb/xproto.h>
+
+#include "wlr-wrap-start.hpp"
+#include <wlr/xwayland/xwayland.h>
+#include "wlr-wrap-end.hpp"
 
 enum atom_name {
 	NET_WM_WINDOW_TYPE_NORMAL,
@@ -33,10 +37,10 @@ class XWayland {
 
   public:
 	Server& server;
-	struct wlr_xwayland* wlr_xwayland;
+	wlr_xwayland* xwayland;
 	xcb_atom_t atoms[ATOM_LAST];
 
-	XWayland(Server& server);
+	XWayland(Server& server) noexcept;
 };
 
 #endif

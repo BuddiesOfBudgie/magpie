@@ -15,10 +15,11 @@ magpie_sources = [
     'input/seat.cpp',
     xdg_shell_protocol,
     wlr_layer_shell_protocol,
+    wlr_pointer_constraints_protocol,
 ]
 
 exe = executable(
-    'magpie',
+    'magpie-wm',
     sources: magpie_sources,
     dependencies: [dep_m, dep_wayland_server, dep_wlroots, dep_xcb, dep_xkbcommon],
     install: true

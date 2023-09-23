@@ -10,27 +10,24 @@
 #include "wlr-wrap-start.hpp"
 #include <wlr/backend/multi.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
-#include <wlr/types/wlr_keyboard.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
+/* This event is raised by the keyboard base wlr_input_device to signal
+ * the destruction of the wlr_keyboard. It will no longer receive events
+ * and should be destroyed. */
 static void keyboard_handle_destroy(wl_listener* listener, void* data) {
+	Keyboard& keyboard = *magpie_container_of(listener, keyboard, destroy);
 	(void) data;
 
-	/* This event is raised by the keyboard base wlr_input_device to signal
-	 * the destruction of the wlr_keyboard. It will no longer receive events
-	 * and should be destroyed.
-	 */
-	Keyboard& keyboard = *magpie_container_of(listener, keyboard, destroy);
-
 	std::vector<Keyboard*>& keyboards = keyboard.seat.keyboards;
-	std::remove(keyboards.begin(), keyboards.end(), &keyboard);
+	(void) std::remove(keyboards.begin(), keyboards.end(), &keyboard);
 
 	delete &keyboard;
 }
 
-static bool handle_compositor_keybinding(Keyboard& keyboard, uint32_t modifiers, xkb_keysym_t sym) {
+static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_t modifiers, const xkb_keysym_t sym) {
 	Server& server = keyboard.seat.server;
 
 	if (modifiers == WLR_MODIFIER_ALT) {
@@ -61,12 +58,12 @@ static bool handle_compositor_keybinding(Keyboard& keyboard, uint32_t modifiers,
 	return false;
 }
 
+/* This event is raised when a key is pressed or released. */
 static void keyboard_handle_key(wl_listener* listener, void* data) {
-	/* This event is raised when a key is pressed or released. */
-	Keyboard& keyboard = *magpie_container_of(listener, keyboard, key);
+	const Keyboard& keyboard = *magpie_container_of(listener, keyboard, key);
 
-	wlr_keyboard_key_event* event = static_cast<wlr_keyboard_key_event*>(data);
-	wlr_seat* seat = keyboard.seat.wlr_seat;
+	auto* event = static_cast<wlr_keyboard_key_event*>(data);
+	wlr_seat* seat = keyboard.seat.seat;
 
 	wlr_idle_notifier_v1_notify_activity(keyboard.seat.server.idle_notifier, seat);
 
@@ -74,10 +71,10 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 	uint32_t keycode = event->keycode + 8;
 	/* Get a list of keysyms based on the keymap for this keyboard */
 	const xkb_keysym_t* syms;
-	int nsyms = xkb_state_key_get_syms(keyboard.wlr_keyboard->xkb_state, keycode, &syms);
+	int nsyms = xkb_state_key_get_syms(keyboard.keyboard->xkb_state, keycode, &syms);
 
 	bool handled = false;
-	uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard.wlr_keyboard);
+	uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard.keyboard);
 	if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
 		if (modifiers & WLR_MODIFIER_ALT) {
 			/* If alt is held down and this button was _pressed_, we attempt to
@@ -90,17 +87,16 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 
 	if (!handled) {
 		/* Otherwise, we pass it along to the client. */
-		wlr_seat_set_keyboard(seat, keyboard.wlr_keyboard);
+		wlr_seat_set_keyboard(seat, keyboard.keyboard);
 		wlr_seat_keyboard_notify_key(seat, event->time_msec, event->keycode, event->state);
 	}
 }
 
+/* This event is raised when a modifier key, such as shift or alt, is
+ * pressed. We simply communicate this to the client. */
 static void keyboard_handle_modifiers(wl_listener* listener, void* data) {
-	(void) data;
-
-	/* This event is raised when a modifier key, such as shift or alt, is
-	 * pressed. We simply communicate this to the client. */
 	Keyboard& keyboard = *magpie_container_of(listener, keyboard, modifiers);
+	(void) data;
 
 	/*
 	 * A seat can only have one keyboard, but this is a limitation of the
@@ -108,35 +104,35 @@ static void keyboard_handle_modifiers(wl_listener* listener, void* data) {
 	 * same seat. You can swap out the underlying wlr_keyboard like this and
 	 * wlr_seat handles this transparently.
 	 */
-	wlr_seat_set_keyboard(keyboard.seat.wlr_seat, keyboard.wlr_keyboard);
+	wlr_seat_set_keyboard(keyboard.seat.seat, keyboard.keyboard);
 	/* Send modifiers to the client. */
-	wlr_seat_keyboard_notify_modifiers(keyboard.seat.wlr_seat, &keyboard.wlr_keyboard->modifiers);
+	wlr_seat_keyboard_notify_modifiers(keyboard.seat.seat, &keyboard.keyboard->modifiers);
 }
 
-Keyboard::Keyboard(Seat& seat, struct wlr_keyboard* wlr_keyboard) : seat(seat) {
+Keyboard::Keyboard(Seat& seat, wlr_keyboard* keyboard) noexcept : seat(seat) {
 	listeners.parent = this;
 
-	this->wlr_keyboard = wlr_keyboard;
+	this->keyboard = keyboard;
 
 	/* We need to prepare an XKB keymap and assign it to the keyboard. This
 	 * assumes the defaults (e.g. layout = "us"). */
 	xkb_context* context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 	xkb_keymap* keymap = xkb_keymap_new_from_names(context, NULL, XKB_KEYMAP_COMPILE_NO_FLAGS);
 
-	wlr_keyboard_set_keymap(wlr_keyboard, keymap);
+	wlr_keyboard_set_keymap(keyboard, keymap);
 	xkb_keymap_unref(keymap);
 	xkb_context_unref(context);
-	wlr_keyboard_set_repeat_info(wlr_keyboard, 25, 600);
+	wlr_keyboard_set_repeat_info(keyboard, 25, 600);
 
 	/* Here we set up listeners for keyboard events. */
 	listeners.modifiers.notify = keyboard_handle_modifiers;
-	wl_signal_add(&wlr_keyboard->events.modifiers, &listeners.modifiers);
+	wl_signal_add(&keyboard->events.modifiers, &listeners.modifiers);
 	listeners.key.notify = keyboard_handle_key;
-	wl_signal_add(&wlr_keyboard->events.key, &listeners.key);
+	wl_signal_add(&keyboard->events.key, &listeners.key);
 	listeners.destroy.notify = keyboard_handle_destroy;
-	wl_signal_add(&wlr_keyboard->base.events.destroy, &listeners.destroy);
+	wl_signal_add(&keyboard->base.events.destroy, &listeners.destroy);
 
-	wlr_seat_set_keyboard(seat.wlr_seat, wlr_keyboard);
+	wlr_seat_set_keyboard(seat.seat, keyboard);
 }
 
 Keyboard::~Keyboard() noexcept {
