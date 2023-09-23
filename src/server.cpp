@@ -81,7 +81,7 @@ Surface* Server::surface_at(const double lx, const double ly, wlr_surface** surf
 }
 
 static void new_input_notify(wl_listener* listener, void* data) {
-	Server& server = *magpie_container_of(listener, server, backend_new_input);
+	Server& server = magpie_container_of(listener, server, backend_new_input);
 
 	auto* device = static_cast<wlr_input_device*>(data);
 	server.seat->new_input_device(device);
@@ -90,7 +90,7 @@ static void new_input_notify(wl_listener* listener, void* data) {
 /* This event is raised by the backend when a new output (aka a display or
  * monitor) becomes available. */
 static void new_output_notify(wl_listener* listener, void* data) {
-	Server& server = *magpie_container_of(listener, server, backend_new_output);
+	Server& server = magpie_container_of(listener, server, backend_new_output);
 
 	auto* new_output = static_cast<wlr_output*>(data);
 
@@ -133,7 +133,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 /* This event is raised when wlr_xdg_shell receives a new xdg surface from a
  * client, either a toplevel (application window) or popup. */
 static void new_xdg_surface_notify(wl_listener* listener, void* data) {
-	Server& server = *magpie_container_of(listener, server, xdg_shell_new_xdg_surface);
+	Server& server = magpie_container_of(listener, server, xdg_shell_new_xdg_surface);
 	auto* xdg_surface = static_cast<wlr_xdg_surface*>(data);
 
 	if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
@@ -145,7 +145,7 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 }
 
 static void new_layer_surface_notify(wl_listener* listener, void* data) {
-	Server& server = *magpie_container_of(listener, server, layer_shell_new_layer_surface);
+	Server& server = magpie_container_of(listener, server, layer_shell_new_layer_surface);
 	auto* layer_surface = static_cast<wlr_layer_surface_v1*>(data);
 
 	/* Allocate a View for this surface */
@@ -160,7 +160,7 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 }
 
 static void request_activation_notify(wl_listener* listener, void* data) {
-	Server& server = *magpie_container_of(listener, server, activation_request_activation);
+	Server& server = magpie_container_of(listener, server, activation_request_activation);
 	auto* event = static_cast<wlr_xdg_activation_v1_request_activate_event*>(data);
 
 	if (!wlr_surface_is_xdg_surface(event->surface)) {
@@ -173,12 +173,10 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 		return;
 	}
 
-	server.focus_view(*surface->view, xdg_surface->surface);
+	server.focus_view(surface->view, xdg_surface->surface);
 }
 
-Server::Server() {
-	listeners.parent = this;
-
+Server::Server() : listeners(*this) {
 	/* The Wayland display is managed by libwayland. It handles accepting
 	 * clients from the Unix socket, manging Wayland globals, and so on. */
 	display = wl_display_create();

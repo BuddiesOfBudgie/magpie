@@ -3,6 +3,7 @@
 
 #include "types.hpp"
 
+#include <functional>
 #include <xcb/xproto.h>
 
 #include "wlr-wrap-start.hpp"
@@ -27,9 +28,10 @@ enum atom_name {
 class XWayland {
   public:
 	struct Listeners {
-		XWayland* parent;
+		std::reference_wrapper<XWayland> parent;
 		wl_listener ready;
 		wl_listener new_surface;
+		Listeners(XWayland& parent) noexcept : parent(std::ref(parent)) {}
 	};
 
   private:

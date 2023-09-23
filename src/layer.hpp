@@ -3,6 +3,7 @@
 
 #include "types.hpp"
 
+#include <functional>
 #include <set>
 
 #include "wlr-wrap-start.hpp"
@@ -17,13 +18,14 @@
 class Layer {
   public:
 	struct Listeners {
-		Layer* parent;
+		std::reference_wrapper<Layer> parent;
 		wl_listener map;
 		wl_listener unmap;
 		wl_listener destroy;
 		wl_listener commit;
 		wl_listener new_popup;
 		wl_listener new_subsurface;
+		Listeners(Layer& parent) noexcept : parent(std::ref(parent)) {}
 	};
 
   private:
@@ -44,11 +46,12 @@ class Layer {
 class LayerSubsurface {
   public:
 	struct Listeners {
-		LayerSubsurface* parent;
+		std::reference_wrapper<LayerSubsurface> parent;
 		wl_listener map;
 		wl_listener unmap;
 		wl_listener destroy;
 		wl_listener commit;
+		Listeners(LayerSubsurface& parent) noexcept : parent(std::ref(parent)) {}
 	};
 
   private:

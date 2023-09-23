@@ -3,6 +3,8 @@
 
 #include "types.hpp"
 
+#include <functional>
+
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_xdg_shell.h>
@@ -11,12 +13,13 @@
 class Popup {
   public:
 	struct Listeners {
-		Popup* parent;
+		std::reference_wrapper<Popup> parent;
 		wl_listener map;
 		wl_listener unmap;
 		wl_listener destroy;
 		wl_listener commit;
 		wl_listener new_popup;
+		Listeners(Popup& parent) noexcept : parent(std::ref(parent)) {}
 	};
 
   private:

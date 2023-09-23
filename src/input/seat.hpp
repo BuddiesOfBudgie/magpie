@@ -12,11 +12,12 @@
 class Seat {
   public:
 	struct Listeners {
-		Seat* parent;
+		std::reference_wrapper<Seat> parent;
 		wl_listener new_input;
 		wl_listener request_cursor;
 		wl_listener request_set_selection;
 		wl_listener destroy;
+		Listeners(Seat& parent) noexcept : parent(std::ref(parent)) {}
 	};
 
   private:

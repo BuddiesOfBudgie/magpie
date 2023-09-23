@@ -3,6 +3,8 @@
 
 #include "types.hpp"
 
+#include <functional>
+
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include "wlr-wrap-end.hpp"
@@ -10,13 +12,14 @@
 class ForeignToplevelHandle {
   public:
 	struct Listeners {
-		ForeignToplevelHandle* parent;
+		std::reference_wrapper<ForeignToplevelHandle> parent;
 		wl_listener request_maximize;
 		wl_listener request_minimize;
 		wl_listener request_activate;
 		wl_listener request_fullscreen;
 		wl_listener request_close;
 		wl_listener set_rectangle;
+		Listeners(ForeignToplevelHandle& parent) noexcept : parent(std::ref(parent)) {}
 	};
 
   private:

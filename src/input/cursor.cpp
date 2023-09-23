@@ -82,7 +82,7 @@ void Cursor::process_move(const uint32_t time) {
 /* This event is forwarded by the cursor when a pointer emits an axis event,
  * for example when you move the scroll wheel. */
 static void cursor_axis_notify(wl_listener* listener, void* data) {
-	Cursor& cursor = *magpie_container_of(listener, cursor, axis);
+	Cursor& cursor = magpie_container_of(listener, cursor, axis);
 	auto* event = static_cast<wlr_pointer_axis_event*>(data);
 
 	/* Notify the client with pointer focus of the axis event. */
@@ -95,7 +95,7 @@ static void cursor_axis_notify(wl_listener* listener, void* data) {
  * multiple events together. For instance, two axis events may happen at the
  * same time, in which case a frame event won't be sent in between. */
 static void cursor_frame_notify(wl_listener* listener, void* data) {
-	Cursor& cursor = *magpie_container_of(listener, cursor, frame);
+	Cursor& cursor = magpie_container_of(listener, cursor, frame);
 	(void) data;
 
 	/* Notify the client with pointer focus of the frame event. */
@@ -109,7 +109,7 @@ static void cursor_frame_notify(wl_listener* listener, void* data) {
  * so we have to warp the mouse there. There is also some hardware which
  * emits these events. */
 static void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
-	Cursor& cursor = *magpie_container_of(listener, cursor, motion_absolute);
+	Cursor& cursor = magpie_container_of(listener, cursor, motion_absolute);
 
 	auto* event = static_cast<wlr_pointer_motion_absolute_event*>(data);
 	wlr_cursor_warp_absolute(cursor.cursor, &event->pointer->base, event->x, event->y);
@@ -118,7 +118,7 @@ static void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
 
 /* This event is forwarded by the cursor when a pointer emits a button event. */
 static void cursor_button_notify(wl_listener* listener, void* data) {
-	Cursor& cursor = *magpie_container_of(listener, cursor, button);
+	Cursor& cursor = magpie_container_of(listener, cursor, button);
 	auto* event = static_cast<wlr_pointer_button_event*>(data);
 
 	Server& server = cursor.seat.server;
@@ -135,14 +135,14 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 		}
 	} else if (magpie_surface != NULL && magpie_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
 		/* Focus that client if the button was _pressed_ */
-		server.focus_view(*magpie_surface->view, surface);
+		server.focus_view(magpie_surface->view, surface);
 	}
 }
 
 /* This event is forwarded by the cursor when a pointer emits a _relative_
  * pointer motion event (i.e. a delta) */
 static void cursor_motion_notify(wl_listener* listener, void* data) {
-	Cursor& cursor = *magpie_container_of(listener, cursor, motion);
+	Cursor& cursor = magpie_container_of(listener, cursor, motion);
 	auto* event = static_cast<wlr_pointer_motion_event*>(data);
 
 	/* The cursor doesn't move unless we tell it to. The cursor automatically
@@ -154,9 +154,7 @@ static void cursor_motion_notify(wl_listener* listener, void* data) {
 	cursor.process_motion(event->time_msec);
 }
 
-Cursor::Cursor(Seat& seat) noexcept : seat(seat) {
-	listeners.parent = this;
-
+Cursor::Cursor(Seat& seat) noexcept : listeners(*this), seat(seat) {
 	/*
 	 * Creates a cursor, which is a wlroots utility for tracking the cursor
 	 * image shown on screen.

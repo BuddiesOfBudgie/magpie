@@ -18,7 +18,7 @@
  * the destruction of the wlr_keyboard. It will no longer receive events
  * and should be destroyed. */
 static void keyboard_handle_destroy(wl_listener* listener, void* data) {
-	Keyboard& keyboard = *magpie_container_of(listener, keyboard, destroy);
+	Keyboard& keyboard = magpie_container_of(listener, keyboard, destroy);
 	(void) data;
 
 	std::vector<Keyboard*>& keyboards = keyboard.seat.keyboards;
@@ -60,7 +60,7 @@ static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_
 
 /* This event is raised when a key is pressed or released. */
 static void keyboard_handle_key(wl_listener* listener, void* data) {
-	const Keyboard& keyboard = *magpie_container_of(listener, keyboard, key);
+	const Keyboard& keyboard = magpie_container_of(listener, keyboard, key);
 
 	auto* event = static_cast<wlr_keyboard_key_event*>(data);
 	wlr_seat* seat = keyboard.seat.seat;
@@ -95,7 +95,7 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 /* This event is raised when a modifier key, such as shift or alt, is
  * pressed. We simply communicate this to the client. */
 static void keyboard_handle_modifiers(wl_listener* listener, void* data) {
-	Keyboard& keyboard = *magpie_container_of(listener, keyboard, modifiers);
+	Keyboard& keyboard = magpie_container_of(listener, keyboard, modifiers);
 	(void) data;
 
 	/*
@@ -109,9 +109,7 @@ static void keyboard_handle_modifiers(wl_listener* listener, void* data) {
 	wlr_seat_keyboard_notify_modifiers(keyboard.seat.seat, &keyboard.keyboard->modifiers);
 }
 
-Keyboard::Keyboard(Seat& seat, wlr_keyboard* keyboard) noexcept : seat(seat) {
-	listeners.parent = this;
-
+Keyboard::Keyboard(Seat& seat, wlr_keyboard* keyboard) noexcept : listeners(*this), seat(seat) {
 	this->keyboard = keyboard;
 
 	/* We need to prepare an XKB keymap and assign it to the keyboard. This

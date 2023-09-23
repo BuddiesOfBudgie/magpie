@@ -3,6 +3,8 @@
 
 #include "types.hpp"
 
+#include <functional>
+
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_scene.h>
 #include "wlr-wrap-end.hpp"
@@ -16,9 +18,9 @@ struct Surface {
 	wlr_scene_node* scene_node;
 
 	union {
-		View* view;
-		Layer* layer;
-		Popup* popup;
+		std::reference_wrapper<View> view;
+		std::reference_wrapper<Layer> layer;
+		std::reference_wrapper<Popup> popup;
 	};
 
 	Surface(View& view) noexcept;

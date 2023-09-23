@@ -36,7 +36,7 @@ void Seat::new_input_device(wlr_input_device* device) {
 }
 
 static void request_cursor_notify(wl_listener* listener, void* data) {
-	const Seat& seat = *magpie_container_of(listener, seat, request_cursor);
+	const Seat& seat = magpie_container_of(listener, seat, request_cursor);
 	auto* event = static_cast<wlr_seat_pointer_request_set_cursor_event*>(data);
 
 	wlr_seat_client* focused_client = seat.seat->pointer_state.focused_client;
@@ -55,15 +55,13 @@ static void request_cursor_notify(wl_listener* listener, void* data) {
  * ignore such requests if they so choose, but in magpie we always honor
  */
 static void request_set_selection_notify(wl_listener* listener, void* data) {
-	const Seat& seat = *magpie_container_of(listener, seat, request_set_selection);
+	const Seat& seat = magpie_container_of(listener, seat, request_set_selection);
 	auto* event = static_cast<wlr_seat_request_set_selection_event*>(data);
 
 	wlr_seat_set_selection(seat.seat, event->source, event->serial);
 }
 
-Seat::Seat(Server& server) noexcept : server(server) {
-	listeners.parent = this;
-
+Seat::Seat(Server& server) noexcept : listeners(*this), server(server) {
 	cursor = new Cursor(*this);
 	seat = wlr_seat_create(server.display, "seat0");
 

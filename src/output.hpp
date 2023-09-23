@@ -3,6 +3,7 @@
 
 #include "types.hpp"
 
+#include <functional>
 #include <set>
 
 #include "wlr-wrap-start.hpp"
@@ -13,10 +14,11 @@
 class Output {
   public:
 	struct Listeners {
-		Output* parent;
+		std::reference_wrapper<Output> parent;
 		wl_listener mode;
 		wl_listener frame;
 		wl_listener destroy;
+		Listeners(Output& parent) noexcept : parent(std::ref(parent)) {}
 	};
 
   private:

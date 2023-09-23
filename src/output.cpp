@@ -15,7 +15,7 @@
 /* This function is called every time an output is ready to display a frame,
  * generally at the output's refresh rate (e.g. 60Hz). */
 static void output_mode_notify(wl_listener* listener, void* data) {
-	Output& output = *magpie_container_of(listener, output, mode);
+	Output& output = magpie_container_of(listener, output, mode);
 	(void) data;
 
 	output.update_layout();
@@ -24,7 +24,7 @@ static void output_mode_notify(wl_listener* listener, void* data) {
 /* This function is called every time an output is ready to display a frame,
  * generally at the output's refresh rate (e.g. 60Hz). */
 static void output_frame_notify(wl_listener* listener, void* data) {
-	Output& output = *magpie_container_of(listener, output, frame);
+	Output& output = magpie_container_of(listener, output, frame);
 	(void) data;
 
 	wlr_scene* scene = output.server.scene;
@@ -39,7 +39,7 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 }
 
 static void output_destroy_notify(wl_listener* listener, void* data) {
-	Output& output = *magpie_container_of(listener, output, destroy);
+	Output& output = magpie_container_of(listener, output, destroy);
 	(void) data;
 
 	output.server.outputs.erase(&output);
@@ -50,9 +50,7 @@ static void output_destroy_notify(wl_listener* listener, void* data) {
 	delete &output;
 }
 
-Output::Output(Server& server, wlr_output* output) noexcept : server(server) {
-	listeners.parent = this;
-
+Output::Output(Server& server, wlr_output* output) noexcept : listeners(*this), server(server) {
 	this->output = output;
 	output->data = this;
 

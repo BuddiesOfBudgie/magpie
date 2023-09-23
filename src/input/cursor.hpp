@@ -3,6 +3,8 @@
 
 #include "types.hpp"
 
+#include <functional>
+
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_xcursor_manager.h>
@@ -13,13 +15,14 @@ enum CursorMode { MAGPIE_CURSOR_PASSTHROUGH, MAGPIE_CURSOR_MOVE, MAGPIE_CURSOR_R
 class Cursor {
   public:
 	struct Listeners {
-		Cursor* parent;
+		std::reference_wrapper<Cursor> parent;
 		wl_listener motion;
 		wl_listener motion_absolute;
 		wl_listener button;
 		wl_listener axis;
 		wl_listener frame;
 		wl_listener new_constraint;
+		Listeners(Cursor& parent) noexcept : parent(std::ref(parent)) {}
 	};
 
   private:

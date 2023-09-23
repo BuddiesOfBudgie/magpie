@@ -25,7 +25,7 @@ static const char* atom_map[ATOM_LAST] = {
 };
 
 static void ready_notify(wl_listener* listener, void* data) {
-	XWayland& xwayland = *magpie_container_of(listener, xwayland, ready);
+	XWayland& xwayland = magpie_container_of(listener, xwayland, ready);
 	(void) data;
 
 	wlr_xwayland_set_seat(xwayland.xwayland, xwayland.server.seat->seat);
@@ -60,15 +60,13 @@ static void ready_notify(wl_listener* listener, void* data) {
 }
 
 static void new_surface_notify(wl_listener* listener, void* data) {
-	XWayland& xwayland = *magpie_container_of(listener, xwayland, new_surface);
+	XWayland& xwayland = magpie_container_of(listener, xwayland, new_surface);
 	auto* xwayland_surface = static_cast<wlr_xwayland_surface*>(data);
 
 	new XWaylandView(xwayland.server, xwayland_surface);
 }
 
-XWayland::XWayland(Server& server) noexcept : server(server) {
-	listeners.parent = this;
-
+XWayland::XWayland(Server& server) noexcept : listeners(*this), server(server) {
 	xwayland = wlr_xwayland_create(server.display, server.compositor, true);
 
 	listeners.ready.notify = ready_notify;
