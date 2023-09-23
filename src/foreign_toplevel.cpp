@@ -20,7 +20,7 @@ static void foreign_toplevel_handle_request_activate_notify(wl_listener* listene
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
 	(void) data;
 
-	handle.view.set_activated(true);
+	handle.view.get_server().focus_view(handle.view, handle.view.surface);
 }
 
 static void foreign_toplevel_handle_request_fullscreen_notify(wl_listener* listener, void* data) {
