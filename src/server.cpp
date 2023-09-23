@@ -316,7 +316,7 @@ Server::Server() : listeners(*this) {
 
 	drm_manager = wlr_drm_lease_v1_manager_create(display, backend);
 	if (drm_manager != nullptr) {
-          listeners.drm_lease_request.notify = drm_lease_notify;
-          wl_signal_add(&drm_manager->events.request, &listeners.drm_lease_request);
+		listeners.drm_lease_request.notify = drm_lease_notify;
+		wl_signal_add(&drm_manager->events.request, &listeners.drm_lease_request);
 	}
 }
