@@ -15,6 +15,7 @@
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_data_device.h>
+#include <wlr/types/wlr_drm_lease_v1.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_idle_inhibit_v1.h>
@@ -50,6 +51,7 @@ class Server {
 		wl_listener activation_request_activation;
 		wl_listener backend_new_input;
 		wl_listener backend_new_output;
+		wl_listener drm_lease_request;
 		Listeners(Server& parent) noexcept : parent(parent) {}
 	};
 
@@ -91,6 +93,8 @@ class Server {
 
 	wlr_idle_notifier_v1* idle_notifier;
 	wlr_idle_inhibit_manager_v1* idle_inhibit_manager;
+
+	wlr_drm_lease_v1_manager* drm_manager;
 
 	Server();
 

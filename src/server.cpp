@@ -98,8 +98,11 @@ static void new_input_notify(wl_listener* listener, void* data) {
  * monitor) becomes available. */
 static void new_output_notify(wl_listener* listener, void* data) {
 	Server& server = magpie_container_of(listener, server, backend_new_output);
-
 	auto* new_output = static_cast<wlr_output*>(data);
+
+	if (server.drm_manager != nullptr) {
+		wlr_drm_lease_v1_manager_offer_output(server.drm_manager, new_output);
+	}
 
 	/* Configures the output created by the backend to use our allocator
 	 * and our renderer. Must be done once, before commiting the output */
@@ -182,6 +185,29 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 	}
 
 	server.focus_view(surface->view, xdg_surface->surface);
+}
+
+static void drm_lease_notify(wl_listener* listener, void* data) {
+	Server& server = magpie_container_of(listener, server, drm_lease_request);
+	auto* request = static_cast<wlr_drm_lease_request_v1*>(data);
+
+	wlr_drm_lease_v1* lease = wlr_drm_lease_request_v1_grant(request);
+	if (lease == nullptr) {
+		wlr_drm_lease_request_v1_reject(request);
+		return;
+	}
+
+	for (size_t i = 0; i < request->n_connectors; i++) {
+		auto* output = static_cast<Output*>(request->connectors[i]->output->data);
+		if (output == nullptr)
+			continue;
+
+		wlr_output_enable(output->output, false);
+		wlr_output_commit(output->output);
+		wlr_output_layout_remove(server.output_layout, output->output);
+		output->is_leased = true;
+		output->scene_output = nullptr;
+	}
 }
 
 Server::Server() : listeners(*this) {
@@ -287,4 +313,10 @@ Server::Server() : listeners(*this) {
 
 	idle_notifier = wlr_idle_notifier_v1_create(display);
 	idle_inhibit_manager = wlr_idle_inhibit_v1_create(display);
+
+	drm_manager = wlr_drm_lease_v1_manager_create(display, backend);
+	if (drm_manager != nullptr) {
+          listeners.drm_lease_request.notify = drm_lease_notify;
+          wl_signal_add(&drm_manager->events.request, &listeners.drm_lease_request);
+	}
 }

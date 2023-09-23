@@ -8,6 +8,7 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_output.h>
+#include <wlr/types/wlr_scene.h>
 #include <wlr/util/box.h>
 #include "wlr-wrap-end.hpp"
 
@@ -27,9 +28,11 @@ class Output {
   public:
 	Server& server;
 	wlr_output* output;
+	wlr_scene_output* scene_output;
 	wlr_box full_area;
 	wlr_box usable_area;
 	std::set<Layer*> layers;
+	bool is_leased;
 
 	Output(Server& server, wlr_output* output) noexcept;
 	~Output() noexcept;

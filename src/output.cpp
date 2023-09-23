@@ -27,6 +27,10 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 	Output& output = magpie_container_of(listener, output, frame);
 	(void) data;
 
+	if (output.scene_output == nullptr || output.is_leased || output.output->enabled) {
+		return;
+	}
+
 	wlr_scene* scene = output.server.scene;
 	wlr_scene_output* scene_output = wlr_scene_get_scene_output(scene, output.output);
 
@@ -53,6 +57,9 @@ static void output_destroy_notify(wl_listener* listener, void* data) {
 Output::Output(Server& server, wlr_output* output) noexcept : listeners(*this), server(server) {
 	this->output = output;
 	output->data = this;
+
+	scene_output = wlr_scene_get_scene_output(server.scene, output);
+	is_leased = false;
 
 	listeners.mode.notify = output_mode_notify;
 	wl_signal_add(&output->events.mode, &listeners.mode);
