@@ -15,6 +15,7 @@ magpie_sources = [
     'input/seat.cpp',
     xdg_shell_protocol,
     wlr_layer_shell_protocol,
+    wlr_output_power_management_protocol,
     wlr_pointer_constraints_protocol,
 ]
 

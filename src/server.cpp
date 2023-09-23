@@ -5,6 +5,7 @@
 #include "surface.hpp"
 #include "types.hpp"
 #include "view.hpp"
+#include "wlr-output-power-management-unstable-v1-protocol.h"
 #include "xwayland.hpp"
 #include "input/seat.hpp"
 
@@ -16,6 +17,7 @@
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
+#include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_screencopy_v1.h>
 #include "wlr-wrap-end.hpp"
 
@@ -140,6 +142,22 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	output->update_layout();
 }
 
+static void output_power_manager_set_mode_notify(wl_listener* listener, void* data) {
+	(void) listener;
+	auto& event = *static_cast<wlr_output_power_v1_set_mode_event*>(data);
+
+	if (event.mode == ZWLR_OUTPUT_POWER_V1_MODE_ON) {
+		wlr_output_enable(event.output, true);
+		if (!wlr_output_test(event.output)) {
+			wlr_output_rollback(event.output);
+		}
+		wlr_output_commit(event.output);
+	} else {
+		wlr_output_enable(event.output, false);
+		wlr_output_commit(event.output);
+	}
+}
+
 /* This event is raised when wlr_xdg_shell receives a new xdg surface from a
  * client, either a toplevel (application window) or popup. */
 static void new_xdg_surface_notify(wl_listener* listener, void* data) {
@@ -255,6 +273,10 @@ Server::Server() : listeners(*this) {
 	assert(output_layout);
 
 	output_manager = wlr_xdg_output_manager_v1_create(display, output_layout);
+
+	output_power_manager = wlr_output_power_manager_v1_create(display);
+	listeners.output_power_manager_set_mode.notify = output_power_manager_set_mode_notify;
+	wl_signal_add(&output_power_manager->events.set_mode, &listeners.output_power_manager_set_mode);
 
 	seat = new Seat(*this);
 

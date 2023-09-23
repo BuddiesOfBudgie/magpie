@@ -22,6 +22,7 @@
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_single_pixel_buffer_v1.h>
 #include <wlr/types/wlr_subcompositor.h>
@@ -52,6 +53,7 @@ class Server {
 		wl_listener backend_new_input;
 		wl_listener backend_new_output;
 		wl_listener drm_lease_request;
+		wl_listener output_power_manager_set_mode;
 		Listeners(Server& parent) noexcept : parent(parent) {}
 	};
 
@@ -88,6 +90,7 @@ class Server {
 	uint32_t resize_edges;
 
 	wlr_xdg_output_manager_v1* output_manager;
+	wlr_output_power_manager_v1* output_power_manager;
 	wlr_output_layout* output_layout;
 	std::set<Output*> outputs;
 
