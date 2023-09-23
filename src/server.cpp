@@ -12,6 +12,13 @@
 #include <cassert>
 #include <wayland-server.h>
 
+#include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_data_control_v1.h>
+#include <wlr/types/wlr_export_dmabuf_v1.h>
+#include <wlr/types/wlr_gamma_control_v1.h>
+#include <wlr/types/wlr_screencopy_v1.h>
+#include "wlr-wrap-end.hpp"
+
 void Server::focus_view(View& view, wlr_surface* surface) {
 	Server& server = view.get_server();
 	wlr_seat* seat = server.seat->seat;
@@ -273,6 +280,10 @@ Server::Server() : listeners(*this) {
 
 	wlr_viewporter_create(display);
 	wlr_single_pixel_buffer_manager_v1_create(display);
+	wlr_screencopy_manager_v1_create(display);
+	wlr_export_dmabuf_manager_v1_create(display);
+	wlr_data_control_manager_v1_create(display);
+	wlr_gamma_control_manager_v1_create(display);
 
 	idle_notifier = wlr_idle_notifier_v1_create(display);
 	idle_inhibit_manager = wlr_idle_inhibit_v1_create(display);
