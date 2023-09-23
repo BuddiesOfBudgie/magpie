@@ -17,7 +17,7 @@ class Seat {
 		wl_listener request_cursor;
 		wl_listener request_set_selection;
 		wl_listener destroy;
-		Listeners(Seat& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(Seat& parent) noexcept : parent(parent) {}
 	};
 
   private:

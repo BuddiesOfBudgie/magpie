@@ -25,7 +25,7 @@ class Layer {
 		wl_listener commit;
 		wl_listener new_popup;
 		wl_listener new_subsurface;
-		Listeners(Layer& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(Layer& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -34,12 +34,12 @@ class Layer {
   public:
 	Output& output;
 
-	wlr_layer_surface_v1* layer_surface;
+	wlr_layer_surface_v1& layer_surface;
 	wlr_scene_layer_surface_v1* scene_layer_surface;
 
 	std::set<LayerSubsurface*> subsurfaces;
 
-	Layer(Output& output, wlr_layer_surface_v1* surface) noexcept;
+	Layer(Output& output, wlr_layer_surface_v1& surface) noexcept;
 	~Layer() noexcept;
 };
 
@@ -51,7 +51,7 @@ class LayerSubsurface {
 		wl_listener unmap;
 		wl_listener destroy;
 		wl_listener commit;
-		Listeners(LayerSubsurface& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(LayerSubsurface& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -59,9 +59,9 @@ class LayerSubsurface {
 
   public:
 	Layer& parent;
-	wlr_subsurface* subsurface;
+	wlr_subsurface& subsurface;
 
-	LayerSubsurface(Layer& parent_layer, wlr_subsurface* subsurface) noexcept;
+	LayerSubsurface(Layer& parent_layer, wlr_subsurface& subsurface) noexcept;
 	~LayerSubsurface() noexcept;
 };
 

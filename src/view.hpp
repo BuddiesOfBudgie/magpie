@@ -61,7 +61,7 @@ class XdgView : public View {
 		wl_listener set_title;
 		wl_listener set_app_id;
 		wl_listener set_parent;
-		Listeners(XdgView& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(XdgView& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -69,9 +69,9 @@ class XdgView : public View {
 
   public:
 	Server& server;
-	wlr_xdg_toplevel* xdg_toplevel;
+	wlr_xdg_toplevel& xdg_toplevel;
 
-	XdgView(Server& server, wlr_xdg_toplevel* toplevel) noexcept;
+	XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept;
 	~XdgView() noexcept;
 
 	inline Server& get_server();
@@ -100,7 +100,7 @@ class XWaylandView : public View {
 		wl_listener set_title;
 		wl_listener set_class;
 		wl_listener set_parent;
-		Listeners(XWaylandView& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(XWaylandView& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -108,9 +108,9 @@ class XWaylandView : public View {
 
   public:
 	Server& server;
-	wlr_xwayland_surface* xwayland_surface;
+	wlr_xwayland_surface& xwayland_surface;
 
-	XWaylandView(Server& server, wlr_xwayland_surface* surface) noexcept;
+	XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept;
 	~XWaylandView() noexcept;
 
 	inline Server& get_server();

@@ -16,7 +16,7 @@ class Keyboard {
 		wl_listener modifiers;
 		wl_listener key;
 		wl_listener destroy;
-		Listeners(Keyboard& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(Keyboard& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -24,9 +24,9 @@ class Keyboard {
 
   public:
 	Seat& seat;
-	wlr_keyboard* keyboard;
+	wlr_keyboard& keyboard;
 
-	Keyboard(Seat& seat, wlr_keyboard* keyboard) noexcept;
+	Keyboard(Seat& seat, wlr_keyboard& keyboard) noexcept;
 	~Keyboard() noexcept;
 };
 

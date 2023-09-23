@@ -71,10 +71,10 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 	uint32_t keycode = event->keycode + 8;
 	/* Get a list of keysyms based on the keymap for this keyboard */
 	const xkb_keysym_t* syms;
-	int nsyms = xkb_state_key_get_syms(keyboard.keyboard->xkb_state, keycode, &syms);
+	int nsyms = xkb_state_key_get_syms(keyboard.keyboard.xkb_state, keycode, &syms);
 
 	bool handled = false;
-	uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard.keyboard);
+	uint32_t modifiers = wlr_keyboard_get_modifiers(&keyboard.keyboard);
 	if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
 		if (modifiers & WLR_MODIFIER_ALT) {
 			/* If alt is held down and this button was _pressed_, we attempt to
@@ -87,7 +87,7 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 
 	if (!handled) {
 		/* Otherwise, we pass it along to the client. */
-		wlr_seat_set_keyboard(seat, keyboard.keyboard);
+		wlr_seat_set_keyboard(seat, &keyboard.keyboard);
 		wlr_seat_keyboard_notify_key(seat, event->time_msec, event->keycode, event->state);
 	}
 }
@@ -104,33 +104,31 @@ static void keyboard_handle_modifiers(wl_listener* listener, void* data) {
 	 * same seat. You can swap out the underlying wlr_keyboard like this and
 	 * wlr_seat handles this transparently.
 	 */
-	wlr_seat_set_keyboard(keyboard.seat.seat, keyboard.keyboard);
+	wlr_seat_set_keyboard(keyboard.seat.seat, &keyboard.keyboard);
 	/* Send modifiers to the client. */
-	wlr_seat_keyboard_notify_modifiers(keyboard.seat.seat, &keyboard.keyboard->modifiers);
+	wlr_seat_keyboard_notify_modifiers(keyboard.seat.seat, &keyboard.keyboard.modifiers);
 }
 
-Keyboard::Keyboard(Seat& seat, wlr_keyboard* keyboard) noexcept : listeners(*this), seat(seat) {
-	this->keyboard = keyboard;
-
+Keyboard::Keyboard(Seat& seat, wlr_keyboard& keyboard) noexcept : listeners(*this), seat(seat), keyboard(keyboard) {
 	/* We need to prepare an XKB keymap and assign it to the keyboard. This
 	 * assumes the defaults (e.g. layout = "us"). */
 	xkb_context* context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 	xkb_keymap* keymap = xkb_keymap_new_from_names(context, NULL, XKB_KEYMAP_COMPILE_NO_FLAGS);
 
-	wlr_keyboard_set_keymap(keyboard, keymap);
+	wlr_keyboard_set_keymap(&keyboard, keymap);
 	xkb_keymap_unref(keymap);
 	xkb_context_unref(context);
-	wlr_keyboard_set_repeat_info(keyboard, 25, 600);
+	wlr_keyboard_set_repeat_info(&keyboard, 25, 600);
 
 	/* Here we set up listeners for keyboard events. */
 	listeners.modifiers.notify = keyboard_handle_modifiers;
-	wl_signal_add(&keyboard->events.modifiers, &listeners.modifiers);
+	wl_signal_add(&keyboard.events.modifiers, &listeners.modifiers);
 	listeners.key.notify = keyboard_handle_key;
-	wl_signal_add(&keyboard->events.key, &listeners.key);
+	wl_signal_add(&keyboard.events.key, &listeners.key);
 	listeners.destroy.notify = keyboard_handle_destroy;
-	wl_signal_add(&keyboard->base.events.destroy, &listeners.destroy);
+	wl_signal_add(&keyboard.base.events.destroy, &listeners.destroy);
 
-	wlr_seat_set_keyboard(seat.seat, keyboard);
+	wlr_seat_set_keyboard(seat.seat, &keyboard);
 }
 
 Keyboard::~Keyboard() noexcept {

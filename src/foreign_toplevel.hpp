@@ -19,7 +19,7 @@ class ForeignToplevelHandle {
 		wl_listener request_fullscreen;
 		wl_listener request_close;
 		wl_listener set_rectangle;
-		Listeners(ForeignToplevelHandle& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(ForeignToplevelHandle& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -27,7 +27,7 @@ class ForeignToplevelHandle {
 
   public:
 	View& view;
-	wlr_foreign_toplevel_handle_v1* handle;
+	wlr_foreign_toplevel_handle_v1& handle;
 
 	ForeignToplevelHandle(View& view) noexcept;
 	~ForeignToplevelHandle() noexcept;

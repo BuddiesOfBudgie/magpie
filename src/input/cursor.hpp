@@ -22,7 +22,7 @@ class Cursor {
 		wl_listener axis;
 		wl_listener frame;
 		wl_listener new_constraint;
-		Listeners(Cursor& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(Cursor& parent) noexcept : parent(parent) {}
 	};
 
   private:

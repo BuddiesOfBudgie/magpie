@@ -44,7 +44,7 @@ static void output_destroy_notify(wl_listener* listener, void* data) {
 
 	output.server.outputs.erase(&output);
 	for (auto* layer : output.layers) {
-		wlr_layer_surface_v1_destroy(layer->layer_surface);
+		wlr_layer_surface_v1_destroy(&layer->layer_surface);
 	}
 
 	delete &output;

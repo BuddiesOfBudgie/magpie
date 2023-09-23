@@ -50,7 +50,7 @@ class Server {
 		wl_listener activation_request_activation;
 		wl_listener backend_new_input;
 		wl_listener backend_new_output;
-		Listeners(Server& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(Server& parent) noexcept : parent(parent) {}
 	};
 
   private:

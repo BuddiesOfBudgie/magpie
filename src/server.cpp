@@ -134,28 +134,29 @@ static void new_output_notify(wl_listener* listener, void* data) {
  * client, either a toplevel (application window) or popup. */
 static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 	Server& server = magpie_container_of(listener, server, xdg_shell_new_xdg_surface);
-	auto* xdg_surface = static_cast<wlr_xdg_surface*>(data);
+	auto& xdg_surface = *static_cast<wlr_xdg_surface*>(data);
 
-	if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-		new XdgView(server, xdg_surface->toplevel);
-	} else if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
-		auto* surface = static_cast<Surface*>(xdg_surface->popup->parent->data);
-		new Popup(*surface, xdg_surface->popup);
+	if (xdg_surface.role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
+		new XdgView(server, *xdg_surface.toplevel);
+	} else if (xdg_surface.role == WLR_XDG_SURFACE_ROLE_POPUP) {
+		auto* surface = static_cast<Surface*>(xdg_surface.popup->parent->data);
+		new Popup(*surface, xdg_surface.popup);
 	}
 }
 
 static void new_layer_surface_notify(wl_listener* listener, void* data) {
 	Server& server = magpie_container_of(listener, server, layer_shell_new_layer_surface);
-	auto* layer_surface = static_cast<wlr_layer_surface_v1*>(data);
+	auto& layer_surface = *static_cast<wlr_layer_surface_v1*>(data);
 
 	/* Allocate a View for this surface */
 	Output* output;
-	if (layer_surface->output == nullptr) {
+	if (layer_surface.output == nullptr) {
 		output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
-		layer_surface->output = output->output;
+		layer_surface.output = output->output;
 	} else {
-		output = static_cast<Output*>(layer_surface->output->data);
+		output = static_cast<Output*>(layer_surface.output->data);
 	}
+
 	output->layers.emplace(new Layer(*output, layer_surface));
 }
 

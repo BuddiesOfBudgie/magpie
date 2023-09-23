@@ -18,7 +18,7 @@ class Output {
 		wl_listener mode;
 		wl_listener frame;
 		wl_listener destroy;
-		Listeners(Output& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(Output& parent) noexcept : parent(parent) {}
 	};
 
   private:

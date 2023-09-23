@@ -31,7 +31,7 @@ class XWayland {
 		std::reference_wrapper<XWayland> parent;
 		wl_listener ready;
 		wl_listener new_surface;
-		Listeners(XWayland& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(XWayland& parent) noexcept : parent(parent) {}
 	};
 
   private:

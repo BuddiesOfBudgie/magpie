@@ -17,7 +17,7 @@
 void Seat::new_input_device(wlr_input_device* device) {
 	switch (device->type) {
 		case WLR_INPUT_DEVICE_KEYBOARD:
-			keyboards.push_back(new Keyboard(*this, wlr_keyboard_from_input_device(device)));
+			keyboards.push_back(new Keyboard(*this, *wlr_keyboard_from_input_device(device)));
 			break;
 		case WLR_INPUT_DEVICE_POINTER:
 		case WLR_INPUT_DEVICE_TABLET_TOOL:

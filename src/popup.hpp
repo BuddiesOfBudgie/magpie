@@ -19,7 +19,7 @@ class Popup {
 		wl_listener destroy;
 		wl_listener commit;
 		wl_listener new_popup;
-		Listeners(Popup& parent) noexcept : parent(std::ref(parent)) {}
+		Listeners(Popup& parent) noexcept : parent(parent) {}
 	};
 
   private:
