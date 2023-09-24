@@ -16,6 +16,7 @@ class Output {
   public:
 	struct Listeners {
 		std::reference_wrapper<Output> parent;
+		wl_listener enable;
 		wl_listener mode;
 		wl_listener frame;
 		wl_listener destroy;

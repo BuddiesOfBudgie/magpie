@@ -12,6 +12,13 @@
 #include <wlr/types/wlr_scene.h>
 #include <wlr-wrap-end.hpp>
 
+static void output_enable_notify(wl_listener* listener, void* data) {
+	Output& output = magpie_container_of(listener, output, enable);
+	(void) data;
+
+	output.scene_output = wlr_scene_get_scene_output(output.server.scene, output.output);
+}
+
 /* This function is called every time an output is ready to display a frame,
  * generally at the output's refresh rate (e.g. 60Hz). */
 static void output_mode_notify(wl_listener* listener, void* data) {
@@ -27,7 +34,7 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 	Output& output = magpie_container_of(listener, output, frame);
 	(void) data;
 
-	if (output.scene_output == nullptr || output.is_leased || output.output->enabled) {
+	if (output.scene_output == nullptr || output.is_leased || !output.output->enabled) {
 		return;
 	}
 
@@ -58,9 +65,10 @@ Output::Output(Server& server, wlr_output* output) noexcept : listeners(*this), 
 	this->output = output;
 	output->data = this;
 
-	scene_output = wlr_scene_get_scene_output(server.scene, output);
 	is_leased = false;
 
+	listeners.enable.notify = output_enable_notify;
+	wl_signal_add(&output->events.enable, &listeners.enable);
 	listeners.mode.notify = output_mode_notify;
 	wl_signal_add(&output->events.mode, &listeners.mode);
 	listeners.frame.notify = output_frame_notify;
