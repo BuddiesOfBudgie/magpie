@@ -330,7 +330,6 @@ Server::Server() : listeners(*this) {
 	wlr_single_pixel_buffer_manager_v1_create(display);
 	wlr_screencopy_manager_v1_create(display);
 	wlr_export_dmabuf_manager_v1_create(display);
-	wlr_data_control_manager_v1_create(display);
 	wlr_gamma_control_manager_v1_create(display);
 
 	idle_notifier = wlr_idle_notifier_v1_create(display);
