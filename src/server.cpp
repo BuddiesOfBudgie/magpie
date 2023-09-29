@@ -5,7 +5,6 @@
 #include "surface.hpp"
 #include "types.hpp"
 #include "view.hpp"
-#include "wlr-output-power-management-unstable-v1-protocol.h"
 #include "xwayland.hpp"
 #include "input/seat.hpp"
 
@@ -18,6 +17,7 @@
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_output_power_management_v1.h>
+#include <wlr/types/wlr_presentation_time.h>
 #include <wlr/types/wlr_screencopy_v1.h>
 #include "wlr-wrap-end.hpp"
 
@@ -302,6 +302,10 @@ Server::Server() : listeners(*this) {
 	}
 
 	wlr_scene_attach_output_layout(scene, output_layout);
+
+	auto* presentation = wlr_presentation_create(display, backend);
+	assert(presentation);
+	wlr_scene_set_presentation(scene, presentation);
 
 	/* Set up xdg-shell version 3. The xdg-shell is a Wayland protocol which is
 	 * used for application windows. For more detail on shells, refer to my
