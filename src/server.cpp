@@ -18,6 +18,7 @@
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_presentation_time.h>
+#include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_screencopy_v1.h>
 #include "wlr-wrap-end.hpp"
 
@@ -266,6 +267,9 @@ Server::Server() : listeners(*this) {
 	compositor = wlr_compositor_create(display, renderer);
 	wlr_subcompositor_create(display);
 	wlr_data_device_manager_create(display);
+
+	// https://wayfire.org/2020/08/04/Wayfire-0-5.html
+	wlr_primary_selection_v1_device_manager_create(display);
 
 	/* Creates an output layout, which a wlroots utility for working with an
 	 * arrangement of screens in a physical layout. */
