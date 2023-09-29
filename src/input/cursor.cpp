@@ -110,8 +110,16 @@ static void cursor_frame_notify(wl_listener* listener, void* data) {
  * emits these events. */
 static void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
 	Cursor& cursor = magpie_container_of(listener, cursor, motion_absolute);
-
 	auto* event = static_cast<wlr_pointer_motion_absolute_event*>(data);
+
+	double lx, ly;
+	wlr_cursor_absolute_to_layout_coords(cursor.cursor, &event->pointer->base, event->x, event->y, &lx, &ly);
+
+	double dx = lx - cursor.cursor->x;
+	double dy = ly - cursor.cursor->y;
+	wlr_relative_pointer_manager_v1_send_relative_motion(
+		cursor.relative_pointer_mgr, cursor.seat.seat, (uint64_t) event->time_msec * 1000, dx, dy, dx, dy);
+
 	wlr_cursor_warp_absolute(cursor.cursor, &event->pointer->base, event->x, event->y);
 	cursor.process_motion(event->time_msec);
 }
@@ -145,6 +153,9 @@ static void cursor_motion_notify(wl_listener* listener, void* data) {
 	Cursor& cursor = magpie_container_of(listener, cursor, motion);
 	auto* event = static_cast<wlr_pointer_motion_event*>(data);
 
+	wlr_relative_pointer_manager_v1_send_relative_motion(cursor.relative_pointer_mgr, cursor.seat.seat,
+		(uint64_t) event->time_msec * 1000, event->delta_x, event->delta_y, event->unaccel_dx, event->unaccel_dy);
+
 	/* The cursor doesn't move unless we tell it to. The cursor automatically
 	 * handles constraining the motion to the output layout, as well as any
 	 * special configuration applied for the specific input device which
@@ -168,6 +179,8 @@ Cursor::Cursor(Seat& seat) noexcept : listeners(*this), seat(seat) {
 	 * HiDPI support). We add a cursor theme at scale factor 1 to begin with. */
 	cursor_mgr = wlr_xcursor_manager_create(NULL, 24);
 	wlr_xcursor_manager_load(cursor_mgr, 1);
+
+	relative_pointer_mgr = wlr_relative_pointer_manager_v1_create(seat.server.display);
 
 	/*
 	 * wlr_cursor *only* displays an image on screen. It does not move around

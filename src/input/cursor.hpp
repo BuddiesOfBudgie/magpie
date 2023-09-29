@@ -7,6 +7,7 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_relative_pointer_v1.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include "wlr-wrap-end.hpp"
 
@@ -36,6 +37,7 @@ class Cursor {
 	CursorMode mode;
 	wlr_cursor* cursor;
 	wlr_xcursor_manager* cursor_mgr;
+	wlr_relative_pointer_manager_v1* relative_pointer_mgr;
 
 	Cursor(Seat& seat) noexcept;
 
