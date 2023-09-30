@@ -659,7 +659,7 @@ meta_settings_init (MetaSettings *settings)
   g_signal_connect (settings->wayland_settings, "changed",
                     G_CALLBACK (wayland_settings_changed),
                     settings);
-  settings->x11_settings = g_settings_new ("org.gnome.mutter.x11");
+  settings->x11_settings = g_settings_new ("com.solus-project.magpie.x11");
   g_signal_connect (settings->x11_settings, "changed",
                     G_CALLBACK (x11_settings_changed),
                     settings);

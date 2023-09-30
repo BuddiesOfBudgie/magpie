@@ -17,7 +17,6 @@ Magpie is a soft-fork of GNOME's mutter at version 43 tailored to the requiremen
 /usr/share/GConf/gsettings/mutter-schemas.convert
 /usr/share/glib-2.0/schemas/org.gnome.mutter.gschema.xml
 /usr/share/glib-2.0/schemas/org.gnome.mutter.wayland.gschema.xml
-/usr/share/glib-2.0/schemas/org.gnome.mutter.x11.gschema.xml
 /usr/share/gnome-control-center/keybindings/50-mutter-navigation.xml
 /usr/share/gnome-control-center/keybindings/50-mutter-system.xml
 /usr/share/gnome-control-center/keybindings/50-mutter-wayland.xml
