@@ -50,7 +50,6 @@ class Server {
 		wl_listener xdg_shell_new_xdg_surface;
 		wl_listener layer_shell_new_layer_surface;
 		wl_listener activation_request_activation;
-		wl_listener backend_new_input;
 		wl_listener backend_new_output;
 		wl_listener drm_lease_request;
 		wl_listener output_power_manager_set_mode;

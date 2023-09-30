@@ -214,7 +214,7 @@ void XWaylandView::map() {
 }
 
 void XWaylandView::unmap() {
-	Cursor& cursor = *server.seat->cursor;
+	Cursor& cursor = server.seat->cursor;
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
 	if (this == server.grabbed_view) {

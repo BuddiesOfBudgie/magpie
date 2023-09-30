@@ -90,13 +90,6 @@ Surface* Server::surface_at(const double lx, const double ly, wlr_surface** surf
 	return static_cast<Surface*>(tree->node.data);
 }
 
-static void new_input_notify(wl_listener* listener, void* data) {
-	Server& server = magpie_container_of(listener, server, backend_new_input);
-
-	auto* device = static_cast<wlr_input_device*>(data);
-	server.seat->new_input_device(device);
-}
-
 /* This event is raised by the backend when a new output (aka a display or
  * monitor) becomes available. */
 static void new_output_notify(wl_listener* listener, void* data) {
@@ -283,9 +276,6 @@ Server::Server() : listeners(*this) {
 	wl_signal_add(&output_power_manager->events.set_mode, &listeners.output_power_manager_set_mode);
 
 	seat = new Seat(*this);
-
-	listeners.backend_new_input.notify = new_input_notify;
-	wl_signal_add(&backend->events.new_input, &listeners.backend_new_input);
 
 	/* Configure a listener to be notified when new outputs are available on the
 	 * backend. */

@@ -193,7 +193,7 @@ void XdgView::unmap() {
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
 	if (this == server.grabbed_view) {
-		server.seat->cursor->reset_mode();
+		server.seat->cursor.reset_mode();
 	}
 }
 

@@ -7,6 +7,8 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_seat.h>
+#include <wlr/types/wlr_virtual_keyboard_v1.h>
+#include <wlr/types/wlr_virtual_pointer_v1.h>
 #include "wlr-wrap-end.hpp"
 
 class Seat {
@@ -14,9 +16,10 @@ class Seat {
 	struct Listeners {
 		std::reference_wrapper<Seat> parent;
 		wl_listener new_input;
+		wl_listener new_virtual_pointer;
+		wl_listener new_virtual_keyboard;
 		wl_listener request_cursor;
 		wl_listener request_set_selection;
-		wl_listener destroy;
 		Listeners(Seat& parent) noexcept : parent(parent) {}
 	};
 
@@ -26,8 +29,10 @@ class Seat {
   public:
 	Server& server;
 	wlr_seat* seat;
-	Cursor* cursor;
+	Cursor& cursor;
 	std::vector<Keyboard*> keyboards;
+	wlr_virtual_pointer_manager_v1* virtual_pointer_mgr;
+	wlr_virtual_keyboard_manager_v1* virtual_keyboard_mgr;
 
 	Seat(Server& server) noexcept;
 	~Seat() noexcept;
