@@ -1,0 +1,17 @@
+name: Build on Ubuntu 22.04
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  ubuntu:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: sudo apt update
+      - run: sudo apt install meson ninja-build gettext gsettings-desktop-schemas-dev libcanberra-dev libcolord-dev libdrm-dev libgbm-dev libgraphene-1.0-dev libgtk-3-dev libgudev-1.0-dev libinput-dev libjson-glib-dev liblcms2-dev libpipewire-0.3-dev libstartup-notification0-dev libsysprof-4-dev libsystemd-dev libudev-dev libx11-xcb-dev libxcb-randr0-dev libxcb-res0-dev libxkbcommon-x11-dev libxkbfile-dev sysprof udev xcvt
+      - run: meson setup build
+      - run: meson compile -C build

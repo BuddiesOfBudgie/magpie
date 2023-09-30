@@ -1,5 +1,5 @@
 project('magpie', 'c',
-  version: '0.9.1',
+  version: '0.9.3',
   meson_version: '>= 0.55.0',
   license: 'GPLv2+'
 )
@@ -134,6 +134,8 @@ have_wayland = false
 have_x11 = true
 have_xwayland = have_wayland # for now default to have_wayland
 have_x11_client = have_x11 or have_xwayland
+
+example_wm = get_option('with_example_wm')
 
 if have_xwayland and not have_wayland
   error('XWayland support requires Wayland support enabled')
@@ -270,6 +272,8 @@ if have_wayland_eglstream
     error('Wayland EGLStream support requires Wayland to be enabled')
   endif
 endif
+
+default_driver = get_option('default_driver')
 
 have_sm = get_option('sm')
 if have_sm
@@ -642,13 +646,14 @@ subdir('tools')
 subdir('src')
 subdir('po')
 
-subdir('doc/man')
+if example_wm
+  subdir('doc/man')
+endif
 if have_documentation
   subdir('doc/reference')
 endif
 
-meson.add_install_script('meson/meson-postinstall.sh')
-meson.add_dist_script('meson/check-version.py', meson.project_version(), 'NEWS')
+meson.add_install_script('scripts/mesonPostInstall.sh')
 
 summary('prefix', prefix, section: 'Directories')
 summary('libexecdir', libexecdir, section: 'Directories')
@@ -668,6 +673,7 @@ summary('X11', have_x11, section: 'Options')
 #summary('XWayland', have_xwayland, section: 'Options')
 summary('Native Backend', have_native_backend, section: 'Options')
 summary('EGL Device', have_egl_device, section: 'Options')
+summary('Default driver', default_driver, section: 'Options')
 summary('Remote desktop', have_remote_desktop, section: 'Options')
 summary('libgnome-desktop', have_gnome_desktop, section: 'Options')
 summary('Sound player', have_sound_player, section: 'Options')
