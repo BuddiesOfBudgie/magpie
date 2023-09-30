@@ -1096,20 +1096,21 @@ libmutter_dep = declare_dependency(
   ],
 )
 
-mutter = executable('magpie',
-  sources: [
-    files('core/mutter.c'),
-  ],
-  include_directories: mutter_includes,
-  c_args: [
-    mutter_c_args,
-    '-DG_LOG_DOMAIN="magpie"',
-  ],
-  dependencies: [libmutter_dep],
-  install_dir: bindir,
-  install: true,
-)
-if have_x11
+if example_wm
+  mutter = executable('magpie',
+    sources: [
+      files('core/mutter.c'),
+    ],
+    include_directories: mutter_includes,
+    c_args: [
+      mutter_c_args,
+      '-DG_LOG_DOMAIN="magpie"',
+    ],
+    dependencies: [libmutter_dep],
+    install_dir: bindir,
+    install: true,
+  )
+
   executable('magpie-restart-helper',
     sources: [
       files('core/restart-helper.c'),
@@ -1184,7 +1185,9 @@ pkg.generate(libmutter,
   install_dir: pcdir,
 )
 
-subdir('compositor/plugins')
+if example_wm
+  subdir('compositor/plugins')
+endif
 
 if have_core_tests
   subdir('tests')

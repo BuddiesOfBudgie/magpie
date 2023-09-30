@@ -4,10 +4,15 @@ set -e
 git submodule init
 git submodule update
 
-VERSION="0.9.1"
-NAME="magpie"
-git-archive-all.sh --format tar --prefix ${NAME}-${VERSION}/ --verbose -t HEAD ${NAME}-${VERSION}.tar
-xz -9 "${NAME}-${VERSION}.tar"
+rm -rf build
+meson setup build --prefix=/usr
+ninja dist -C build
 
-gpg --default-key 1E1FB0017C998A8AE2C498A6C2EAA8A26ADC59EE --armor --detach-sign "${NAME}-${VERSION}.tar.xz"
-gpg --verify "${NAME}-${VERSION}.tar.xz.asc"
+VERSION=$(grep "version:" meson.build | head -n1 | cut -d"'" -f2)
+TAR="magpie-${VERSION}.tar.xz"
+VTAR="magpie-v${VERSION}.tar.xz"
+
+mv build/meson-dist/$TAR $VTAR
+
+gpg --armor --detach-sign $VTAR
+gpg --verify "${VTAR}.asc"
