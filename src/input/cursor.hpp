@@ -7,6 +7,7 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_pointer_gestures_v1.h>
 #include <wlr/types/wlr_relative_pointer_v1.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include "wlr-wrap-end.hpp"
@@ -23,6 +24,12 @@ class Cursor {
 		wl_listener axis;
 		wl_listener frame;
 		wl_listener new_constraint;
+		wl_listener gesture_pinch_begin;
+		wl_listener gesture_pinch_update;
+		wl_listener gesture_pinch_end;
+		wl_listener gesture_swipe_begin;
+		wl_listener gesture_swipe_update;
+		wl_listener gesture_swipe_end;
 		Listeners(Cursor& parent) noexcept : parent(parent) {}
 	};
 
@@ -38,6 +45,7 @@ class Cursor {
 	wlr_cursor* cursor;
 	wlr_xcursor_manager* cursor_mgr;
 	wlr_relative_pointer_manager_v1* relative_pointer_mgr;
+	wlr_pointer_gestures_v1* pointer_gestures;
 
 	Cursor(Seat& seat) noexcept;
 

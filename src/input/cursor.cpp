@@ -166,6 +166,50 @@ static void cursor_motion_notify(wl_listener* listener, void* data) {
 	cursor.process_motion(event->time_msec);
 }
 
+static void gesture_pinch_begin_notify(wl_listener* listener, void* data) {
+	Cursor& cursor = magpie_container_of(listener, cursor, gesture_pinch_begin);
+	auto* event = static_cast<wlr_pointer_pinch_begin_event*>(data);
+
+	wlr_pointer_gestures_v1_send_pinch_begin(cursor.pointer_gestures, cursor.seat.seat, event->time_msec, event->fingers);
+}
+
+static void gesture_pinch_update_notify(wl_listener* listener, void* data) {
+	Cursor& cursor = magpie_container_of(listener, cursor, gesture_pinch_update);
+	auto* event = static_cast<wlr_pointer_pinch_update_event*>(data);
+
+	wlr_pointer_gestures_v1_send_pinch_update(
+		cursor.pointer_gestures, cursor.seat.seat, event->time_msec, event->dx, event->dy, event->scale, event->rotation);
+}
+
+static void gesture_pinch_end_notify(wl_listener* listener, void* data) {
+	Cursor& cursor = magpie_container_of(listener, cursor, gesture_pinch_end);
+	auto* event = static_cast<wlr_pointer_pinch_end_event*>(data);
+
+	wlr_pointer_gestures_v1_send_pinch_end(cursor.pointer_gestures, cursor.seat.seat, event->time_msec, event->cancelled);
+}
+
+static void gesture_swipe_begin_notify(wl_listener* listener, void* data) {
+	Cursor& cursor = magpie_container_of(listener, cursor, gesture_swipe_begin);
+	auto* event = static_cast<wlr_pointer_swipe_begin_event*>(data);
+
+	wlr_pointer_gestures_v1_send_swipe_begin(cursor.pointer_gestures, cursor.seat.seat, event->time_msec, event->fingers);
+}
+
+static void gesture_swipe_update_notify(wl_listener* listener, void* data) {
+	Cursor& cursor = magpie_container_of(listener, cursor, gesture_swipe_update);
+	auto* event = static_cast<wlr_pointer_swipe_update_event*>(data);
+
+	wlr_pointer_gestures_v1_send_swipe_update(
+		cursor.pointer_gestures, cursor.seat.seat, event->time_msec, event->dx, event->dy);
+}
+
+static void gesture_swipe_end_notify(wl_listener* listener, void* data) {
+	Cursor& cursor = magpie_container_of(listener, cursor, gesture_swipe_end);
+	auto* event = static_cast<wlr_pointer_swipe_end_event*>(data);
+
+	wlr_pointer_gestures_v1_send_swipe_end(cursor.pointer_gestures, cursor.seat.seat, event->time_msec, event->cancelled);
+}
+
 Cursor::Cursor(Seat& seat) noexcept : listeners(*this), seat(seat) {
 	/*
 	 * Creates a cursor, which is a wlroots utility for tracking the cursor
@@ -182,6 +226,7 @@ Cursor::Cursor(Seat& seat) noexcept : listeners(*this), seat(seat) {
 	wlr_xcursor_manager_load(cursor_mgr, 1);
 
 	relative_pointer_mgr = wlr_relative_pointer_manager_v1_create(seat.server.display);
+	pointer_gestures = wlr_pointer_gestures_v1_create(seat.server.display);
 
 	/*
 	 * wlr_cursor *only* displays an image on screen. It does not move around
@@ -206,6 +251,19 @@ Cursor::Cursor(Seat& seat) noexcept : listeners(*this), seat(seat) {
 	wl_signal_add(&cursor->events.axis, &listeners.axis);
 	listeners.frame.notify = cursor_frame_notify;
 	wl_signal_add(&cursor->events.frame, &listeners.frame);
+
+	listeners.gesture_pinch_begin.notify = gesture_pinch_begin_notify;
+	wl_signal_add(&cursor->events.pinch_begin, &listeners.gesture_pinch_begin);
+	listeners.gesture_pinch_update.notify = gesture_pinch_update_notify;
+	wl_signal_add(&cursor->events.pinch_update, &listeners.gesture_pinch_update);
+	listeners.gesture_pinch_end.notify = gesture_pinch_end_notify;
+	wl_signal_add(&cursor->events.pinch_end, &listeners.gesture_pinch_end);
+	listeners.gesture_swipe_begin.notify = gesture_swipe_begin_notify;
+	wl_signal_add(&cursor->events.swipe_begin, &listeners.gesture_swipe_begin);
+	listeners.gesture_swipe_update.notify = gesture_swipe_update_notify;
+	wl_signal_add(&cursor->events.swipe_update, &listeners.gesture_swipe_update);
+	listeners.gesture_swipe_end.notify = gesture_swipe_end_notify;
+	wl_signal_add(&cursor->events.swipe_end, &listeners.gesture_swipe_end);
 }
 
 void Cursor::attach_input_device(wlr_input_device* device) {
