@@ -104,13 +104,12 @@ static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, vo
 }
 
 Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept
-	: listeners(*this), output(output), layer_surface(surface) {
+	: listeners(*this), server(output.server), output(output), layer_surface(surface) {
 	magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface.current.layer);
 	scene_layer_surface = wlr_scene_layer_surface_v1_create(output.server.scene_layers[chosen_layer], &surface);
 
-	Surface* magpie_surface = new Surface(*this);
-	scene_layer_surface->tree->node.data = magpie_surface;
-	surface.surface->data = magpie_surface;
+	scene_layer_surface->tree->node.data = this;
+	surface.surface->data = this;
 
 	listeners.map.notify = wlr_layer_surface_v1_map_notify;
 	wl_signal_add(&surface.events.map, &listeners.map);
@@ -133,4 +132,8 @@ Layer::~Layer() noexcept {
 	wl_list_remove(&listeners.commit.link);
 	wl_list_remove(&listeners.new_popup.link);
 	wl_list_remove(&listeners.new_subsurface.link);
+}
+
+inline Server& Layer::get_server() const {
+	return server;
 }

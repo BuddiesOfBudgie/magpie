@@ -9,17 +9,15 @@ class Seat;
 class Keyboard;
 class Cursor;
 
-class View;
+struct Surface;
+struct View;
 class XdgView;
 class XWaylandView;
-class ForeignToplevelHandle;
-
 class Layer;
 class LayerSubsurface;
-
 class Popup;
 
-struct Surface;
+class ForeignToplevelHandle;
 
 #define magpie_container_of(ptr, sample, member)                                                                               \
 	(__extension__({                                                                                                           \

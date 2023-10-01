@@ -1,6 +1,7 @@
 #ifndef MAGPIE_POPUP_HPP
 #define MAGPIE_POPUP_HPP
 
+#include "surface.hpp"
 #include "types.hpp"
 
 #include <functional>
@@ -10,7 +11,7 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
-class Popup {
+class Popup : public Surface {
   public:
 	struct Listeners {
 		std::reference_wrapper<Popup> parent;
@@ -27,13 +28,13 @@ class Popup {
 
   public:
 	Server& server;
-	Surface& parent;
-
+	const Surface& parent;
 	wlr_xdg_popup* xdg_popup;
-	wlr_scene_node* scene_node;
 
-	Popup(Surface& parent, wlr_xdg_popup* xdg_popup) noexcept;
+	Popup(const Surface& parent, wlr_xdg_popup* xdg_popup) noexcept;
 	~Popup() noexcept;
+
+	Server& get_server() const override;
 };
 
 #endif

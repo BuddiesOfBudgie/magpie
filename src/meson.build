@@ -5,7 +5,6 @@ magpie_sources = [
     'output.cpp',
     'popup.cpp',
     'server.cpp',
-    'surface.cpp',
     'view.cpp',
     'xdg_view.cpp',
     'xwayland.cpp',

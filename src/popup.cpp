@@ -33,17 +33,17 @@ static void popup_commit_notify(wl_listener* listener, void* data) {
 static void popup_new_popup_notify(wl_listener* listener, void* data) {
 	const Popup& popup = magpie_container_of(listener, popup, new_popup);
 
-	new Popup(popup.parent, static_cast<wlr_xdg_popup*>(data));
+	new Popup(popup, static_cast<wlr_xdg_popup*>(data));
 }
 
-Popup::Popup(Surface& parent, wlr_xdg_popup* xdg_popup) noexcept : listeners(*this), server(parent.server), parent(parent) {
+Popup::Popup(const Surface& parent, wlr_xdg_popup* xdg_popup) noexcept
+	: listeners(*this), server(parent.get_server()), parent(parent) {
 	this->xdg_popup = xdg_popup;
 	auto* scene_tree = wlr_scene_xdg_surface_create(parent.scene_node->parent, xdg_popup->base);
 	scene_node = &scene_tree->node;
 
-	Surface* surface = new Surface(*this);
-	scene_node->data = surface;
-	xdg_popup->base->surface->data = surface;
+	scene_node->data = this;
+	xdg_popup->base->surface->data = this;
 
 	listeners.map.notify = popup_map_notify;
 	wl_signal_add(&xdg_popup->base->events.map, &listeners.map);
@@ -63,4 +63,8 @@ Popup::~Popup() noexcept {
 	wl_list_remove(&listeners.destroy.link);
 	wl_list_remove(&listeners.commit.link);
 	wl_list_remove(&listeners.new_popup.link);
+}
+
+inline Server& Popup::get_server() const {
+	return server;
 }

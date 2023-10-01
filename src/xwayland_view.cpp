@@ -119,10 +119,10 @@ static void xwayland_surface_set_parent_notify(wl_listener* listener, void* data
 		return;
 
 	if (view.xwayland_surface.parent != nullptr) {
-		auto* m_surface = static_cast<Surface*>(view.xwayland_surface.parent->data);
-		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
-			wlr_scene_node_reparent(view.scene_node, m_surface->scene_node->parent);
-			view.toplevel_handle->set_parent(m_surface->view.get().toplevel_handle);
+		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(view.xwayland_surface.parent->data));
+		if (m_view != nullptr) {
+			wlr_scene_node_reparent(view.scene_node, m_view->scene_node->parent);
+			view.toplevel_handle->set_parent(m_view->toplevel_handle);
 			return;
 		}
 	}
@@ -171,11 +171,11 @@ XWaylandView::~XWaylandView() noexcept {
 	wl_list_remove(&listeners.set_parent.link);
 }
 
-inline Server& XWaylandView::get_server() {
+inline Server& XWaylandView::get_server() const {
 	return server;
 }
 
-const wlr_box XWaylandView::get_geometry() {
+const wlr_box XWaylandView::get_geometry() const {
 	wlr_box box;
 	box.x = xwayland_surface.x;
 	box.y = xwayland_surface.y;
@@ -185,9 +185,8 @@ const wlr_box XWaylandView::get_geometry() {
 }
 
 void XWaylandView::map() {
-	Surface* surface = new Surface(*this);
-	xwayland_surface.data = surface;
-	xwayland_surface.surface->data = surface;
+	xwayland_surface.data = this;
+	xwayland_surface.surface->data = this;
 
 	this->surface = xwayland_surface.surface;
 
@@ -200,10 +199,10 @@ void XWaylandView::map() {
 	scene_node->data = surface;
 
 	if (xwayland_surface.parent != nullptr) {
-		auto* m_surface = static_cast<Surface*>(xwayland_surface.parent->data);
-		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
-			wlr_scene_node_reparent(scene_node, m_surface->view.get().scene_node->parent);
-			toplevel_handle->set_parent(m_surface->view.get().toplevel_handle);
+		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(xwayland_surface.parent->data));
+		if (m_view != nullptr) {
+			wlr_scene_node_reparent(scene_node, m_view->scene_node->parent);
+			toplevel_handle->set_parent(m_view->toplevel_handle);
 		}
 	}
 

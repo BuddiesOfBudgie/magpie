@@ -191,12 +191,10 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 	}
 
 	wlr_xdg_surface* xdg_surface = wlr_xdg_surface_from_wlr_surface(event->surface);
-	auto* surface = static_cast<Surface*>(xdg_surface->surface->data);
-	if (surface->type != MAGPIE_SURFACE_TYPE_VIEW || !xdg_surface->mapped) {
-		return;
+	auto* view = dynamic_cast<View*>(static_cast<Surface*>(xdg_surface->surface->data));
+	if (view != nullptr && xdg_surface->mapped) {
+		server.focus_view(*view, xdg_surface->surface);
 	}
-
-	server.focus_view(surface->view, xdg_surface->surface);
 }
 
 static void drm_lease_notify(wl_listener* listener, void* data) {

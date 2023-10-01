@@ -101,9 +101,9 @@ static void xdg_toplevel_set_parent_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	if (view.xdg_toplevel.parent != nullptr) {
-		auto* m_surface = static_cast<Surface*>(view.xdg_toplevel.parent->base->data);
-		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
-			view.toplevel_handle->set_parent(m_surface->view.get().toplevel_handle);
+		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(view.xdg_toplevel.parent->base->data));
+		if (m_view != nullptr) {
+			view.toplevel_handle->set_parent(m_view->toplevel_handle);
 			return;
 		}
 	}
@@ -120,9 +120,8 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
 	wlr_xdg_surface_get_geometry(toplevel.base, &previous);
 	wlr_xdg_toplevel_set_wm_capabilities(&toplevel, WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE);
 
-	Surface* surface = new Surface(*this);
-	scene_node->data = surface;
-	toplevel.base->surface->data = surface;
+	scene_node->data = this;
+	toplevel.base->surface->data = this;
 
 	xdg_toplevel = toplevel;
 	toplevel_handle = new ForeignToplevelHandle(*this);
@@ -130,9 +129,9 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
 	toplevel_handle->set_app_id(xdg_toplevel.app_id);
 
 	if (xdg_toplevel.parent != nullptr) {
-		auto* m_surface = static_cast<Surface*>(xdg_toplevel.parent->base->data);
-		if (m_surface != nullptr && m_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
-			toplevel_handle->set_parent(m_surface->view.get().toplevel_handle);
+		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(xdg_toplevel.parent->base->data));
+		if (m_view != nullptr) {
+			toplevel_handle->set_parent(m_view->toplevel_handle);
 		}
 	}
 
@@ -172,11 +171,11 @@ XdgView::~XdgView() noexcept {
 	wl_list_remove(&listeners.set_parent.link);
 }
 
-inline Server& XdgView::get_server() {
+inline Server& XdgView::get_server() const {
 	return server;
 }
 
-const wlr_box XdgView::get_geometry() {
+const wlr_box XdgView::get_geometry() const {
 	wlr_box box;
 	wlr_xdg_surface_get_geometry(xdg_toplevel.base, &box);
 	return box;

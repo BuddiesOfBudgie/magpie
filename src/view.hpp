@@ -2,6 +2,7 @@
 #define MAGPIE_VIEW_HPP
 
 #include "input/cursor.hpp"
+#include "surface.hpp"
 #include "types.hpp"
 
 #include <optional>
@@ -13,21 +14,17 @@
 #include <wlr/xwayland.h>
 #include "wlr-wrap-end.hpp"
 
-class View {
-  public:
+struct View : public Surface {
 	bool maximized;
 	wlr_box current;
 	wlr_box pending;
 	wlr_box previous;
 	wlr_surface* surface;
-	wlr_scene_node* scene_node;
 	ForeignToplevelHandle* toplevel_handle;
 
 	virtual ~View() noexcept {};
 
-	virtual Server& get_server() = 0;
-	virtual const wlr_box get_geometry() = 0;
-
+	virtual const wlr_box get_geometry() const = 0;
 	virtual void map() = 0;
 	virtual void unmap() = 0;
 
@@ -74,8 +71,8 @@ class XdgView : public View {
 	XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept;
 	~XdgView() noexcept;
 
-	inline Server& get_server();
-	const wlr_box get_geometry();
+	inline Server& get_server() const;
+	const wlr_box get_geometry() const;
 	void map();
 	void unmap();
 
@@ -113,8 +110,8 @@ class XWaylandView : public View {
 	XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept;
 	~XWaylandView() noexcept;
 
-	inline Server& get_server();
-	const wlr_box get_geometry();
+	inline Server& get_server() const;
+	const wlr_box get_geometry() const;
 	void map();
 	void unmap();
 

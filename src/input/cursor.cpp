@@ -136,14 +136,15 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 	double sx, sy;
 	wlr_surface* surface = NULL;
 	Surface* magpie_surface = server.surface_at(cursor.cursor->x, cursor.cursor->y, &surface, &sx, &sy);
+	auto* magpie_view = dynamic_cast<View*>(magpie_surface);
 	if (event->state == WLR_BUTTON_RELEASED) {
 		/* If you released any buttons, we exit interactive move/resize mode. */
 		if (cursor.mode != MAGPIE_CURSOR_PASSTHROUGH) {
 			cursor.reset_mode();
 		}
-	} else if (magpie_surface != NULL && magpie_surface->type == MAGPIE_SURFACE_TYPE_VIEW) {
+	} else if (magpie_view != nullptr) {
 		/* Focus that client if the button was _pressed_ */
-		server.focus_view(magpie_surface->view, surface);
+		server.focus_view(*magpie_view, surface);
 	}
 }
 

@@ -1,6 +1,7 @@
 #ifndef MAGPIE_LAYER_HPP
 #define MAGPIE_LAYER_HPP
 
+#include "surface.hpp"
 #include "types.hpp"
 
 #include <functional>
@@ -15,7 +16,7 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-class Layer {
+class Layer : public Surface {
   public:
 	struct Listeners {
 		std::reference_wrapper<Layer> parent;
@@ -32,6 +33,7 @@ class Layer {
 	Listeners listeners;
 
   public:
+	Server& server;
 	Output& output;
 
 	wlr_layer_surface_v1& layer_surface;
@@ -41,6 +43,8 @@ class Layer {
 
 	Layer(Output& output, wlr_layer_surface_v1& surface) noexcept;
 	~Layer() noexcept;
+
+	inline Server& get_server() const;
 };
 
 class LayerSubsurface {
