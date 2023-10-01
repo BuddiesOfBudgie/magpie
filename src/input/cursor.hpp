@@ -30,6 +30,8 @@ class Cursor {
 		wl_listener gesture_swipe_begin;
 		wl_listener gesture_swipe_update;
 		wl_listener gesture_swipe_end;
+		wl_listener gesture_hold_begin;
+		wl_listener gesture_hold_end;
 		Listeners(Cursor& parent) noexcept : parent(parent) {}
 	};
 

@@ -210,6 +210,20 @@ static void gesture_swipe_end_notify(wl_listener* listener, void* data) {
 	wlr_pointer_gestures_v1_send_swipe_end(cursor.pointer_gestures, cursor.seat.seat, event->time_msec, event->cancelled);
 }
 
+static void gesture_hold_begin_notify(wl_listener* listener, void* data) {
+	Cursor& cursor = magpie_container_of(listener, cursor, gesture_hold_begin);
+	auto* event = static_cast<wlr_pointer_hold_begin_event*>(data);
+
+	wlr_pointer_gestures_v1_send_hold_begin(cursor.pointer_gestures, cursor.seat.seat, event->time_msec, event->fingers);
+}
+
+static void gesture_hold_end_notify(wl_listener* listener, void* data) {
+	Cursor& cursor = magpie_container_of(listener, cursor, gesture_hold_end);
+	auto* event = static_cast<wlr_pointer_hold_end_event*>(data);
+
+	wlr_pointer_gestures_v1_send_hold_end(cursor.pointer_gestures, cursor.seat.seat, event->time_msec, event->cancelled);
+}
+
 Cursor::Cursor(Seat& seat) noexcept : listeners(*this), seat(seat) {
 	/*
 	 * Creates a cursor, which is a wlroots utility for tracking the cursor
@@ -264,6 +278,10 @@ Cursor::Cursor(Seat& seat) noexcept : listeners(*this), seat(seat) {
 	wl_signal_add(&cursor->events.swipe_update, &listeners.gesture_swipe_update);
 	listeners.gesture_swipe_end.notify = gesture_swipe_end_notify;
 	wl_signal_add(&cursor->events.swipe_end, &listeners.gesture_swipe_end);
+	listeners.gesture_hold_begin.notify = gesture_hold_begin_notify;
+	wl_signal_add(&cursor->events.hold_begin, &listeners.gesture_swipe_update);
+	listeners.gesture_hold_end.notify = gesture_hold_end_notify;
+	wl_signal_add(&cursor->events.hold_end, &listeners.gesture_swipe_end);
 }
 
 void Cursor::attach_input_device(wlr_input_device* device) {
