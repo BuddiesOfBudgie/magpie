@@ -8,18 +8,22 @@ static void foreign_toplevel_handle_request_maximize_notify(wl_listener* listene
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
 	auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
 
+	handle.view.set_minimized(false);
 	handle.view.set_maximized(event.maximized);
 }
 
 static void foreign_toplevel_handle_request_minimize_notify(wl_listener* listener, void* data) {
-	(void) listener;
-	(void) data;
+	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
+	auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_minimized_event*>(data);
+
+	handle.view.set_minimized(event.minimized);
 }
 
 static void foreign_toplevel_handle_request_activate_notify(wl_listener* listener, void* data) {
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
 	(void) data;
 
+	handle.view.set_minimized(false);
 	handle.view.get_server().focus_view(handle.view, handle.view.surface);
 }
 

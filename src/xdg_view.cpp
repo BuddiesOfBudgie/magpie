@@ -1,3 +1,4 @@
+#include "types.hpp"
 #include "view.hpp"
 
 #include "foreign_toplevel.hpp"
@@ -74,6 +75,14 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
 }
 
+static void xdg_toplevel_request_minimize_notify(wl_listener* listener, void* data) {
+	XdgView& view = magpie_container_of(listener, view, request_minimize);
+	(void) data;
+
+	view.set_minimized(!view.is_minimized);
+	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
+}
+
 static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* data) {
 	XdgView& view = magpie_container_of(listener, view, request_fullscreen);
 	(void) data;
@@ -147,6 +156,8 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
 	wl_signal_add(&xdg_toplevel.events.request_resize, &listeners.request_resize);
 	listeners.request_maximize.notify = xdg_toplevel_request_maximize_notify;
 	wl_signal_add(&xdg_toplevel.events.request_maximize, &listeners.request_maximize);
+	listeners.request_minimize.notify = xdg_toplevel_request_minimize_notify;
+	wl_signal_add(&xdg_toplevel.events.request_minimize, &listeners.request_minimize);
 	listeners.request_fullscreen.notify = xdg_toplevel_request_fullscreen_notify;
 	wl_signal_add(&xdg_toplevel.events.request_fullscreen, &listeners.request_fullscreen);
 	listeners.set_title.notify = xdg_toplevel_set_title_notify;
@@ -166,6 +177,7 @@ XdgView::~XdgView() noexcept {
 	wl_list_remove(&listeners.request_move.link);
 	wl_list_remove(&listeners.request_resize.link);
 	wl_list_remove(&listeners.request_maximize.link);
+	wl_list_remove(&listeners.request_minimize.link);
 	wl_list_remove(&listeners.set_title.link);
 	wl_list_remove(&listeners.set_app_id.link);
 	wl_list_remove(&listeners.set_parent.link);
@@ -182,7 +194,7 @@ const wlr_box XdgView::get_geometry() const {
 }
 
 void XdgView::map() {
-	current = {0, 0, surface->current.width, surface->current.height};
+	current = {scene_node->x, scene_node->y, surface->current.width, surface->current.height};
 	wlr_scene_node_set_enabled(scene_node, true);
 	is_maximized = xdg_toplevel.current.maximized;
 	server.focus_view(*this, xdg_toplevel.base->surface);

@@ -57,7 +57,7 @@ class XdgView : public View {
 		wl_listener request_move;
 		wl_listener request_resize;
 		wl_listener request_maximize;
-		wl_listener request_unmaximize;
+		wl_listener request_minimize;
 		wl_listener request_fullscreen;
 		wl_listener set_title;
 		wl_listener set_app_id;
