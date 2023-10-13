@@ -39,6 +39,7 @@ class Output {
 	~Output() noexcept;
 
 	void update_layout();
+	wlr_box usable_area_in_layout_coords() const;
 };
 
 #endif

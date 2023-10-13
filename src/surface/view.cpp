@@ -130,13 +130,12 @@ void View::set_maximized(const bool maximized) {
 		previous.x = current.x;
 		previous.y = current.y;
 
-		wlr_box output_box = current;
-
 		auto best_output = find_output_for_maximize();
-		if (best_output.has_value()) {
-			wlr_output_layout_get_box(server.output_layout, best_output.value()->output, &output_box);
+		if (!best_output.has_value()) {
+			return;
 		}
 
+		wlr_box output_box = best_output.value()->usable_area_in_layout_coords();
 		set_size(output_box.width, output_box.height);
 		impl_set_maximized(true);
 		current.x = output_box.x;
