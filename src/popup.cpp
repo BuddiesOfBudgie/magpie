@@ -68,3 +68,7 @@ Popup::~Popup() noexcept {
 inline Server& Popup::get_server() const {
 	return server;
 }
+
+bool Popup::is_view() const {
+	return false;
+}

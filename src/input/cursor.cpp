@@ -145,7 +145,7 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 		if (cursor.mode != MAGPIE_CURSOR_PASSTHROUGH) {
 			cursor.reset_mode();
 		}
-	} else if (typeid(magpie_surface) == typeid(View*)) {
+	} else if (magpie_surface != nullptr && magpie_surface->is_view()) {
 		/* Focus that client if the button was _pressed_ */
 		server.focus_view(*static_cast<View*>(magpie_surface), surface);
 	}
