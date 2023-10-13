@@ -182,6 +182,7 @@ const wlr_box XdgView::get_geometry() const {
 }
 
 void XdgView::map() {
+	current = {0, 0, surface->current.width, surface->current.height};
 	wlr_scene_node_set_enabled(scene_node, true);
 	is_maximized = xdg_toplevel.current.maximized;
 	server.focus_view(*this, xdg_toplevel.base->surface);
