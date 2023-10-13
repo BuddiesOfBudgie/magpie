@@ -70,7 +70,7 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 	XdgView& view = magpie_container_of(listener, view, request_maximize);
 	(void) data;
 
-	view.set_maximized(!view.maximized);
+	view.set_maximized(!view.is_maximized);
 	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
 }
 
@@ -183,7 +183,7 @@ const wlr_box XdgView::get_geometry() const {
 
 void XdgView::map() {
 	wlr_scene_node_set_enabled(scene_node, true);
-	maximized = xdg_toplevel.current.maximized;
+	is_maximized = xdg_toplevel.current.maximized;
 	server.focus_view(*this, xdg_toplevel.base->surface);
 }
 
@@ -206,4 +206,8 @@ void XdgView::impl_set_activated(const bool activated) {
 
 void XdgView::impl_set_maximized(const bool maximized) {
 	wlr_xdg_toplevel_set_maximized(&xdg_toplevel, maximized);
+}
+
+void XdgView::impl_set_minimized(const bool minimized) {
+	(void) minimized;
 }

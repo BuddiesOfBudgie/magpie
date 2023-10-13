@@ -15,7 +15,8 @@
 #include "wlr-wrap-end.hpp"
 
 struct View : public Surface {
-	bool maximized;
+	bool is_maximized;
+	bool is_minimized;
 	wlr_box current;
 	wlr_box pending;
 	wlr_box previous;
@@ -32,6 +33,7 @@ struct View : public Surface {
 	void set_size(const int new_width, const int new_height);
 	void set_activated(const bool activated);
 	void set_maximized(const bool maximized);
+	void set_minimized(const bool minimized);
 
   private:
 	const std::optional<const Output*> find_output_for_maximize();
@@ -40,6 +42,7 @@ struct View : public Surface {
 	virtual void impl_set_size(const int new_width, const int new_height) = 0;
 	virtual void impl_set_activated(const bool activated) = 0;
 	virtual void impl_set_maximized(const bool maximized) = 0;
+	virtual void impl_set_minimized(bool minimized) = 0;
 };
 
 class XdgView : public View {
@@ -71,15 +74,16 @@ class XdgView : public View {
 	XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept;
 	~XdgView() noexcept;
 
-	inline Server& get_server() const;
-	const wlr_box get_geometry() const;
-	void map();
-	void unmap();
+	inline Server& get_server() const override;
+	const wlr_box get_geometry() const override;
+	void map() override;
+	void unmap() override;
 
   protected:
-	void impl_set_size(int new_width, int new_height);
-	void impl_set_activated(bool activated);
-	void impl_set_maximized(bool maximized);
+	void impl_set_size(int new_width, int new_height) override;
+	void impl_set_activated(bool activated) override;
+	void impl_set_maximized(bool maximized) override;
+	void impl_set_minimized(bool minimized) override;
 };
 
 class XWaylandView : public View {
@@ -110,15 +114,16 @@ class XWaylandView : public View {
 	XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept;
 	~XWaylandView() noexcept;
 
-	inline Server& get_server() const;
-	const wlr_box get_geometry() const;
-	void map();
-	void unmap();
+	inline Server& get_server() const override;
+	const wlr_box get_geometry() const override;
+	void map() override;
+	void unmap() override;
 
   protected:
-	void impl_set_size(int new_width, int new_height);
-	void impl_set_activated(bool activated);
-	void impl_set_maximized(bool maximized);
+	void impl_set_size(int new_width, int new_height) override;
+	void impl_set_activated(bool activated) override;
+	void impl_set_maximized(bool maximized) override;
+	void impl_set_minimized(bool minimized) override;
 };
 
 #endif

@@ -104,7 +104,7 @@ void View::set_activated(const bool activated) {
 
 void View::set_maximized(const bool maximized) {
 	Server& server = get_server();
-	if (this->maximized == maximized) {
+	if (this->is_maximized == maximized) {
 		/* Don't honor request if already maximized. */
 		return;
 	}
@@ -115,7 +115,7 @@ void View::set_maximized(const bool maximized) {
 		return;
 	}
 
-	if (this->maximized) {
+	if (this->is_maximized) {
 		set_size(previous.width, previous.height);
 		impl_set_maximized(false);
 		current.x = previous.x;
@@ -140,6 +140,23 @@ void View::set_maximized(const bool maximized) {
 		wlr_scene_node_set_position(scene_node, current.x, current.y);
 	}
 
-	this->maximized = maximized;
+	this->is_maximized = maximized;
 	toplevel_handle->set_maximized(maximized);
+}
+
+void View::set_minimized(const bool minimized) {
+	if (minimized == is_minimized) {
+		return;
+	}
+
+	toplevel_handle->set_minimized(minimized);
+	impl_set_minimized(minimized);
+	this->is_minimized = minimized;
+
+	if (minimized) {
+		unmap();
+		set_activated(false);
+	} else {
+		map();
+	}
 }

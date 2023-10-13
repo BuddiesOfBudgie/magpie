@@ -5,6 +5,8 @@
 #include "surface.hpp"
 #include "view.hpp"
 
+#include <iostream>
+
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_pointer.h>
@@ -134,7 +136,8 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 	/* Notify the client with pointer focus that a button press has occurred */
 	wlr_seat_pointer_notify_button(server.seat->seat, event->time_msec, event->button, event->state);
 	double sx, sy;
-	wlr_surface* surface = NULL;
+
+	wlr_surface* surface = nullptr;
 	Surface* magpie_surface = server.surface_at(cursor.cursor->x, cursor.cursor->y, &surface, &sx, &sy);
 
 	if (event->state == WLR_BUTTON_RELEASED) {

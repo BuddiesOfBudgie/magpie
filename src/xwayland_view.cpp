@@ -245,3 +245,7 @@ void XWaylandView::impl_set_activated(bool activated) {
 void XWaylandView::impl_set_maximized(const bool maximized) {
 	wlr_xwayland_surface_set_maximized(&xwayland_surface, maximized);
 }
+
+void XWaylandView::impl_set_minimized(const bool minimized) {
+	wlr_xwayland_surface_set_minimized(&xwayland_surface, minimized);
+}
