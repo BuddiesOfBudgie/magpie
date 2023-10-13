@@ -1,7 +1,7 @@
 #include "output.hpp"
 
-#include "layer.hpp"
 #include "server.hpp"
+#include "surface/layer.hpp"
 #include "types.hpp"
 
 #include <algorithm>

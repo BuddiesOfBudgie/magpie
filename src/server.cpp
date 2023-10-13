@@ -1,12 +1,13 @@
 #include "server.hpp"
-#include "layer.hpp"
-#include "output.hpp"
-#include "popup.hpp"
-#include "surface.hpp"
-#include "types.hpp"
-#include "view.hpp"
-#include "xwayland.hpp"
+
 #include "input/seat.hpp"
+#include "output.hpp"
+#include "surface/layer.hpp"
+#include "surface/popup.hpp"
+#include "surface/surface.hpp"
+#include "surface/view.hpp"
+#include "types.hpp"
+#include "xwayland.hpp"
 
 #include <algorithm>
 #include <cassert>

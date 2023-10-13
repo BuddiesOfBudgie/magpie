@@ -1,10 +1,11 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "xwayland.hpp"
+
+#include "input/seat.hpp"
 #include "server.hpp"
 #include "types.hpp"
-#include "view.hpp"
-#include "input/seat.hpp"
+#include "surface/view.hpp"
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/util/log.h>

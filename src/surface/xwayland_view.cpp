@@ -1,10 +1,10 @@
 #include "view.hpp"
 
 #include "foreign_toplevel.hpp"
+#include "input/seat.hpp"
 #include "server.hpp"
 #include "surface.hpp"
 #include "types.hpp"
-#include "input/seat.hpp"
 
 #include <cstdlib>
 #include <wayland-server-core.h>

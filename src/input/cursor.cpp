@@ -2,8 +2,8 @@
 
 #include "seat.hpp"
 #include "server.hpp"
-#include "surface.hpp"
-#include "view.hpp"
+#include "surface/surface.hpp"
+#include "surface/view.hpp"
 
 #include <iostream>
 

@@ -2,7 +2,7 @@
 
 #include "output.hpp"
 #include "server.hpp"
-#include "view.hpp"
+#include "surface/view.hpp"
 
 static void foreign_toplevel_handle_request_maximize_notify(wl_listener* listener, void* data) {
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);

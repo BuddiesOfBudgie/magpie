@@ -2,7 +2,7 @@
 
 #include "seat.hpp"
 #include "server.hpp"
-#include "view.hpp"
+#include "surface/view.hpp"
 
 #include <algorithm>
 #include <xkbcommon/xkbcommon.h>
