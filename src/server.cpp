@@ -16,6 +16,9 @@
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
+#include <wlr/types/wlr_xdg_foreign_registry.h>
+#include <wlr/types/wlr_xdg_foreign_v1.h>
+#include <wlr/types/wlr_xdg_foreign_v2.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_presentation_time.h>
@@ -328,6 +331,10 @@ Server::Server() : listeners(*this) {
 	wlr_screencopy_manager_v1_create(display);
 	wlr_export_dmabuf_manager_v1_create(display);
 	wlr_gamma_control_manager_v1_create(display);
+
+	wlr_xdg_foreign_registry* foreign_registry = wlr_xdg_foreign_registry_create(display);
+	wlr_xdg_foreign_v1_create(display, foreign_registry);
+	wlr_xdg_foreign_v2_create(display, foreign_registry);
 
 	idle_notifier = wlr_idle_notifier_v1_create(display);
 	idle_inhibit_manager = wlr_idle_inhibit_v1_create(display);
