@@ -196,6 +196,7 @@ void XWaylandView::map() {
 
 	wlr_scene_tree* scene_tree = wlr_scene_subsurface_tree_create(&server.scene->tree, xwayland_surface.surface);
 	scene_node = &scene_tree->node;
+	scene_node->data = this;
 
 	if (xwayland_surface.parent != nullptr) {
 		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(xwayland_surface.parent->data));
