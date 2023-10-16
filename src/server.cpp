@@ -303,12 +303,6 @@ Server::Server() : listeners(*this) {
 	assert(presentation);
 	wlr_scene_set_presentation(scene, presentation);
 
-	/* Set up xdg-shell version 3. The xdg-shell is a Wayland protocol which is
-	 * used for application windows. For more detail on shells, refer to my
-	 * article:
-	 *
-	 * https://drewdevault.com/2018/07/29/Wayland-shells.html
-	 */
 	xdg_shell = wlr_xdg_shell_create(display, 5);
 	listeners.xdg_shell_new_xdg_surface.notify = new_xdg_surface_notify;
 	wl_signal_add(&xdg_shell->events.new_surface, &listeners.xdg_shell_new_xdg_surface);

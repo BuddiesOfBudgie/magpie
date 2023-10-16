@@ -61,9 +61,7 @@ void Cursor::process_resize(const uint32_t time) {
 	}
 
 	wlr_box geo_box = view.get_geometry();
-	view.current.x = new_left - geo_box.x;
-	view.current.y = new_top - geo_box.y;
-	wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
+	view.set_position(new_left - geo_box.x, new_top - geo_box.y);
 
 	int new_width = new_right - new_left;
 	int new_height = new_bottom - new_top;

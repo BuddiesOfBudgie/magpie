@@ -2,6 +2,7 @@
 #include "view.hpp"
 
 #include "foreign_toplevel.hpp"
+#include "output.hpp"
 #include "server.hpp"
 #include "surface.hpp"
 #include "input/seat.hpp"
@@ -126,8 +127,10 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
 	scene_node = &scene_tree->node;
 	surface = toplevel.base->surface;
 
-	wlr_xdg_surface_get_geometry(toplevel.base, &previous);
-	wlr_xdg_toplevel_set_wm_capabilities(&toplevel, WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE);
+	never_mapped = true;
+
+	wlr_xdg_toplevel_set_wm_capabilities(
+		&toplevel, WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE);
 
 	scene_node->data = this;
 	toplevel.base->surface->data = this;
@@ -194,7 +197,21 @@ const wlr_box XdgView::get_geometry() const {
 }
 
 void XdgView::map() {
-	current = {scene_node->x, scene_node->y, surface->current.width, surface->current.height};
+	if (never_mapped) {
+		previous = {0, 0, 0, 0};
+		wlr_xdg_surface_get_geometry(xdg_toplevel.base, &current);
+
+		if (!server.outputs.empty()) {
+			auto output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
+			auto usable_area = output->usable_area_in_layout_coords();
+			auto center_x = usable_area.x + (usable_area.width / 2);
+			auto center_y = usable_area.y + (usable_area.height / 2);
+			set_position(center_x - (current.width / 2), center_y - (current.height / 2));
+		}
+
+		never_mapped = false;
+	}
+
 	wlr_scene_node_set_enabled(scene_node, true);
 	is_maximized = xdg_toplevel.current.maximized;
 	server.focus_view(*this, xdg_toplevel.base->surface);
@@ -207,6 +224,11 @@ void XdgView::unmap() {
 	if (this == server.grabbed_view) {
 		server.seat->cursor.reset_mode();
 	}
+}
+
+void XdgView::impl_set_position(const int new_x, const int new_y) {
+	(void) new_x;
+	(void) new_y;
 }
 
 void XdgView::impl_set_size(const int new_width, const int new_height) {

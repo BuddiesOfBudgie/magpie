@@ -196,7 +196,6 @@ void XWaylandView::map() {
 
 	wlr_scene_tree* scene_tree = wlr_scene_subsurface_tree_create(&server.scene->tree, xwayland_surface.surface);
 	scene_node = &scene_tree->node;
-	scene_node->data = surface;
 
 	if (xwayland_surface.parent != nullptr) {
 		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(xwayland_surface.parent->data));
@@ -213,6 +212,7 @@ void XWaylandView::map() {
 }
 
 void XWaylandView::unmap() {
+	scene_node->data = nullptr;
 	Cursor& cursor = server.seat->cursor;
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
@@ -229,6 +229,10 @@ void XWaylandView::unmap() {
 
 	delete toplevel_handle;
 	toplevel_handle = nullptr;
+}
+
+void XWaylandView::impl_set_position(const int new_x, const int new_y) {
+	wlr_xwayland_surface_configure(&xwayland_surface, new_x, new_y, current.width, current.height);
 }
 
 void XWaylandView::impl_set_size(const int new_width, const int new_height) {

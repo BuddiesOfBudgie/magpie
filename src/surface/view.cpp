@@ -97,6 +97,15 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	}
 }
 
+void View::set_position(const int new_x, const int new_y) {
+	previous.x = current.x;
+	previous.y = current.y;
+	current.x = new_x;
+	current.y = new_y;
+	wlr_scene_node_set_position(scene_node, new_x, new_y);
+	impl_set_position(new_x, new_y);
+}
+
 void View::set_size(const int new_width, const int new_height) {
 	impl_set_size(new_width, new_height);
 }

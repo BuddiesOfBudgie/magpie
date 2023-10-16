@@ -31,6 +31,7 @@ struct View : public Surface {
 
 	bool is_view() const;
 	void begin_interactive(const CursorMode mode, const uint32_t edges);
+	void set_position(const int new_x, const int new_y);
 	void set_size(const int new_width, const int new_height);
 	void set_activated(const bool activated);
 	void set_maximized(const bool maximized);
@@ -40,10 +41,11 @@ struct View : public Surface {
 	const std::optional<const Output*> find_output_for_maximize();
 
   protected:
+	virtual void impl_set_position(const int new_x, const int new_y) = 0;
 	virtual void impl_set_size(const int new_width, const int new_height) = 0;
 	virtual void impl_set_activated(const bool activated) = 0;
 	virtual void impl_set_maximized(const bool maximized) = 0;
-	virtual void impl_set_minimized(bool minimized) = 0;
+	virtual void impl_set_minimized(const bool minimized) = 0;
 };
 
 class XdgView : public View {
@@ -67,6 +69,7 @@ class XdgView : public View {
 
   private:
 	Listeners listeners;
+	bool never_mapped;
 
   public:
 	Server& server;
@@ -81,6 +84,7 @@ class XdgView : public View {
 	void unmap() override;
 
   protected:
+	void impl_set_position(int new_x, int new_y) override;
 	void impl_set_size(int new_width, int new_height) override;
 	void impl_set_activated(bool activated) override;
 	void impl_set_maximized(bool maximized) override;
@@ -121,6 +125,7 @@ class XWaylandView : public View {
 	void unmap() override;
 
   protected:
+	void impl_set_position(int new_x, int new_y) override;
 	void impl_set_size(int new_width, int new_height) override;
 	void impl_set_activated(bool activated) override;
 	void impl_set_maximized(bool maximized) override;
