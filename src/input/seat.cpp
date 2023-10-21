@@ -67,7 +67,7 @@ static void request_set_selection_notify(wl_listener* listener, void* data) {
  * pointer, touch, and drawing tablet device. We also rig up a listener to
  * let us know when new input devices are available on the backend.
  */
-Seat::Seat(Server& server) noexcept : listeners(*this), server(server), cursor(*(new Cursor(*this))) {
+Seat::Seat(Server& server) noexcept : listeners(*this), server(server), cursor(*this) {
 	seat = wlr_seat_create(server.display, "seat0");
 
 	listeners.new_input.notify = new_input_notify;

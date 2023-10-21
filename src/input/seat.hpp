@@ -1,6 +1,7 @@
 #ifndef MAGPIE_SEAT_HPP
 #define MAGPIE_SEAT_HPP
 
+#include "cursor.hpp"
 #include "types.hpp"
 
 #include <vector>
@@ -29,7 +30,7 @@ class Seat {
   public:
 	Server& server;
 	wlr_seat* seat;
-	Cursor& cursor;
+	Cursor cursor;
 	std::vector<Keyboard*> keyboards;
 	wlr_virtual_pointer_manager_v1* virtual_pointer_mgr;
 	wlr_virtual_keyboard_manager_v1* virtual_keyboard_mgr;
