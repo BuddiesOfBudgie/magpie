@@ -100,7 +100,7 @@ void Seat::new_input_device(wlr_input_device* device) {
 			break;
 	}
 
-	uint32_t caps = WL_SEAT_CAPABILITY_POINTER;
+	uint32_t caps = WL_SEAT_CAPABILITY_POINTER | WL_SEAT_CAPABILITY_TOUCH;
 	if (!keyboards.empty()) {
 		caps |= WL_SEAT_CAPABILITY_KEYBOARD;
 	}
