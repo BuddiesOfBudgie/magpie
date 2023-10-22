@@ -4,12 +4,10 @@
 #include "surface/layer.hpp"
 #include "types.hpp"
 
-#include <algorithm>
 #include <set>
 
 #include <wlr-wrap-start.hpp>
 #include <wlr/types/wlr_layer_shell_v1.h>
-#include <wlr/types/wlr_scene.h>
 #include <wlr-wrap-end.hpp>
 
 static void output_enable_notify(wl_listener* listener, void* data) {

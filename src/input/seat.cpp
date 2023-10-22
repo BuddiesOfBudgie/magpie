@@ -5,8 +5,9 @@
 #include "server.hpp"
 #include "types.hpp"
 
-#include "wlr-wrap-start.hpp"
 #include <wayland-util.h>
+
+#include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_input_device.h>

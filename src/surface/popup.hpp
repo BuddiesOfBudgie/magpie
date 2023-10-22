@@ -4,10 +4,7 @@
 #include "surface.hpp"
 #include "types.hpp"
 
-#include <functional>
-
 #include "wlr-wrap-start.hpp"
-#include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 

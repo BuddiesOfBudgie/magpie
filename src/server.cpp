@@ -9,21 +9,23 @@
 #include "types.hpp"
 #include "xwayland.hpp"
 
-#include <algorithm>
 #include <cassert>
 #include <wayland-server.h>
 
 #include "wlr-wrap-start.hpp"
+#include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_data_control_v1.h>
+#include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
-#include <wlr/types/wlr_xdg_foreign_registry.h>
-#include <wlr/types/wlr_xdg_foreign_v1.h>
-#include <wlr/types/wlr_xdg_foreign_v2.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
-#include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_presentation_time.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_screencopy_v1.h>
+#include <wlr/types/wlr_single_pixel_buffer_v1.h>
+#include <wlr/types/wlr_viewporter.h>
+#include <wlr/types/wlr_xdg_foreign_registry.h>
+#include <wlr/types/wlr_xdg_foreign_v1.h>
+#include <wlr/types/wlr_xdg_foreign_v2.h>
 #include "wlr-wrap-end.hpp"
 
 void Server::focus_view(View& view, wlr_surface* surface) {
@@ -315,7 +317,7 @@ Server::Server() : listeners(*this) {
 	listeners.activation_request_activation.notify = request_activation_notify;
 	wl_signal_add(&xdg_activation->events.request_activate, &listeners.activation_request_activation);
 
-	data_controller = wlr_data_control_manager_v1_create(display);
+	wlr_data_control_manager_v1_create(display);
 	foreign_toplevel_manager = wlr_foreign_toplevel_manager_v1_create(display);
 
 	xwayland = new XWayland(*this);

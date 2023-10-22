@@ -2,36 +2,23 @@
 #define MAGPIE_SERVER_HPP
 
 #include "types.hpp"
-#include "xwayland.hpp"
 
+#include <functional>
 #include <list>
 #include <set>
-#include <vector>
 
 #include "wlr-wrap-start.hpp"
-#include <wayland-server.h>
 #include <wlr/render/allocator.h>
-#include <wlr/render/wlr_renderer.h>
-#include <wlr/types/wlr_cursor.h>
-#include <wlr/types/wlr_data_control_v1.h>
-#include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_drm_lease_v1.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
-#include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_idle_inhibit_v1.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
-#include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_scene.h>
-#include <wlr/types/wlr_single_pixel_buffer_v1.h>
-#include <wlr/types/wlr_subcompositor.h>
-#include <wlr/types/wlr_viewporter.h>
-#include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_activation_v1.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
-#include <wlr/xwayland.h>
 #include "wlr-wrap-end.hpp"
 
 typedef enum {
@@ -75,7 +62,6 @@ class Server {
 
 	wlr_xdg_activation_v1* xdg_activation;
 
-	wlr_data_control_manager_v1* data_controller;
 	wlr_foreign_toplevel_manager_v1* foreign_toplevel_manager;
 
 	wlr_layer_shell_v1* layer_shell;

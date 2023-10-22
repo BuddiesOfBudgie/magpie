@@ -3,11 +3,6 @@
 #include "surface.hpp"
 #include "types.hpp"
 
-#include "wlr-wrap-start.hpp"
-#include <wlr/types/wlr_scene.h>
-#include <wlr/types/wlr_xdg_shell.h>
-#include "wlr-wrap-end.hpp"
-
 static void popup_map_notify(wl_listener* listener, void* data) {
 	(void) listener;
 	(void) data;

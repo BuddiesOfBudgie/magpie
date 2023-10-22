@@ -3,17 +3,10 @@
 
 #include "surface.hpp"
 #include "types.hpp"
-
-#include <functional>
 #include <set>
 
 #include "wlr-wrap-start.hpp"
-#include <wlr/types/wlr_layer_shell_v1.h>
-#include <wlr/types/wlr_output_layout.h>
-#include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_subcompositor.h>
-#include <wlr/types/wlr_xdg_shell.h>
-#include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
 class Layer : public Surface {
