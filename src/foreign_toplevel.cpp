@@ -38,8 +38,11 @@ static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, 
 }
 
 static void foreign_toplevel_handle_set_rectangle_notify(wl_listener* listener, void* data) {
-	(void) listener;
-	(void) data;
+	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, set_rectangle);
+	auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_set_rectangle_event*>(data);
+
+	handle.view.set_position(event.x, event.y);
+	handle.view.set_size(event.width, event.height);
 }
 
 ForeignToplevelHandle::ForeignToplevelHandle(View& view) noexcept
