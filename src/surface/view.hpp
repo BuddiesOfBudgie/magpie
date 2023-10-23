@@ -43,6 +43,7 @@ struct View : public Surface {
 	virtual void impl_set_position(const int new_x, const int new_y) = 0;
 	virtual void impl_set_size(const int new_width, const int new_height) = 0;
 	virtual void impl_set_activated(const bool activated) = 0;
+	virtual void impl_set_fullscreen(const bool fullscreen) = 0;
 	virtual void impl_set_maximized(const bool maximized) = 0;
 	virtual void impl_set_minimized(const bool minimized) = 0;
 };
@@ -86,6 +87,7 @@ class XdgView : public View {
 	void impl_set_position(int new_x, int new_y) override;
 	void impl_set_size(int new_width, int new_height) override;
 	void impl_set_activated(bool activated) override;
+	void impl_set_fullscreen(bool fullscreen) override;
 	void impl_set_maximized(bool maximized) override;
 	void impl_set_minimized(bool minimized) override;
 };
@@ -127,6 +129,7 @@ class XWaylandView : public View {
 	void impl_set_position(int new_x, int new_y) override;
 	void impl_set_size(int new_width, int new_height) override;
 	void impl_set_activated(bool activated) override;
+	void impl_set_fullscreen(bool fullscreen) override;
 	void impl_set_maximized(bool maximized) override;
 	void impl_set_minimized(bool minimized) override;
 };

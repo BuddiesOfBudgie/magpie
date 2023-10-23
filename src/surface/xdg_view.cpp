@@ -239,6 +239,10 @@ void XdgView::impl_set_activated(const bool activated) {
 	wlr_xdg_toplevel_set_activated(&xdg_toplevel, activated);
 }
 
+void XdgView::impl_set_fullscreen(const bool fullscreen) {
+	wlr_xdg_toplevel_set_fullscreen(&xdg_toplevel, fullscreen);
+}
+
 void XdgView::impl_set_maximized(const bool maximized) {
 	wlr_xdg_toplevel_set_maximized(&xdg_toplevel, maximized);
 }

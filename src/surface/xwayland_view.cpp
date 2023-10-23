@@ -247,6 +247,10 @@ void XWaylandView::impl_set_activated(bool activated) {
 	}
 }
 
+void XWaylandView::impl_set_fullscreen(const bool fullscreen) {
+	wlr_xwayland_surface_set_fullscreen(&xwayland_surface, fullscreen);
+}
+
 void XWaylandView::impl_set_maximized(const bool maximized) {
 	wlr_xwayland_surface_set_maximized(&xwayland_surface, maximized);
 }
