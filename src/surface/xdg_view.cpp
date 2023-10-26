@@ -36,6 +36,7 @@ static void xdg_toplevel_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	view.server.views.remove(&view);
+	delete view.toplevel_handle;
 	delete &view;
 }
 
