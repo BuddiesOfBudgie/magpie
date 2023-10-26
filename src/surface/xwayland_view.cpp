@@ -97,7 +97,7 @@ static void xwayland_surface_set_title_notify(wl_listener* listener, void* data)
 	XWaylandView& view = magpie_container_of(listener, view, set_title);
 	(void) data;
 
-	if (view.toplevel_handle != nullptr) {
+	if (view.toplevel_handle.has_value()) {
 		view.toplevel_handle->set_title(view.xwayland_surface.title);
 	}
 }
@@ -106,7 +106,7 @@ static void xwayland_surface_set_class_notify(wl_listener* listener, void* data)
 	XWaylandView& view = magpie_container_of(listener, view, set_class);
 	(void) data;
 
-	if (view.toplevel_handle != nullptr) {
+	if (view.toplevel_handle.has_value()) {
 		view.toplevel_handle->set_app_id(view.xwayland_surface._class);
 	}
 }
@@ -115,25 +115,25 @@ static void xwayland_surface_set_parent_notify(wl_listener* listener, void* data
 	XWaylandView& view = magpie_container_of(listener, view, set_parent);
 	(void) data;
 
-	if (view.toplevel_handle == nullptr)
-		return;
-
 	if (view.xwayland_surface.parent != nullptr) {
 		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(view.xwayland_surface.parent->data));
 		if (m_view != nullptr) {
 			wlr_scene_node_reparent(view.scene_node, m_view->scene_node->parent);
-			view.toplevel_handle->set_parent(m_view->toplevel_handle);
+			if (view.toplevel_handle.has_value() && m_view->toplevel_handle.has_value()) {
+				view.toplevel_handle->set_parent(m_view->toplevel_handle.value());
+			}
 			return;
 		}
 	}
 
-	view.toplevel_handle->set_parent(nullptr);
+	if (view.toplevel_handle.has_value()) {
+		view.toplevel_handle->set_parent({});
+	}
 }
 
 XWaylandView::XWaylandView(Server& server, wlr_xwayland_surface& xwayland_surface) noexcept
 	: listeners(*this), server(server), xwayland_surface(xwayland_surface) {
 	this->xwayland_surface = xwayland_surface;
-	toplevel_handle = nullptr;
 
 	/* Listen to the various events it can emit */
 	listeners.map.notify = xwayland_surface_map_notify;
@@ -190,7 +190,7 @@ void XWaylandView::map() {
 
 	this->surface = xwayland_surface.surface;
 
-	toplevel_handle = new ForeignToplevelHandle(*this);
+	toplevel_handle.emplace(*this);
 	toplevel_handle->set_title(xwayland_surface.title);
 	toplevel_handle->set_app_id(xwayland_surface._class);
 
@@ -228,8 +228,7 @@ void XWaylandView::unmap() {
 	wlr_scene_node_destroy(scene_node);
 	server.views.remove(this);
 
-	delete toplevel_handle;
-	toplevel_handle = nullptr;
+	toplevel_handle.reset();
 }
 
 void XWaylandView::impl_set_position(const int new_x, const int new_y) {

@@ -4,6 +4,7 @@
 #include "types.hpp"
 
 #include <functional>
+#include <optional>
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
@@ -34,7 +35,7 @@ class ForeignToplevelHandle {
 
 	void set_title(const char* title);
 	void set_app_id(const char* app_id);
-	void set_parent(const ForeignToplevelHandle* parent);
+	void set_parent(std::optional<std::reference_wrapper<const ForeignToplevelHandle>> parent);
 	void set_maximized(bool maximized);
 	void set_minimized(bool minimized);
 	void set_activated(bool activated);

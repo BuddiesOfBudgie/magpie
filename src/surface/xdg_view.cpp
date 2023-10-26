@@ -36,7 +36,6 @@ static void xdg_toplevel_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	view.server.views.remove(&view);
-	delete view.toplevel_handle;
 	delete &view;
 }
 
@@ -119,7 +118,7 @@ static void xdg_toplevel_set_parent_notify(wl_listener* listener, void* data) {
 		}
 	}
 
-	view.toplevel_handle->set_parent(nullptr);
+	view.toplevel_handle->set_parent({});
 }
 
 XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
@@ -137,14 +136,14 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
 	toplevel.base->surface->data = this;
 
 	xdg_toplevel = toplevel;
-	toplevel_handle = new ForeignToplevelHandle(*this);
+	toplevel_handle.emplace(*this);
 	toplevel_handle->set_title(xdg_toplevel.title);
 	toplevel_handle->set_app_id(xdg_toplevel.app_id);
 
 	if (xdg_toplevel.parent != nullptr) {
 		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(xdg_toplevel.parent->base->data));
 		if (m_view != nullptr) {
-			toplevel_handle->set_parent(m_view->toplevel_handle);
+			toplevel_handle->set_parent(m_view->toplevel_handle.value());
 		}
 	}
 

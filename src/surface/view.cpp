@@ -112,7 +112,10 @@ void View::set_size(const int new_width, const int new_height) {
 
 void View::set_activated(const bool activated) {
 	impl_set_activated(activated);
-	toplevel_handle->set_activated(activated);
+
+	if (toplevel_handle.has_value()) {
+		toplevel_handle->set_activated(activated);
+	}
 }
 
 void View::set_maximized(const bool maximized) {
@@ -153,7 +156,9 @@ void View::set_maximized(const bool maximized) {
 	}
 
 	this->is_maximized = maximized;
-	toplevel_handle->set_maximized(maximized);
+	if (toplevel_handle.has_value()) {
+		toplevel_handle->set_maximized(maximized);
+	}
 }
 
 void View::set_minimized(const bool minimized) {
@@ -161,7 +166,9 @@ void View::set_minimized(const bool minimized) {
 		return;
 	}
 
-	toplevel_handle->set_minimized(minimized);
+	if (toplevel_handle.has_value()) {
+		toplevel_handle->set_minimized(minimized);
+	}
 	impl_set_minimized(minimized);
 	this->is_minimized = minimized;
 

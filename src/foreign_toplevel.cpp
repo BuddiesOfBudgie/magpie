@@ -85,8 +85,8 @@ void ForeignToplevelHandle::set_app_id(const char* app_id) {
 	}
 }
 
-void ForeignToplevelHandle::set_parent(const ForeignToplevelHandle* parent) {
-	wlr_foreign_toplevel_handle_v1_set_parent(&handle, (parent == nullptr) ? nullptr : &parent->handle);
+void ForeignToplevelHandle::set_parent(std::optional<std::reference_wrapper<const ForeignToplevelHandle>> parent) {
+	wlr_foreign_toplevel_handle_v1_set_parent(&handle, (parent.has_value()) ? nullptr : &parent->get().handle);
 }
 
 void ForeignToplevelHandle::set_maximized(const bool maximized) {

@@ -1,6 +1,7 @@
 #ifndef MAGPIE_VIEW_HPP
 #define MAGPIE_VIEW_HPP
 
+#include "foreign_toplevel.hpp"
 #include "input/cursor.hpp"
 #include "surface.hpp"
 #include "types.hpp"
@@ -19,8 +20,8 @@ struct View : public Surface {
 	wlr_box current;
 	wlr_box pending;
 	wlr_box previous;
-	wlr_surface* surface;
-	ForeignToplevelHandle* toplevel_handle;
+	wlr_surface* surface = nullptr;
+	std::optional<ForeignToplevelHandle> toplevel_handle = {};
 
 	virtual ~View() noexcept {};
 
