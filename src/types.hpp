@@ -8,6 +8,7 @@ class Output;
 class Seat;
 class Keyboard;
 class Cursor;
+class PointerConstraint;
 
 struct Surface;
 struct View;

@@ -4,6 +4,7 @@ magpie_sources = [
     'output.cpp',
     'server.cpp',
     'xwayland.cpp',
+    'input/constraint.cpp',
     'input/cursor.cpp',
     'input/keyboard.cpp',
     'input/seat.cpp',

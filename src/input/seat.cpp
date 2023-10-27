@@ -36,6 +36,17 @@ static void new_virtual_keyboard_notify(wl_listener* listener, void* data) {
 	seat.new_input_device(&keyboard->keyboard.base);
 }
 
+static void new_pointer_constraint_notify(wl_listener* listener, void* data) {
+	Seat& seat = magpie_container_of(listener, seat, new_pointer_constraint);
+	auto* wlr_constraint = static_cast<wlr_pointer_constraint_v1*>(data);
+
+	auto* focused_surface = seat.seat->keyboard_state.focused_surface;
+	if (focused_surface == wlr_constraint->surface) {
+		// only allow creating constraints for the focused view
+		seat.set_constraint(wlr_constraint);
+	}
+}
+
 static void request_cursor_notify(wl_listener* listener, void* data) {
 	const Seat& seat = magpie_container_of(listener, seat, request_cursor);
 	auto* event = static_cast<wlr_seat_pointer_request_set_cursor_event*>(data);
@@ -85,6 +96,10 @@ Seat::Seat(Server& server) noexcept : listeners(*this), server(server), cursor(*
 	virtual_keyboard_mgr = wlr_virtual_keyboard_manager_v1_create(server.display);
 	listeners.new_virtual_keyboard.notify = new_virtual_keyboard_notify;
 	wl_signal_add(&virtual_keyboard_mgr->events.new_virtual_keyboard, &listeners.new_virtual_keyboard);
+
+	pointer_constraints = wlr_pointer_constraints_v1_create(server.display);
+	listeners.new_pointer_constraint.notify = new_pointer_constraint_notify;
+	wl_signal_add(&pointer_constraints->events.new_constraint, &listeners.new_pointer_constraint);
 }
 
 void Seat::new_input_device(wlr_input_device* device) {
@@ -106,4 +121,20 @@ void Seat::new_input_device(wlr_input_device* device) {
 		caps |= WL_SEAT_CAPABILITY_KEYBOARD;
 	}
 	wlr_seat_set_capabilities(seat, caps);
+}
+
+void Seat::set_constraint(wlr_pointer_constraint_v1* wlr_constraint) {
+	if (current_constraint.has_value()) {
+		if (current_constraint.value().wlr == wlr_constraint) {
+			// we already have this constraint marked as the current constraint
+			return;
+		}
+
+		current_constraint.reset();
+	}
+
+	if (wlr_constraint != nullptr) {
+		current_constraint.emplace(PointerConstraint(*this, wlr_constraint));
+		current_constraint.value().activate();
+	}
 }

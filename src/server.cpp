@@ -70,6 +70,10 @@ void Server::focus_view(View& view, wlr_surface* surface) {
 	if (keyboard != nullptr) {
 		wlr_seat_keyboard_notify_enter(seat, view.surface, keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
 	}
+
+	wlr_pointer_constraint_v1* constraint =
+		wlr_pointer_constraints_v1_constraint_for_surface(server.seat->pointer_constraints, surface, seat);
+	server.seat->set_constraint(constraint);
 }
 
 Surface* Server::surface_at(const double lx, const double ly, wlr_surface** surface, double* sx, double* sy) {
