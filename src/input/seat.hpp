@@ -39,13 +39,15 @@ class Seat {
 	wlr_virtual_pointer_manager_v1* virtual_pointer_mgr;
 	wlr_virtual_keyboard_manager_v1* virtual_keyboard_mgr;
 	wlr_pointer_constraints_v1* pointer_constraints;
-	std::optional<PointerConstraint> current_constraint = {};
+	std::optional<std::reference_wrapper<PointerConstraint>> current_constraint = {};
 
 	Seat(Server& server) noexcept;
 	~Seat() noexcept;
 
 	void new_input_device(wlr_input_device* device);
 	void set_constraint(wlr_pointer_constraint_v1* wlr_constraint);
+	void apply_constraint(const wlr_pointer* pointer, double* dx, double* dy) const;
+	bool is_pointer_locked(const wlr_pointer* pointer) const;
 };
 
 #endif

@@ -3,6 +3,7 @@
 #include "cursor.hpp"
 #include "keyboard.hpp"
 #include "server.hpp"
+#include "surface/view.hpp"
 #include "types.hpp"
 
 #include <wayland-util.h>
@@ -13,6 +14,7 @@
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_keyboard.h>
 #include <wlr/types/wlr_pointer_constraints_v1.h>
+#include <wlr/util/region.h>
 #include "wlr-wrap-end.hpp"
 
 static void new_input_notify(wl_listener* listener, void* data) {
@@ -124,17 +126,51 @@ void Seat::new_input_device(wlr_input_device* device) {
 }
 
 void Seat::set_constraint(wlr_pointer_constraint_v1* wlr_constraint) {
+	printf("Setting constraint %p\n", (void*) wlr_constraint);
+
 	if (current_constraint.has_value()) {
-		if (current_constraint.value().wlr == wlr_constraint) {
+		if (current_constraint.value().get().wlr == wlr_constraint) {
 			// we already have this constraint marked as the current constraint
 			return;
 		}
 
+		cursor.warp_to_constraint(current_constraint.value());
 		current_constraint.reset();
 	}
 
 	if (wlr_constraint != nullptr) {
-		current_constraint.emplace(PointerConstraint(*this, wlr_constraint));
-		current_constraint.value().activate();
+		current_constraint = *(new PointerConstraint(*this, wlr_constraint));
+		current_constraint.value().get().activate();
 	}
+}
+
+void Seat::apply_constraint(const wlr_pointer* pointer, double* dx, double* dy) const {
+	if (!current_constraint.has_value() || pointer->base.type != WLR_INPUT_DEVICE_POINTER) {
+		return;
+	}
+
+	if (server.focused_view == nullptr) {
+		return;
+	}
+
+	double x = cursor.cursor->x;
+	double y = cursor.cursor->y;
+
+	x -= server.focused_view->current.x;
+	y -= server.focused_view->current.y;
+
+	double confined_x = 0;
+	double confined_y = 0;
+	if (!wlr_region_confine(&current_constraint->get().wlr->region, x, y, x + *dx, y + *dy, &confined_x, &confined_y)) {
+		printf("Couldn't confine\n");
+		return;
+	}
+
+	*dx = confined_x - x;
+	*dy = confined_y - y;
+}
+
+bool Seat::is_pointer_locked(const wlr_pointer* pointer) const {
+	return current_constraint.has_value() && pointer->base.type == WLR_INPUT_DEVICE_POINTER &&
+		   current_constraint->get().wlr->type == WLR_POINTER_CONSTRAINT_V1_LOCKED;
 }

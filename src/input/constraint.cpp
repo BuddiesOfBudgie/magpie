@@ -24,9 +24,13 @@ static void constraint_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	auto& current_constraint = constraint.seat.current_constraint;
-	if (current_constraint.has_value() && current_constraint.value().wlr == constraint.wlr) {
+	if (current_constraint.has_value() && current_constraint.value().get().wlr == constraint.wlr) {
+		constraint.seat.cursor.warp_to_constraint(current_constraint.value());
+		constraint.deactivate();
 		current_constraint.reset();
 	}
+
+	delete &constraint;
 }
 
 PointerConstraint::PointerConstraint(Seat& seat, wlr_pointer_constraint_v1* constraint) noexcept
@@ -40,7 +44,6 @@ PointerConstraint::PointerConstraint(Seat& seat, wlr_pointer_constraint_v1* cons
 }
 
 PointerConstraint::~PointerConstraint() noexcept {
-	deactivate();
 	wl_list_remove(&listeners.set_region.link);
 	wl_list_remove(&listeners.surface_commit.link);
 	wl_list_remove(&listeners.destroy.link);

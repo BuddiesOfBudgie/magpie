@@ -60,6 +60,7 @@ void Server::focus_view(View& view, wlr_surface* surface) {
 	/* Activate the new surface */
 	server.views.insert(server.views.begin(), &view);
 	view.set_activated(true);
+	focused_view = &view;
 
 	/*
 	 * Tell the seat to have the keyboard enter this surface. wlroots will keep

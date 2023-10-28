@@ -69,7 +69,8 @@ class Server {
 	Seat* seat;
 
 	std::list<View*> views;
-	View* grabbed_view;
+	View* focused_view = nullptr;
+	View* grabbed_view = nullptr;
 	double grab_x, grab_y;
 	wlr_box grab_geobox;
 	uint32_t resize_edges;

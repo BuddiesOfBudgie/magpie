@@ -1,6 +1,7 @@
 #ifndef MAGPIE_CURSOR_HPP
 #define MAGPIE_CURSOR_HPP
 
+#include "input/constraint.hpp"
 #include "types.hpp"
 
 #include <functional>
@@ -54,6 +55,7 @@ class Cursor {
 	void attach_input_device(wlr_input_device* device);
 	void process_motion(uint32_t time);
 	void reset_mode();
+	void warp_to_constraint(PointerConstraint& constraint);
 };
 
 #endif

@@ -224,6 +224,10 @@ void XdgView::unmap() {
 	if (this == server.grabbed_view) {
 		server.seat->cursor.reset_mode();
 	}
+
+	if (this == server.focused_view) {
+		server.focused_view = nullptr;
+	}
 }
 
 void XdgView::impl_set_position(const int new_x, const int new_y) {

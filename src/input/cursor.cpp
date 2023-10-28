@@ -1,5 +1,6 @@
 #include "cursor.hpp"
 
+#include "input/constraint.hpp"
 #include "seat.hpp"
 #include "server.hpp"
 #include "surface/surface.hpp"
@@ -120,7 +121,13 @@ static void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
 	wlr_relative_pointer_manager_v1_send_relative_motion(
 		cursor.relative_pointer_mgr, cursor.seat.seat, (uint64_t) event->time_msec * 1000, dx, dy, dx, dy);
 
-	wlr_cursor_warp_absolute(cursor.cursor, &event->pointer->base, event->x, event->y);
+	if (cursor.seat.is_pointer_locked(event->pointer)) {
+		return;
+	}
+
+	cursor.seat.apply_constraint(event->pointer, &dx, &dy);
+
+	wlr_cursor_move(cursor.cursor, &event->pointer->base, dx, dy);
 	cursor.process_motion(event->time_msec);
 }
 
@@ -158,12 +165,15 @@ static void cursor_motion_notify(wl_listener* listener, void* data) {
 	wlr_relative_pointer_manager_v1_send_relative_motion(cursor.relative_pointer_mgr, cursor.seat.seat,
 		(uint64_t) event->time_msec * 1000, event->delta_x, event->delta_y, event->unaccel_dx, event->unaccel_dy);
 
-	/* The cursor doesn't move unless we tell it to. The cursor automatically
-	 * handles constraining the motion to the output layout, as well as any
-	 * special configuration applied for the specific input device which
-	 * generated the event. You can pass NULL for the device if you want to move
-	 * the cursor around without any input. */
-	wlr_cursor_move(cursor.cursor, &event->pointer->base, event->delta_x, event->delta_y);
+	if (cursor.seat.is_pointer_locked(event->pointer)) {
+		return;
+	}
+
+	double dx = event->delta_x;
+	double dy = event->delta_y;
+	cursor.seat.apply_constraint(event->pointer, &dx, &dy);
+
+	wlr_cursor_move(cursor.cursor, &event->pointer->base, dx, dy);
 	cursor.process_motion(event->time_msec);
 }
 
@@ -338,4 +348,23 @@ void Cursor::reset_mode() {
 	}
 	mode = MAGPIE_CURSOR_PASSTHROUGH;
 	seat.server.grabbed_view = NULL;
+}
+
+void Cursor::warp_to_constraint(PointerConstraint& constraint) {
+	if (seat.server.focused_view->surface != constraint.wlr->surface) {
+		return;
+	}
+
+	if (seat.server.focused_view == nullptr) {
+		// only warp to constraints tied to views...
+		return;
+	}
+
+	if (constraint.wlr->current.committed & WLR_POINTER_CONSTRAINT_V1_STATE_CURSOR_HINT) {
+		double x = constraint.wlr->current.cursor_hint.x;
+		double y = constraint.wlr->current.cursor_hint.y;
+
+		wlr_cursor_warp(cursor, nullptr, seat.server.focused_view->current.x + x, seat.server.focused_view->current.y + y);
+		wlr_seat_pointer_warp(seat.seat, x, y);
+	}
 }

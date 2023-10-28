@@ -221,6 +221,10 @@ void XWaylandView::unmap() {
 		cursor.reset_mode();
 	}
 
+	if (this == server.focused_view) {
+		server.focused_view = nullptr;
+	}
+
 	if (server.seat->seat->keyboard_state.focused_surface == surface) {
 		server.seat->seat->keyboard_state.focused_surface = NULL;
 	}
