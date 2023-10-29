@@ -70,7 +70,7 @@ class XdgView : public View {
 
   private:
 	Listeners listeners;
-	bool never_mapped;
+	bool pending_map = true;
 
   public:
 	Server& server;

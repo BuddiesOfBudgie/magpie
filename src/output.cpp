@@ -100,7 +100,7 @@ wlr_box Output::usable_area_in_layout_coords() const {
 	wlr_output_layout_output_coords(server.output_layout, output, &layout_x, &layout_y);
 
 	wlr_box box = usable_area;
-	box.x -= layout_x;
-	box.y -= layout_y;
+	box.x += layout_x;
+	box.y += layout_y;
 	return box;
 }

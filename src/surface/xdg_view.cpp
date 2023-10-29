@@ -127,8 +127,6 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
 	scene_node = &scene_tree->node;
 	surface = toplevel.base->surface;
 
-	never_mapped = true;
-
 	wlr_xdg_toplevel_set_wm_capabilities(
 		&toplevel, WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE);
 
@@ -197,7 +195,7 @@ const wlr_box XdgView::get_geometry() const {
 }
 
 void XdgView::map() {
-	if (never_mapped) {
+	if (pending_map) {
 		previous = {0, 0, 0, 0};
 		wlr_xdg_surface_get_geometry(xdg_toplevel.base, &current);
 
@@ -209,7 +207,7 @@ void XdgView::map() {
 			set_position(center_x - (current.width / 2), center_y - (current.height / 2));
 		}
 
-		never_mapped = false;
+		pending_map = false;
 	}
 
 	wlr_scene_node_set_enabled(scene_node, true);
