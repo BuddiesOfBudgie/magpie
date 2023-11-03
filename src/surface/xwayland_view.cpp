@@ -117,7 +117,7 @@ static void xwayland_surface_set_parent_notify(wl_listener* listener, void* data
 
 	if (view.xwayland_surface.parent != nullptr) {
 		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(view.xwayland_surface.parent->data));
-		if (m_view != nullptr) {
+		if (m_view != nullptr && view.scene_node != nullptr) {
 			wlr_scene_node_reparent(view.scene_node, m_view->scene_node->parent);
 			if (view.toplevel_handle.has_value() && m_view->toplevel_handle.has_value()) {
 				view.toplevel_handle->set_parent(m_view->toplevel_handle.value());
