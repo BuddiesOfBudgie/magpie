@@ -28,7 +28,7 @@ class Output {
 
   public:
 	Server& server;
-	wlr_output* output;
+	wlr_output* wlr;
 	wlr_scene_output* scene_output;
 	wlr_box full_area;
 	wlr_box usable_area;

@@ -26,6 +26,8 @@
 #include <wlr/types/wlr_xdg_foreign_registry.h>
 #include <wlr/types/wlr_xdg_foreign_v1.h>
 #include <wlr/types/wlr_xdg_foreign_v2.h>
+#include <wlr/util/box.h>
+#include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
 void Server::focus_view(View& view, wlr_surface* surface) {
@@ -185,7 +187,7 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 	Output* output;
 	if (layer_surface.output == nullptr) {
 		output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
-		layer_surface.output = output->output;
+		layer_surface.output = output->wlr;
 	} else {
 		output = static_cast<Output*>(layer_surface.output->data);
 	}
@@ -223,11 +225,89 @@ static void drm_lease_notify(wl_listener* listener, void* data) {
 		if (output == nullptr)
 			continue;
 
-		wlr_output_enable(output->output, false);
-		wlr_output_commit(output->output);
-		wlr_output_layout_remove(server.output_layout, output->output);
+		wlr_output_enable(output->wlr, false);
+		wlr_output_commit(output->wlr);
+		wlr_output_layout_remove(server.output_layout, output->wlr);
 		output->is_leased = true;
 		output->scene_output = nullptr;
+	}
+}
+
+void output_layout_change_notify(wl_listener* listener, void* data) {
+	Server& server = magpie_container_of(listener, server, output_layout_change);
+	(void) data;
+
+	if (server.num_pending_output_layout_changes > 0) {
+		return;
+	}
+
+	wlr_output_configuration_v1* config = wlr_output_configuration_v1_create();
+
+	for (auto* output : server.outputs) {
+		wlr_output_configuration_head_v1* head = wlr_output_configuration_head_v1_create(config, output->wlr);
+
+		wlr_box box;
+		wlr_output_layout_get_box(server.output_layout, output->wlr, &box);
+		if (!wlr_box_empty(&box)) {
+			head->state.x = box.x;
+			head->state.y = box.y;
+		}
+	}
+
+	wlr_output_manager_v1_set_configuration(server.output_manager, config);
+}
+
+void output_manager_apply_notify(wl_listener* listener, void* data) {
+	Server& server = magpie_container_of(listener, server, output_manager_apply);
+	auto& config = *static_cast<wlr_output_configuration_v1*>(data);
+
+	server.num_pending_output_layout_changes++;
+
+	wlr_output_configuration_head_v1* head;
+	wl_list_for_each(head, &config.heads, link) {
+		Output& output = *static_cast<Output*>(head->state.output->data);
+		bool enabled = head->state.enabled && !output.is_leased;
+        bool adding = enabled && !output.wlr->enabled;
+        bool removing = !enabled && output.wlr->enabled;
+
+        wlr_output_enable(output.wlr, enabled);
+        if (enabled) {
+            if (head->state.mode) {
+                wlr_output_set_mode(output.wlr, head->state.mode);
+            } else {
+                int32_t width = head->state.custom_mode.width;
+                int32_t height = head->state.custom_mode.height;
+                int32_t refresh = head->state.custom_mode.refresh;
+                wlr_output_set_custom_mode(output.wlr, width, height, refresh);
+            }
+
+            wlr_output_set_scale(output.wlr, head->state.scale);
+            wlr_output_set_transform(output.wlr, head->state.transform);
+        }
+
+        if (!wlr_output_commit(output.wlr)) {
+            wlr_log(WLR_ERROR, "Output config commit failed");
+            continue;
+        }
+
+        if (adding) {
+            wlr_output_layout_add_auto(server.output_layout, output.wlr);
+            output.scene_output = wlr_scene_get_scene_output(server.scene, output.wlr);
+        }
+
+        if (enabled) {
+            wlr_box box;
+            wlr_output_layout_get_box(server.output_layout, output.wlr, &box);
+            if (box.x != head->state.x || box.y != head->state.y) {
+                /* This overrides the automatic layout */
+                wlr_output_layout_move(server.output_layout, output.wlr, head->state.x, head->state.y);
+            }
+        }
+
+        if (removing) {
+            wlr_output_layout_remove(server.output_layout, output.wlr);
+            output.scene_output = nullptr;
+        }
 	}
 }
 
@@ -276,9 +356,14 @@ Server::Server() : listeners(*this) {
 	/* Creates an output layout, which a wlroots utility for working with an
 	 * arrangement of screens in a physical layout. */
 	output_layout = wlr_output_layout_create();
-	assert(output_layout);
+	listeners.output_layout_change.notify = output_layout_change_notify;
+	wl_signal_add(&output_layout->events.change, &listeners.output_layout_change);
 
-	output_manager = wlr_xdg_output_manager_v1_create(display, output_layout);
+	wlr_xdg_output_manager_v1_create(display, output_layout);
+
+	output_manager = wlr_output_manager_v1_create(display);
+	listeners.output_manager_apply.notify = output_manager_apply_notify;
+	wl_signal_add(&output_manager->events.apply, &listeners.output_manager_apply);
 
 	output_power_manager = wlr_output_power_manager_v1_create(display);
 	listeners.output_power_manager_set_mode.notify = output_power_manager_set_mode_notify;

@@ -14,7 +14,7 @@ static void output_enable_notify(wl_listener* listener, void* data) {
 	Output& output = magpie_container_of(listener, output, enable);
 	(void) data;
 
-	output.scene_output = wlr_scene_get_scene_output(output.server.scene, output.output);
+	output.scene_output = wlr_scene_get_scene_output(output.server.scene, output.wlr);
 }
 
 /* This function is called every time an output is ready to display a frame,
@@ -32,12 +32,12 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 	Output& output = magpie_container_of(listener, output, frame);
 	(void) data;
 
-	if (output.scene_output == nullptr || output.is_leased || !output.output->enabled) {
+	if (output.scene_output == nullptr || output.is_leased || !output.wlr->enabled) {
 		return;
 	}
 
 	wlr_scene* scene = output.server.scene;
-	wlr_scene_output* scene_output = wlr_scene_get_scene_output(scene, output.output);
+	wlr_scene_output* scene_output = wlr_scene_get_scene_output(scene, output.wlr);
 
 	/* Render the scene if needed and commit the output */
 	wlr_scene_output_commit(scene_output);
@@ -60,7 +60,7 @@ static void output_destroy_notify(wl_listener* listener, void* data) {
 }
 
 Output::Output(Server& server, wlr_output* output) noexcept : listeners(*this), server(server) {
-	this->output = output;
+	this->wlr = output;
 	output->data = this;
 
 	is_leased = false;
@@ -82,11 +82,11 @@ Output::~Output() noexcept {
 }
 
 void Output::update_layout() {
-	wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, output);
+	wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, wlr);
 
 	full_area.x = scene_output->x;
 	full_area.y = scene_output->y;
-	wlr_output_effective_resolution(output, &full_area.width, &full_area.height);
+	wlr_output_effective_resolution(wlr, &full_area.width, &full_area.height);
 
 	usable_area = full_area;
 
@@ -97,7 +97,7 @@ void Output::update_layout() {
 
 wlr_box Output::usable_area_in_layout_coords() const {
 	double layout_x = 0, layout_y = 0;
-	wlr_output_layout_output_coords(server.output_layout, output, &layout_x, &layout_y);
+	wlr_output_layout_output_coords(server.output_layout, wlr, &layout_x, &layout_y);
 
 	wlr_box box = usable_area;
 	box.x += layout_x;

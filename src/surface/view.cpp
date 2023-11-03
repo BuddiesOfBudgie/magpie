@@ -26,12 +26,12 @@ const std::optional<const Output*> View::find_output_for_maximize() {
 	long best_area = 0;
 
 	for (auto* output : server.outputs) {
-		if (!wlr_output_layout_intersects(server.output_layout, output->output, &previous)) {
+		if (!wlr_output_layout_intersects(server.output_layout, output->wlr, &previous)) {
 			continue;
 		}
 
 		wlr_box output_box;
-		wlr_output_layout_get_box(server.output_layout, output->output, &output_box);
+		wlr_output_layout_get_box(server.output_layout, output->wlr, &output_box);
 		wlr_box intersection;
 		wlr_box_intersection(&intersection, &previous, &output_box);
 		long intersection_area = intersection.width * intersection.height;
@@ -43,9 +43,9 @@ const std::optional<const Output*> View::find_output_for_maximize() {
 	}
 
 	// if it's outside of all outputs, just use the pointer position
-	if (best_output == NULL) {
+	if (best_output == nullptr) {
 		for (auto* output : server.outputs) {
-			if (wlr_output_layout_contains_point(server.output_layout, output->output, cursor.cursor->x, cursor.cursor->y)) {
+			if (wlr_output_layout_contains_point(server.output_layout, output->wlr, cursor.cursor->x, cursor.cursor->y)) {
 				best_output = output;
 				break;
 			}
