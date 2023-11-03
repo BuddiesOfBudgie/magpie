@@ -137,3 +137,7 @@ Layer::~Layer() noexcept {
 inline Server& Layer::get_server() const {
 	return server;
 }
+
+bool Layer::is_view() const {
+	return false;
+}

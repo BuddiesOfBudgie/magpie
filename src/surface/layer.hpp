@@ -38,6 +38,7 @@ class Layer : public Surface {
 	~Layer() noexcept;
 
 	inline Server& get_server() const override;
+	bool is_view() const override;
 };
 
 class LayerSubsurface {
