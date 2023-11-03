@@ -6,6 +6,7 @@
 #include "surface/surface.hpp"
 #include "surface/view.hpp"
 
+#include <cstring>
 #include <iostream>
 
 #include "wlr-wrap-start.hpp"
@@ -76,7 +77,8 @@ void Cursor::process_move(const uint32_t time) {
 	View* view = seat.server.grabbed_view;
 	view->current.x = cursor->x - seat.server.grab_x;
 	view->current.y = fmax(cursor->y - seat.server.grab_y, 0);
-	wlr_xcursor_manager_set_cursor_image(cursor_mgr, "fleur", cursor);
+
+	set_image("fleur");
 	wlr_scene_node_set_position(view->scene_node, view->current.x, view->current.y);
 }
 
@@ -319,7 +321,7 @@ void Cursor::process_motion(const uint32_t time) {
 		/* If there's no view under the cursor, set the cursor image to a
 		 * default. This is what makes the cursor image appear when you move it
 		 * around the screen, not over any views. */
-		wlr_xcursor_manager_set_cursor_image(cursor_mgr, "left_ptr", cursor);
+		set_image("left_ptr");
 	}
 	if (surface) {
 		/*
@@ -344,7 +346,7 @@ void Cursor::process_motion(const uint32_t time) {
 
 void Cursor::reset_mode() {
 	if (mode != MAGPIE_CURSOR_PASSTHROUGH) {
-		wlr_xcursor_manager_set_cursor_image(cursor_mgr, "left_ptr", cursor);
+		set_image("left_ptr");
 	}
 	mode = MAGPIE_CURSOR_PASSTHROUGH;
 	seat.server.grabbed_view = NULL;
@@ -366,5 +368,12 @@ void Cursor::warp_to_constraint(PointerConstraint& constraint) {
 
 		wlr_cursor_warp(cursor, nullptr, seat.server.focused_view->current.x + x, seat.server.focused_view->current.y + y);
 		wlr_seat_pointer_warp(seat.seat, x, y);
+	}
+}
+
+void Cursor::set_image(const std::string name) {
+	if (current_image != name) {
+		wlr_xcursor_manager_set_cursor_image(cursor_mgr, name.c_str(), cursor);
+		current_image = name;
 	}
 }

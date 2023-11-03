@@ -5,6 +5,7 @@
 #include "types.hpp"
 
 #include <functional>
+#include <string>
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_cursor.h>
@@ -49,6 +50,7 @@ class Cursor {
 	wlr_xcursor_manager* cursor_mgr;
 	wlr_relative_pointer_manager_v1* relative_pointer_mgr;
 	wlr_pointer_gestures_v1* pointer_gestures;
+	std::string current_image = "";
 
 	Cursor(Seat& seat) noexcept;
 
@@ -56,6 +58,7 @@ class Cursor {
 	void process_motion(uint32_t time);
 	void reset_mode();
 	void warp_to_constraint(PointerConstraint& constraint);
+	void set_image(const std::string name);
 };
 
 #endif
