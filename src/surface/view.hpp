@@ -29,9 +29,6 @@ struct View : public Surface {
 	virtual void map() = 0;
 	virtual void unmap() = 0;
 
-	constexpr bool is_view() const override {
-		return true;
-	}
 	void begin_interactive(const CursorMode mode, const uint32_t edges);
 	void set_position(const int new_x, const int new_y);
 	void set_size(const int new_width, const int new_height);

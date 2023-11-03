@@ -32,7 +32,6 @@ class Popup : public Surface {
 	~Popup() noexcept;
 
 	constexpr Server& get_server() const override;
-	constexpr bool is_view() const override;
 };
 
 #endif

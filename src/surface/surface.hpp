@@ -17,7 +17,9 @@ struct Surface {
 	virtual ~Surface() noexcept {};
 
 	virtual constexpr Server& get_server() const = 0;
-	virtual bool is_view() const = 0;
+	constexpr bool is_view() const {
+		return std::is_base_of<View, decltype(this)>();
+	};
 };
 
 #endif
