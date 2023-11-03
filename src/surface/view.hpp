@@ -29,7 +29,9 @@ struct View : public Surface {
 	virtual void map() = 0;
 	virtual void unmap() = 0;
 
-	bool is_view() const;
+	constexpr bool is_view() const override {
+		return true;
+	}
 	void begin_interactive(const CursorMode mode, const uint32_t edges);
 	void set_position(const int new_x, const int new_y);
 	void set_size(const int new_width, const int new_height);
@@ -79,7 +81,7 @@ class XdgView : public View {
 	XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept;
 	~XdgView() noexcept;
 
-	inline Server& get_server() const override;
+	constexpr Server& get_server() const override;
 	const wlr_box get_geometry() const override;
 	void map() override;
 	void unmap() override;
@@ -121,7 +123,7 @@ class XWaylandView : public View {
 	XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept;
 	~XWaylandView() noexcept;
 
-	inline Server& get_server() const override;
+	constexpr Server& get_server() const override;
 	const wlr_box get_geometry() const override;
 	void map() override;
 	void unmap() override;

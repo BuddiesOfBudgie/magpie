@@ -171,7 +171,7 @@ XWaylandView::~XWaylandView() noexcept {
 	wl_list_remove(&listeners.set_parent.link);
 }
 
-inline Server& XWaylandView::get_server() const {
+constexpr Server& XWaylandView::get_server() const {
 	return server;
 }
 

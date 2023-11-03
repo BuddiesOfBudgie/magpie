@@ -184,7 +184,7 @@ XdgView::~XdgView() noexcept {
 	wl_list_remove(&listeners.set_parent.link);
 }
 
-inline Server& XdgView::get_server() const {
+constexpr Server& XdgView::get_server() const {
 	return server;
 }
 

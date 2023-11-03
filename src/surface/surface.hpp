@@ -16,7 +16,7 @@ struct Surface {
 
 	virtual ~Surface() noexcept {};
 
-	virtual Server& get_server() const = 0;
+	virtual constexpr Server& get_server() const = 0;
 	virtual bool is_view() const = 0;
 };
 

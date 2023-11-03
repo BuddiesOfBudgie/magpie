@@ -60,10 +60,6 @@ const std::optional<const Output*> View::find_output_for_maximize() {
 	return best_output;
 }
 
-bool View::is_view() const {
-	return true;
-}
-
 void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	Server& server = get_server();
 

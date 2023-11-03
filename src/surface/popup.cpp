@@ -60,10 +60,10 @@ Popup::~Popup() noexcept {
 	wl_list_remove(&listeners.new_popup.link);
 }
 
-inline Server& Popup::get_server() const {
+constexpr Server& Popup::get_server() const {
 	return server;
 }
 
-bool Popup::is_view() const {
+constexpr bool Popup::is_view() const {
 	return false;
 }
