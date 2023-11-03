@@ -59,6 +59,7 @@ class Cursor {
 	void reset_mode();
 	void warp_to_constraint(PointerConstraint& constraint);
 	void set_image(const std::string name);
+	void reload_image();
 };
 
 #endif

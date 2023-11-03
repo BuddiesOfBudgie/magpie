@@ -309,6 +309,15 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
             output.scene_output = nullptr;
         }
 	}
+
+	wlr_output_configuration_v1_send_succeeded(&config);
+	wlr_output_configuration_v1_destroy(&config);
+
+	for (auto* output : server.outputs) {
+		wlr_xcursor_manager_load(server.seat->cursor.cursor_mgr, output->wlr->scale);
+	}
+
+	server.seat->cursor.reload_image();
 }
 
 Server::Server() : listeners(*this) {

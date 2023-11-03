@@ -377,3 +377,7 @@ void Cursor::set_image(const std::string name) {
 		current_image = name;
 	}
 }
+
+void Cursor::reload_image() {
+	wlr_xcursor_manager_set_cursor_image(cursor_mgr, current_image.c_str(), cursor);
+}
