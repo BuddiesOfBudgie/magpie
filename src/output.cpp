@@ -14,7 +14,7 @@ static void output_enable_notify(wl_listener* listener, void* data) {
 	Output& output = magpie_container_of(listener, output, enable);
 	(void) data;
 
-	output.scene_output = wlr_scene_get_scene_output(output.server.scene, output.wlr);
+	output.scene_output = wlr_scene_get_scene_output(output.server.scene, &output.wlr);
 }
 
 /* This function is called every time an output is ready to display a frame,
@@ -32,12 +32,12 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 	Output& output = magpie_container_of(listener, output, frame);
 	(void) data;
 
-	if (output.scene_output == nullptr || output.is_leased || !output.wlr->enabled) {
+	if (output.scene_output == nullptr || output.is_leased || !output.wlr.enabled) {
 		return;
 	}
 
 	wlr_scene* scene = output.server.scene;
-	wlr_scene_output* scene_output = wlr_scene_get_scene_output(scene, output.wlr);
+	wlr_scene_output* scene_output = wlr_scene_get_scene_output(scene, &output.wlr);
 
 	/* Render the scene if needed and commit the output */
 	wlr_scene_output_commit(scene_output);
@@ -59,20 +59,19 @@ static void output_destroy_notify(wl_listener* listener, void* data) {
 	delete &output;
 }
 
-Output::Output(Server& server, wlr_output* output) noexcept : listeners(*this), server(server) {
-	this->wlr = output;
-	output->data = this;
+Output::Output(Server& server, wlr_output& wlr) noexcept : listeners(*this), server(server), wlr(wlr) {
+	wlr.data = this;
 
 	is_leased = false;
 
 	listeners.enable.notify = output_enable_notify;
-	wl_signal_add(&output->events.enable, &listeners.enable);
+	wl_signal_add(&wlr.events.enable, &listeners.enable);
 	listeners.mode.notify = output_mode_notify;
-	wl_signal_add(&output->events.mode, &listeners.mode);
+	wl_signal_add(&wlr.events.mode, &listeners.mode);
 	listeners.frame.notify = output_frame_notify;
-	wl_signal_add(&output->events.frame, &listeners.frame);
+	wl_signal_add(&wlr.events.frame, &listeners.frame);
 	listeners.destroy.notify = output_destroy_notify;
-	wl_signal_add(&output->events.destroy, &listeners.destroy);
+	wl_signal_add(&wlr.events.destroy, &listeners.destroy);
 }
 
 Output::~Output() noexcept {
@@ -82,11 +81,11 @@ Output::~Output() noexcept {
 }
 
 void Output::update_layout() {
-	wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, wlr);
+	wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, &wlr);
 
 	full_area.x = scene_output->x;
 	full_area.y = scene_output->y;
-	wlr_output_effective_resolution(wlr, &full_area.width, &full_area.height);
+	wlr_output_effective_resolution(&wlr, &full_area.width, &full_area.height);
 
 	usable_area = full_area;
 
@@ -97,7 +96,7 @@ void Output::update_layout() {
 
 wlr_box Output::usable_area_in_layout_coords() const {
 	double layout_x = 0, layout_y = 0;
-	wlr_output_layout_output_coords(server.output_layout, wlr, &layout_x, &layout_y);
+	wlr_output_layout_output_coords(server.output_layout, &wlr, &layout_x, &layout_y);
 
 	wlr_box box = usable_area;
 	box.x += layout_x;

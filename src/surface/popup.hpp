@@ -26,9 +26,9 @@ class Popup : public Surface {
   public:
 	Server& server;
 	const Surface& parent;
-	wlr_xdg_popup* xdg_popup;
+	wlr_xdg_popup& wlr;
 
-	Popup(const Surface& parent, wlr_xdg_popup* xdg_popup) noexcept;
+	Popup(const Surface& parent, wlr_xdg_popup& xdg_popup) noexcept;
 	~Popup() noexcept;
 
 	constexpr wlr_surface* get_wlr_surface() const override;

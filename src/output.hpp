@@ -28,14 +28,14 @@ class Output {
 
   public:
 	Server& server;
-	wlr_output* wlr;
+	wlr_output& wlr;
 	wlr_scene_output* scene_output;
 	wlr_box full_area;
 	wlr_box usable_area;
 	std::set<Layer*> layers;
 	bool is_leased;
 
-	Output(Server& server, wlr_output* output) noexcept;
+	Output(Server& server, wlr_output& output) noexcept;
 	~Output() noexcept;
 
 	void update_layout();

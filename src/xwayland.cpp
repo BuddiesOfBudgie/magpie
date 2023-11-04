@@ -29,7 +29,7 @@ static void ready_notify(wl_listener* listener, void* data) {
 	XWayland& xwayland = magpie_container_of(listener, xwayland, ready);
 	(void) data;
 
-	wlr_xwayland_set_seat(xwayland.xwayland, xwayland.server.seat->seat);
+	wlr_xwayland_set_seat(xwayland.wlr, xwayland.server.seat->wlr);
 
 	xcb_connection_t* xcb_conn = xcb_connect(NULL, NULL);
 	int err = xcb_connection_has_error(xcb_conn);
@@ -68,12 +68,12 @@ static void new_surface_notify(wl_listener* listener, void* data) {
 }
 
 XWayland::XWayland(Server& server) noexcept : listeners(*this), server(server) {
-	xwayland = wlr_xwayland_create(server.display, server.compositor, true);
+	wlr = wlr_xwayland_create(server.display, server.compositor, true);
 
 	listeners.ready.notify = ready_notify;
-	wl_signal_add(&xwayland->events.ready, &listeners.ready);
+	wl_signal_add(&wlr->events.ready, &listeners.ready);
 	listeners.new_surface.notify = new_surface_notify;
-	wl_signal_add(&xwayland->events.new_surface, &listeners.new_surface);
+	wl_signal_add(&wlr->events.new_surface, &listeners.new_surface);
 
-	setenv("DISPLAY", xwayland->display_name, true);
+	setenv("DISPLAY", wlr->display_name, true);
 }

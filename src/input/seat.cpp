@@ -42,7 +42,7 @@ static void new_pointer_constraint_notify(wl_listener* listener, void* data) {
 	Seat& seat = magpie_container_of(listener, seat, new_pointer_constraint);
 	auto* wlr_constraint = static_cast<wlr_pointer_constraint_v1*>(data);
 
-	auto* focused_surface = seat.seat->keyboard_state.focused_surface;
+	auto* focused_surface = seat.wlr->keyboard_state.focused_surface;
 	if (focused_surface == wlr_constraint->surface) {
 		// only allow creating constraints for the focused view
 		seat.set_constraint(wlr_constraint);
@@ -53,14 +53,14 @@ static void request_cursor_notify(wl_listener* listener, void* data) {
 	const Seat& seat = magpie_container_of(listener, seat, request_cursor);
 	auto* event = static_cast<wlr_seat_pointer_request_set_cursor_event*>(data);
 
-	wlr_seat_client* focused_client = seat.seat->pointer_state.focused_client;
+	wlr_seat_client* focused_client = seat.wlr->pointer_state.focused_client;
 
 	if (focused_client == event->seat_client) {
 		/* Once we've vetted the client, we can tell the cursor to use the
 		 * provided surface as the cursor image. It will set the hardware cursor
 		 * on the output that it's currently on and continue to do so as the
 		 * cursor moves between outputs. */
-		wlr_cursor_set_surface(seat.cursor.cursor, event->surface, event->hotspot_x, event->hotspot_y);
+		wlr_cursor_set_surface(&seat.cursor.wlr, event->surface, event->hotspot_x, event->hotspot_y);
 	}
 }
 
@@ -72,7 +72,7 @@ static void request_set_selection_notify(wl_listener* listener, void* data) {
 	const Seat& seat = magpie_container_of(listener, seat, request_set_selection);
 	auto* event = static_cast<wlr_seat_request_set_selection_event*>(data);
 
-	wlr_seat_set_selection(seat.seat, event->source, event->serial);
+	wlr_seat_set_selection(seat.wlr, event->source, event->serial);
 }
 
 /*
@@ -82,14 +82,14 @@ static void request_set_selection_notify(wl_listener* listener, void* data) {
  * let us know when new input devices are available on the backend.
  */
 Seat::Seat(Server& server) noexcept : listeners(*this), server(server), cursor(*this) {
-	seat = wlr_seat_create(server.display, "seat0");
+	wlr = wlr_seat_create(server.display, "seat0");
 
 	listeners.new_input.notify = new_input_notify;
 	wl_signal_add(&server.backend->events.new_input, &listeners.new_input);
 	listeners.request_cursor.notify = request_cursor_notify;
-	wl_signal_add(&seat->events.request_set_cursor, &listeners.request_cursor);
+	wl_signal_add(&wlr->events.request_set_cursor, &listeners.request_cursor);
 	listeners.request_set_selection.notify = request_set_selection_notify;
-	wl_signal_add(&seat->events.request_set_selection, &listeners.request_set_selection);
+	wl_signal_add(&wlr->events.request_set_selection, &listeners.request_set_selection);
 
 	virtual_pointer_mgr = wlr_virtual_pointer_manager_v1_create(server.display);
 	listeners.new_virtual_pointer.notify = new_virtual_pointer_notify;
@@ -122,14 +122,14 @@ void Seat::new_input_device(wlr_input_device* device) {
 	if (!keyboards.empty()) {
 		caps |= WL_SEAT_CAPABILITY_KEYBOARD;
 	}
-	wlr_seat_set_capabilities(seat, caps);
+	wlr_seat_set_capabilities(wlr, caps);
 }
 
 void Seat::set_constraint(wlr_pointer_constraint_v1* wlr_constraint) {
 	printf("Setting constraint %p\n", (void*) wlr_constraint);
 
 	if (current_constraint.has_value()) {
-		if (current_constraint.value().get().wlr == wlr_constraint) {
+		if (&current_constraint.value().get().wlr == wlr_constraint) {
 			// we already have this constraint marked as the current constraint
 			return;
 		}
@@ -139,7 +139,7 @@ void Seat::set_constraint(wlr_pointer_constraint_v1* wlr_constraint) {
 	}
 
 	if (wlr_constraint != nullptr) {
-		current_constraint = *(new PointerConstraint(*this, wlr_constraint));
+		current_constraint = *(new PointerConstraint(*this, *wlr_constraint));
 		current_constraint.value().get().activate();
 	}
 }
@@ -153,15 +153,15 @@ void Seat::apply_constraint(const wlr_pointer* pointer, double* dx, double* dy) 
 		return;
 	}
 
-	double x = cursor.cursor->x;
-	double y = cursor.cursor->y;
+	double x = cursor.wlr.x;
+	double y = cursor.wlr.y;
 
 	x -= server.focused_view->current.x;
 	y -= server.focused_view->current.y;
 
 	double confined_x = 0;
 	double confined_y = 0;
-	if (!wlr_region_confine(&current_constraint->get().wlr->region, x, y, x + *dx, y + *dy, &confined_x, &confined_y)) {
+	if (!wlr_region_confine(&current_constraint->get().wlr.region, x, y, x + *dx, y + *dy, &confined_x, &confined_y)) {
 		printf("Couldn't confine\n");
 		return;
 	}
@@ -172,5 +172,5 @@ void Seat::apply_constraint(const wlr_pointer* pointer, double* dx, double* dy) 
 
 bool Seat::is_pointer_locked(const wlr_pointer* pointer) const {
 	return current_constraint.has_value() && pointer->base.type == WLR_INPUT_DEVICE_POINTER &&
-		   current_constraint->get().wlr->type == WLR_POINTER_CONSTRAINT_V1_LOCKED;
+		   current_constraint->get().wlr.type == WLR_POINTER_CONSTRAINT_V1_LOCKED;
 }

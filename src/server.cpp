@@ -31,14 +31,14 @@
 #include "wlr-wrap-end.hpp"
 
 void Server::focus_view(View* view, wlr_surface* surface) {
-	wlr_surface* prev_surface = seat->seat->keyboard_state.focused_surface;
+	wlr_surface* prev_surface = seat->wlr->keyboard_state.focused_surface;
 	if (prev_surface == surface) {
 		/* Don't re-focus an already focused surface. */
 		return;
 	}
 
 	if (prev_surface) {
-		wlr_surface* previous = seat->seat->keyboard_state.focused_surface;
+		wlr_surface* previous = seat->wlr->keyboard_state.focused_surface;
 
 		if (wlr_surface_is_xdg_surface(previous)) {
 			wlr_xdg_surface* xdg_previous = wlr_xdg_surface_from_wlr_surface(previous);
@@ -71,14 +71,14 @@ void Server::focus_view(View* view, wlr_surface* surface) {
 	 * track of this and automatically send key events to the appropriate
 	 * clients without additional work on your part.
 	 */
-	wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat->seat);
+	wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat->wlr);
 	if (keyboard != nullptr) {
 		wlr_seat_keyboard_notify_enter(
-			seat->seat, view->get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
+			seat->wlr, view->get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
 	}
 
 	wlr_pointer_constraint_v1* constraint =
-		wlr_pointer_constraints_v1_constraint_for_surface(seat->pointer_constraints, surface, seat->seat);
+		wlr_pointer_constraints_v1_constraint_for_surface(seat->pointer_constraints, surface, seat->wlr);
 	seat->set_constraint(constraint);
 }
 
@@ -135,7 +135,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	}
 
 	/* Allocates and configures our state for this output */
-	Output* output = new Output(server, new_output);
+	Output* output = new Output(server, *new_output);
 	server.outputs.emplace(output);
 
 	/* Adds this to the output layout. The add_auto function arranges outputs
@@ -178,7 +178,7 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 		new XdgView(server, *xdg_surface.toplevel);
 	} else if (xdg_surface.role == WLR_XDG_SURFACE_ROLE_POPUP) {
 		auto* surface = static_cast<Surface*>(xdg_surface.popup->parent->data);
-		new Popup(*surface, xdg_surface.popup);
+		new Popup(*surface, *xdg_surface.popup);
 	}
 }
 
@@ -190,7 +190,7 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 	Output* output;
 	if (layer_surface.output == nullptr) {
 		output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
-		layer_surface.output = output->wlr;
+		layer_surface.output = &output->wlr;
 	} else {
 		output = static_cast<Output*>(layer_surface.output->data);
 	}
@@ -228,9 +228,9 @@ static void drm_lease_notify(wl_listener* listener, void* data) {
 		if (output == nullptr)
 			continue;
 
-		wlr_output_enable(output->wlr, false);
-		wlr_output_commit(output->wlr);
-		wlr_output_layout_remove(server.output_layout, output->wlr);
+		wlr_output_enable(&output->wlr, false);
+		wlr_output_commit(&output->wlr);
+		wlr_output_layout_remove(server.output_layout, &output->wlr);
 		output->is_leased = true;
 		output->scene_output = nullptr;
 	}
@@ -247,10 +247,10 @@ void output_layout_change_notify(wl_listener* listener, void* data) {
 	wlr_output_configuration_v1* config = wlr_output_configuration_v1_create();
 
 	for (auto* output : server.outputs) {
-		wlr_output_configuration_head_v1* head = wlr_output_configuration_head_v1_create(config, output->wlr);
+		wlr_output_configuration_head_v1* head = wlr_output_configuration_head_v1_create(config, &output->wlr);
 
 		wlr_box box;
-		wlr_output_layout_get_box(server.output_layout, output->wlr, &box);
+		wlr_output_layout_get_box(server.output_layout, &output->wlr, &box);
 		if (!wlr_box_empty(&box)) {
 			head->state.x = box.x;
 			head->state.y = box.y;
@@ -270,45 +270,45 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 	wl_list_for_each(head, &config.heads, link) {
 		Output& output = *static_cast<Output*>(head->state.output->data);
 		bool enabled = head->state.enabled && !output.is_leased;
-		bool adding = enabled && !output.wlr->enabled;
-		bool removing = !enabled && output.wlr->enabled;
+		bool adding = enabled && !output.wlr.enabled;
+		bool removing = !enabled && output.wlr.enabled;
 
-		wlr_output_enable(output.wlr, enabled);
+		wlr_output_enable(&output.wlr, enabled);
 		if (enabled) {
 			if (head->state.mode) {
-				wlr_output_set_mode(output.wlr, head->state.mode);
+				wlr_output_set_mode(&output.wlr, head->state.mode);
 			} else {
 				int32_t width = head->state.custom_mode.width;
 				int32_t height = head->state.custom_mode.height;
 				int32_t refresh = head->state.custom_mode.refresh;
-				wlr_output_set_custom_mode(output.wlr, width, height, refresh);
+				wlr_output_set_custom_mode(&output.wlr, width, height, refresh);
 			}
 
-			wlr_output_set_scale(output.wlr, head->state.scale);
-			wlr_output_set_transform(output.wlr, head->state.transform);
+			wlr_output_set_scale(&output.wlr, head->state.scale);
+			wlr_output_set_transform(&output.wlr, head->state.transform);
 		}
 
-		if (!wlr_output_commit(output.wlr)) {
+		if (!wlr_output_commit(&output.wlr)) {
 			wlr_log(WLR_ERROR, "Output config commit failed");
 			continue;
 		}
 
 		if (adding) {
-			wlr_output_layout_add_auto(server.output_layout, output.wlr);
-			output.scene_output = wlr_scene_get_scene_output(server.scene, output.wlr);
+			wlr_output_layout_add_auto(server.output_layout, &output.wlr);
+			output.scene_output = wlr_scene_get_scene_output(server.scene, &output.wlr);
 		}
 
 		if (enabled) {
 			wlr_box box;
-			wlr_output_layout_get_box(server.output_layout, output.wlr, &box);
+			wlr_output_layout_get_box(server.output_layout, &output.wlr, &box);
 			if (box.x != head->state.x || box.y != head->state.y) {
 				/* This overrides the automatic layout */
-				wlr_output_layout_move(server.output_layout, output.wlr, head->state.x, head->state.y);
+				wlr_output_layout_move(server.output_layout, &output.wlr, head->state.x, head->state.y);
 			}
 		}
 
 		if (removing) {
-			wlr_output_layout_remove(server.output_layout, output.wlr);
+			wlr_output_layout_remove(server.output_layout, &output.wlr);
 			output.scene_output = nullptr;
 		}
 	}
@@ -317,7 +317,7 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 	wlr_output_configuration_v1_destroy(&config);
 
 	for (auto* output : server.outputs) {
-		wlr_xcursor_manager_load(server.seat->cursor.cursor_mgr, output->wlr->scale);
+		wlr_xcursor_manager_load(server.seat->cursor.cursor_mgr, output->wlr.scale);
 	}
 
 	server.seat->cursor.reload_image();

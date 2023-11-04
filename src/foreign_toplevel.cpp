@@ -106,9 +106,9 @@ void ForeignToplevelHandle::set_fullscreen(const bool fullscreen) {
 }
 
 void ForeignToplevelHandle::output_enter(const Output& output) {
-	wlr_foreign_toplevel_handle_v1_output_enter(&handle, output.wlr);
+	wlr_foreign_toplevel_handle_v1_output_enter(&handle, &output.wlr);
 }
 
 void ForeignToplevelHandle::output_leave(const Output& output) {
-	wlr_foreign_toplevel_handle_v1_output_leave(&handle, output.wlr);
+	wlr_foreign_toplevel_handle_v1_output_leave(&handle, &output.wlr);
 }

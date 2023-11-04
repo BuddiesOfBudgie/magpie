@@ -39,7 +39,7 @@ class XWayland {
 
   public:
 	Server& server;
-	wlr_xwayland* xwayland;
+	wlr_xwayland* wlr;
 	xcb_atom_t atoms[ATOM_LAST];
 
 	XWayland(Server& server) noexcept;

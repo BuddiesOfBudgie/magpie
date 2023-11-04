@@ -33,7 +33,7 @@ class Seat {
 
   public:
 	Server& server;
-	wlr_seat* seat;
+	wlr_seat* wlr;
 	Cursor cursor;
 	std::vector<Keyboard*> keyboards;
 	wlr_virtual_pointer_manager_v1* virtual_pointer_mgr;

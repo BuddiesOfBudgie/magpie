@@ -227,8 +227,8 @@ void XWaylandView::unmap() {
 		server.focused_view = nullptr;
 	}
 
-	if (server.seat->seat->keyboard_state.focused_surface == xwayland_surface.surface) {
-		server.seat->seat->keyboard_state.focused_surface = NULL;
+	if (server.seat->wlr->keyboard_state.focused_surface == xwayland_surface.surface) {
+		server.seat->wlr->keyboard_state.focused_surface = NULL;
 	}
 
 	wlr_scene_node_destroy(scene_node);

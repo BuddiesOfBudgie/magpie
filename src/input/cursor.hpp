@@ -45,8 +45,9 @@ class Cursor {
 
   public:
 	const Seat& seat;
+	wlr_cursor& wlr;
+
 	CursorMode mode;
-	wlr_cursor* cursor;
 	wlr_xcursor_manager* cursor_mgr;
 	wlr_relative_pointer_manager_v1* relative_pointer_mgr;
 	wlr_pointer_gestures_v1* pointer_gestures;

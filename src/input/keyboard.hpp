@@ -24,7 +24,7 @@ class Keyboard {
 
   public:
 	Seat& seat;
-	wlr_keyboard& keyboard;
+	wlr_keyboard& wlr;
 
 	Keyboard(Seat& seat, wlr_keyboard& keyboard) noexcept;
 	~Keyboard() noexcept;

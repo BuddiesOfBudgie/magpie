@@ -25,9 +25,9 @@ class PointerConstraint {
 
   public:
 	Seat& seat;
-	wlr_pointer_constraint_v1* wlr;
+	wlr_pointer_constraint_v1& wlr;
 
-	PointerConstraint(Seat& seat, wlr_pointer_constraint_v1* wlr) noexcept;
+	PointerConstraint(Seat& seat, wlr_pointer_constraint_v1& wlr) noexcept;
 	~PointerConstraint() noexcept;
 
 	void activate() const;

@@ -26,12 +26,12 @@ const std::optional<const Output*> View::find_output_for_maximize() {
 	long best_area = 0;
 
 	for (auto* output : server.outputs) {
-		if (!wlr_output_layout_intersects(server.output_layout, output->wlr, &previous)) {
+		if (!wlr_output_layout_intersects(server.output_layout, &output->wlr, &previous)) {
 			continue;
 		}
 
 		wlr_box output_box;
-		wlr_output_layout_get_box(server.output_layout, output->wlr, &output_box);
+		wlr_output_layout_get_box(server.output_layout, &output->wlr, &output_box);
 		wlr_box intersection;
 		wlr_box_intersection(&intersection, &previous, &output_box);
 		long intersection_area = intersection.width * intersection.height;
@@ -45,7 +45,7 @@ const std::optional<const Output*> View::find_output_for_maximize() {
 	// if it's outside of all outputs, just use the pointer position
 	if (best_output == nullptr) {
 		for (auto* output : server.outputs) {
-			if (wlr_output_layout_contains_point(server.output_layout, output->wlr, cursor.cursor->x, cursor.cursor->y)) {
+			if (wlr_output_layout_contains_point(server.output_layout, &output->wlr, cursor.wlr.x, cursor.wlr.y)) {
 				best_output = output;
 				break;
 			}
@@ -64,7 +64,7 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	Server& server = get_server();
 
 	Cursor& cursor = server.seat->cursor;
-	wlr_surface* focused_surface = server.seat->seat->pointer_state.focused_surface;
+	wlr_surface* focused_surface = server.seat->wlr->pointer_state.focused_surface;
 
 	if (get_wlr_surface() != wlr_surface_get_root_surface(focused_surface)) {
 		/* Deny move/resize requests from unfocused clients. */
@@ -75,15 +75,15 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	cursor.mode = mode;
 
 	if (mode == MAGPIE_CURSOR_MOVE) {
-		server.grab_x = cursor.cursor->x - current.x;
-		server.grab_y = cursor.cursor->y - current.y;
+		server.grab_x = cursor.wlr.x - current.x;
+		server.grab_y = cursor.wlr.y - current.y;
 	} else {
 		wlr_box geo_box = get_geometry();
 
 		double border_x = (current.x + geo_box.x) + ((edges & WLR_EDGE_RIGHT) ? geo_box.width : 0);
 		double border_y = (current.y + geo_box.y) + ((edges & WLR_EDGE_BOTTOM) ? geo_box.height : 0);
-		server.grab_x = cursor.cursor->x - border_x;
-		server.grab_y = cursor.cursor->y - border_y;
+		server.grab_x = cursor.wlr.x - border_x;
+		server.grab_y = cursor.wlr.y - border_y;
 
 		server.grab_geobox = geo_box;
 		server.grab_geobox.x += current.x;
@@ -121,7 +121,7 @@ void View::set_maximized(const bool maximized) {
 		return;
 	}
 
-	wlr_surface* focused_surface = server.seat->seat->pointer_state.focused_surface;
+	wlr_surface* focused_surface = server.seat->wlr->pointer_state.focused_surface;
 	if (get_wlr_surface() != wlr_surface_get_root_surface(focused_surface)) {
 		/* Deny maximize requests from unfocused clients. */
 		return;

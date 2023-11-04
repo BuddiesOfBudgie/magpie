@@ -24,7 +24,7 @@ static void constraint_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	auto& current_constraint = constraint.seat.current_constraint;
-	if (current_constraint.has_value() && current_constraint.value().get().wlr == constraint.wlr) {
+	if (current_constraint.has_value() && &current_constraint.value().get().wlr == &constraint.wlr) {
 		constraint.seat.cursor.warp_to_constraint(current_constraint.value());
 		constraint.deactivate();
 		current_constraint.reset();
@@ -33,14 +33,14 @@ static void constraint_destroy_notify(wl_listener* listener, void* data) {
 	delete &constraint;
 }
 
-PointerConstraint::PointerConstraint(Seat& seat, wlr_pointer_constraint_v1* constraint) noexcept
-	: listeners(*this), seat(seat), wlr(constraint) {
+PointerConstraint::PointerConstraint(Seat& seat, wlr_pointer_constraint_v1& wlr) noexcept
+	: listeners(*this), seat(seat), wlr(wlr) {
 	listeners.set_region.notify = constraint_set_region_notify;
-	wl_signal_add(&constraint->events.set_region, &listeners.set_region);
+	wl_signal_add(&wlr.events.set_region, &listeners.set_region);
 	listeners.surface_commit.notify = constraint_surface_commit_notify;
-	wl_signal_add(&constraint->surface->events.commit, &listeners.surface_commit);
+	wl_signal_add(&wlr.surface->events.commit, &listeners.surface_commit);
 	listeners.destroy.notify = constraint_destroy_notify;
-	wl_signal_add(&constraint->events.destroy, &listeners.destroy);
+	wl_signal_add(&wlr.events.destroy, &listeners.destroy);
 }
 
 PointerConstraint::~PointerConstraint() noexcept {
@@ -50,9 +50,9 @@ PointerConstraint::~PointerConstraint() noexcept {
 }
 
 void PointerConstraint::activate() const {
-	wlr_pointer_constraint_v1_send_activated(wlr);
+	wlr_pointer_constraint_v1_send_activated(&wlr);
 }
 
 void PointerConstraint::deactivate() const {
-	wlr_pointer_constraint_v1_send_deactivated(wlr);
+	wlr_pointer_constraint_v1_send_deactivated(&wlr);
 }
