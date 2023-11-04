@@ -30,17 +30,15 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-void Server::focus_view(View& view, wlr_surface* surface) {
-	Server& server = view.get_server();
-	wlr_seat* seat = server.seat->seat;
-	wlr_surface* prev_surface = seat->keyboard_state.focused_surface;
+void Server::focus_view(View* view, wlr_surface* surface) {
+	wlr_surface* prev_surface = seat->seat->keyboard_state.focused_surface;
 	if (prev_surface == surface) {
 		/* Don't re-focus an already focused surface. */
 		return;
 	}
 
 	if (prev_surface) {
-		wlr_surface* previous = seat->keyboard_state.focused_surface;
+		wlr_surface* previous = seat->seat->keyboard_state.focused_surface;
 
 		if (wlr_surface_is_xdg_surface(previous)) {
 			wlr_xdg_surface* xdg_previous = wlr_xdg_surface_from_wlr_surface(previous);
@@ -52,31 +50,35 @@ void Server::focus_view(View& view, wlr_surface* surface) {
 		}
 	}
 
+	if (view == nullptr) {
+		return;
+	}
+
 	/* Move the view to the front */
-	wlr_scene_node_raise_to_top(view.scene_node);
-	(void) std::remove(server.views.begin(), server.views.end(), &view);
-	for (auto* view : server.views) {
+	wlr_scene_node_raise_to_top(view->scene_node);
+	(void) std::remove(views.begin(), views.end(), view);
+	for (auto* view : views) {
 		view->set_activated(false);
 	}
 
 	/* Activate the new surface */
-	server.views.insert(server.views.begin(), &view);
-	view.set_activated(true);
-	focused_view = &view;
+	views.insert(views.begin(), view);
+	view->set_activated(true);
+	focused_view = view;
 
 	/*
 	 * Tell the seat to have the keyboard enter this surface. wlroots will keep
 	 * track of this and automatically send key events to the appropriate
 	 * clients without additional work on your part.
 	 */
-	wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat);
+	wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat->seat);
 	if (keyboard != nullptr) {
-		wlr_seat_keyboard_notify_enter(seat, view.get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
+		wlr_seat_keyboard_notify_enter(seat->seat, view->get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
 	}
 
 	wlr_pointer_constraint_v1* constraint =
-		wlr_pointer_constraints_v1_constraint_for_surface(server.seat->pointer_constraints, surface, seat);
-	server.seat->set_constraint(constraint);
+		wlr_pointer_constraints_v1_constraint_for_surface(seat->pointer_constraints, surface, seat->seat);
+	seat->set_constraint(constraint);
 }
 
 Surface* Server::surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy) {
@@ -206,7 +208,7 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 	wlr_xdg_surface* xdg_surface = wlr_xdg_surface_from_wlr_surface(event->surface);
 	auto* view = dynamic_cast<View*>(static_cast<Surface*>(xdg_surface->surface->data));
 	if (view != nullptr && xdg_surface->mapped) {
-		server.focus_view(*view, xdg_surface->surface);
+		server.focus_view(view, xdg_surface->surface);
 	}
 }
 

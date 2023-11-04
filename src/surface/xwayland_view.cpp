@@ -211,7 +211,7 @@ void XWaylandView::map() {
 	wlr_scene_node_set_position(scene_node, current.x, current.y);
 
 	server.views.insert(server.views.begin(), this);
-	server.focus_view(*this);
+	server.focus_view(this);
 }
 
 void XWaylandView::unmap() {

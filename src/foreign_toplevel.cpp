@@ -24,7 +24,7 @@ static void foreign_toplevel_handle_request_activate_notify(wl_listener* listene
 	(void) data;
 
 	handle.view.set_minimized(false);
-	handle.view.get_server().focus_view(handle.view, handle.view.get_wlr_surface());
+	handle.view.get_server().focus_view(&handle.view, handle.view.get_wlr_surface());
 }
 
 static void foreign_toplevel_handle_request_fullscreen_notify(wl_listener* listener, void* data) {

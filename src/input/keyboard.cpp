@@ -40,7 +40,7 @@ static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_
 				if (server.views.size() < 2) {
 					return true;
 				}
-				View& next_view = **server.views.begin()++;
+				View* next_view = *server.views.begin()++;
 				server.focus_view(next_view);
 				return true;
 		}

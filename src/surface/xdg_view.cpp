@@ -215,7 +215,7 @@ void XdgView::map() {
 
 	wlr_scene_node_set_enabled(scene_node, true);
 	is_maximized = xdg_toplevel.current.maximized;
-	server.focus_view(*this);
+	server.focus_view(this);
 }
 
 void XdgView::unmap() {
