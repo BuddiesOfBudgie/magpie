@@ -66,7 +66,7 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	Cursor& cursor = server.seat->cursor;
 	wlr_surface* focused_surface = server.seat->seat->pointer_state.focused_surface;
 
-	if (surface != wlr_surface_get_root_surface(focused_surface)) {
+	if (get_wlr_surface() != wlr_surface_get_root_surface(focused_surface)) {
 		/* Deny move/resize requests from unfocused clients. */
 		return;
 	}
@@ -122,7 +122,7 @@ void View::set_maximized(const bool maximized) {
 	}
 
 	wlr_surface* focused_surface = server.seat->seat->pointer_state.focused_surface;
-	if (surface != wlr_surface_get_root_surface(focused_surface)) {
+	if (get_wlr_surface() != wlr_surface_get_root_surface(focused_surface)) {
 		/* Deny maximize requests from unfocused clients. */
 		return;
 	}

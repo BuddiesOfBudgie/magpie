@@ -125,7 +125,6 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
 	: listeners(*this), server(server), xdg_toplevel(toplevel) {
 	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, toplevel.base);
 	scene_node = &scene_tree->node;
-	surface = toplevel.base->surface;
 
 	wlr_xdg_toplevel_set_wm_capabilities(
 		&toplevel, WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE);
@@ -184,6 +183,10 @@ XdgView::~XdgView() noexcept {
 	wl_list_remove(&listeners.set_parent.link);
 }
 
+constexpr wlr_surface* XdgView::get_wlr_surface() const {
+	return xdg_toplevel.base->surface;
+}
+
 constexpr Server& XdgView::get_server() const {
 	return server;
 }
@@ -212,7 +215,7 @@ void XdgView::map() {
 
 	wlr_scene_node_set_enabled(scene_node, true);
 	is_maximized = xdg_toplevel.current.maximized;
-	server.focus_view(*this, xdg_toplevel.base->surface);
+	server.focus_view(*this);
 }
 
 void XdgView::unmap() {

@@ -31,6 +31,7 @@ class Popup : public Surface {
 	Popup(const Surface& parent, wlr_xdg_popup* xdg_popup) noexcept;
 	~Popup() noexcept;
 
+	constexpr wlr_surface* get_wlr_surface() const override;
 	constexpr Server& get_server() const override;
 	constexpr bool is_view() const override;
 };

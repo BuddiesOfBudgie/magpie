@@ -37,8 +37,9 @@ class Layer : public Surface {
 	Layer(Output& output, wlr_layer_surface_v1& surface) noexcept;
 	~Layer() noexcept;
 
-	inline Server& get_server() const override;
-	bool is_view() const override;
+	constexpr wlr_surface* get_wlr_surface() const override;
+	constexpr Server& get_server() const override;
+	constexpr bool is_view() const override;
 };
 
 class LayerSubsurface {

@@ -134,10 +134,14 @@ Layer::~Layer() noexcept {
 	wl_list_remove(&listeners.new_subsurface.link);
 }
 
-inline Server& Layer::get_server() const {
+constexpr wlr_surface* Layer::get_wlr_surface() const {
+	return layer_surface.surface;
+}
+
+constexpr Server& Layer::get_server() const {
 	return server;
 }
 
-bool Layer::is_view() const {
+constexpr bool Layer::is_view() const {
 	return false;
 }

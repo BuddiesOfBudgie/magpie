@@ -71,7 +71,7 @@ void Server::focus_view(View& view, wlr_surface* surface) {
 	 */
 	wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat);
 	if (keyboard != nullptr) {
-		wlr_seat_keyboard_notify_enter(seat, view.surface, keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
+		wlr_seat_keyboard_notify_enter(seat, view.get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
 	}
 
 	wlr_pointer_constraint_v1* constraint =
@@ -79,7 +79,7 @@ void Server::focus_view(View& view, wlr_surface* surface) {
 	server.seat->set_constraint(constraint);
 }
 
-Surface* Server::surface_at(const double lx, const double ly, wlr_surface** surface, double* sx, double* sy) {
+Surface* Server::surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy) {
 	/* This returns the topmost node in the scene at the given layout coords.
 	 * we only care about surface nodes as we are specifically looking for a
 	 * surface in the surface tree of a magpie_view. */
@@ -93,7 +93,7 @@ Surface* Server::surface_at(const double lx, const double ly, wlr_surface** surf
 		return NULL;
 	}
 
-	*surface = scene_surface->surface;
+	*wlr = scene_surface->surface;
 	/* Find the node corresponding to the magpie_view at the root of this
 	 * surface tree, it is the only one for which we set the data field. */
 	wlr_scene_tree* tree = node->parent;

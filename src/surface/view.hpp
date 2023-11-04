@@ -20,7 +20,6 @@ struct View : public Surface {
 	wlr_box current;
 	wlr_box pending;
 	wlr_box previous;
-	wlr_surface* surface = nullptr;
 	std::optional<ForeignToplevelHandle> toplevel_handle = {};
 
 	virtual ~View() noexcept {};
@@ -81,6 +80,7 @@ class XdgView : public View {
 	XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept;
 	~XdgView() noexcept;
 
+	constexpr wlr_surface* get_wlr_surface() const override;
 	constexpr Server& get_server() const override;
 	const wlr_box get_geometry() const override;
 	void map() override;
@@ -123,6 +123,7 @@ class XWaylandView : public View {
 	XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept;
 	~XWaylandView() noexcept;
 
+	constexpr wlr_surface* get_wlr_surface() const override;
 	constexpr Server& get_server() const override;
 	const wlr_box get_geometry() const override;
 	void map() override;

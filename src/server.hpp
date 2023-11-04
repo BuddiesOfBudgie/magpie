@@ -91,8 +91,8 @@ class Server {
 
 	Server();
 
-	Surface* surface_at(const double lx, const double ly, wlr_surface** surface, double* sx, double* sy);
-	void focus_view(View& view, wlr_surface* surface);
+	Surface* surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy);
+	void focus_view(View& view, wlr_surface* surface = nullptr);
 };
 
 #endif

@@ -171,6 +171,10 @@ XWaylandView::~XWaylandView() noexcept {
 	wl_list_remove(&listeners.set_parent.link);
 }
 
+constexpr wlr_surface* XWaylandView::get_wlr_surface() const {
+	return xwayland_surface.surface;
+}
+
 constexpr Server& XWaylandView::get_server() const {
 	return server;
 }
@@ -187,8 +191,6 @@ const wlr_box XWaylandView::get_geometry() const {
 void XWaylandView::map() {
 	xwayland_surface.data = this;
 	xwayland_surface.surface->data = this;
-
-	this->surface = xwayland_surface.surface;
 
 	toplevel_handle.emplace(*this);
 	toplevel_handle->set_title(xwayland_surface.title);
@@ -209,7 +211,7 @@ void XWaylandView::map() {
 	wlr_scene_node_set_position(scene_node, current.x, current.y);
 
 	server.views.insert(server.views.begin(), this);
-	server.focus_view(*this, this->surface);
+	server.focus_view(*this);
 }
 
 void XWaylandView::unmap() {
@@ -225,7 +227,7 @@ void XWaylandView::unmap() {
 		server.focused_view = nullptr;
 	}
 
-	if (server.seat->seat->keyboard_state.focused_surface == surface) {
+	if (server.seat->seat->keyboard_state.focused_surface == xwayland_surface.surface) {
 		server.seat->seat->keyboard_state.focused_surface = NULL;
 	}
 

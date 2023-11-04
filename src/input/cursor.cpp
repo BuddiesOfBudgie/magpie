@@ -315,15 +315,16 @@ void Cursor::process_motion(const uint32_t time) {
 
 	/* Otherwise, find the view under the pointer and send the event along. */
 	double sx, sy;
-	wlr_surface* surface = NULL;
+	wlr_surface* surface = nullptr;
 	Surface* magpie_surface = seat.server.surface_at(cursor->x, cursor->y, &surface, &sx, &sy);
-	if (!magpie_surface) {
+	if (magpie_surface == nullptr) {
 		/* If there's no view under the cursor, set the cursor image to a
 		 * default. This is what makes the cursor image appear when you move it
 		 * around the screen, not over any views. */
 		set_image("left_ptr");
 	}
-	if (surface) {
+
+	if (surface != nullptr) {
 		/*
 		 * Send pointer enter and motion events.
 		 *
@@ -354,7 +355,7 @@ void Cursor::reset_mode() {
 }
 
 void Cursor::warp_to_constraint(PointerConstraint& constraint) {
-	if (seat.server.focused_view->surface != constraint.wlr->surface) {
+	if (seat.server.focused_view->get_wlr_surface() != constraint.wlr->surface) {
 		return;
 	}
 
