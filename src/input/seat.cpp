@@ -14,6 +14,7 @@
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_keyboard.h>
 #include <wlr/types/wlr_pointer_constraints_v1.h>
+#include <wlr/util/log.h>
 #include <wlr/util/region.h>
 #include "wlr-wrap-end.hpp"
 
@@ -126,8 +127,6 @@ void Seat::new_input_device(wlr_input_device* device) {
 }
 
 void Seat::set_constraint(wlr_pointer_constraint_v1* wlr_constraint) {
-	printf("Setting constraint %p\n", (void*) wlr_constraint);
-
 	if (current_constraint.has_value()) {
 		if (&current_constraint.value().get().wlr == wlr_constraint) {
 			// we already have this constraint marked as the current constraint
@@ -162,7 +161,7 @@ void Seat::apply_constraint(const wlr_pointer* pointer, double* dx, double* dy) 
 	double confined_x = 0;
 	double confined_y = 0;
 	if (!wlr_region_confine(&current_constraint->get().wlr.region, x, y, x + *dx, y + *dy, &confined_x, &confined_y)) {
-		printf("Couldn't confine\n");
+		wlr_log(WLR_ERROR, "Couldn't confine\n");
 		return;
 	}
 

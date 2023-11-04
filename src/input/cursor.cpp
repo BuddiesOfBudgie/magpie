@@ -375,8 +375,8 @@ void Cursor::warp_to_constraint(PointerConstraint& constraint) {
 
 void Cursor::set_image(const std::string name) {
 	if (current_image != name) {
-		wlr_xcursor_manager_set_cursor_image(cursor_mgr, name.c_str(), &wlr);
 		current_image = name;
+		reload_image();
 	}
 }
 
