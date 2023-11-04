@@ -32,7 +32,7 @@
 
 void Server::focus_view(View* view, wlr_surface* surface) {
 	wlr_surface* prev_surface = seat->wlr->keyboard_state.focused_surface;
-	if (prev_surface == surface) {
+	if (prev_surface == surface && surface != nullptr) {
 		/* Don't re-focus an already focused surface. */
 		return;
 	}
@@ -52,6 +52,8 @@ void Server::focus_view(View* view, wlr_surface* surface) {
 
 	if (view == nullptr) {
 		return;
+	} else if (surface == nullptr) {
+		surface = view->get_wlr_surface();
 	}
 
 	/* Move the view to the front */
