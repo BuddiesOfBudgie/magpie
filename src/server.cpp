@@ -73,7 +73,8 @@ void Server::focus_view(View* view, wlr_surface* surface) {
 	 */
 	wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat->seat);
 	if (keyboard != nullptr) {
-		wlr_seat_keyboard_notify_enter(seat->seat, view->get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
+		wlr_seat_keyboard_notify_enter(
+			seat->seat, view->get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
 	}
 
 	wlr_pointer_constraint_v1* constraint =
@@ -269,47 +270,47 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 	wl_list_for_each(head, &config.heads, link) {
 		Output& output = *static_cast<Output*>(head->state.output->data);
 		bool enabled = head->state.enabled && !output.is_leased;
-        bool adding = enabled && !output.wlr->enabled;
-        bool removing = !enabled && output.wlr->enabled;
+		bool adding = enabled && !output.wlr->enabled;
+		bool removing = !enabled && output.wlr->enabled;
 
-        wlr_output_enable(output.wlr, enabled);
-        if (enabled) {
-            if (head->state.mode) {
-                wlr_output_set_mode(output.wlr, head->state.mode);
-            } else {
-                int32_t width = head->state.custom_mode.width;
-                int32_t height = head->state.custom_mode.height;
-                int32_t refresh = head->state.custom_mode.refresh;
-                wlr_output_set_custom_mode(output.wlr, width, height, refresh);
-            }
+		wlr_output_enable(output.wlr, enabled);
+		if (enabled) {
+			if (head->state.mode) {
+				wlr_output_set_mode(output.wlr, head->state.mode);
+			} else {
+				int32_t width = head->state.custom_mode.width;
+				int32_t height = head->state.custom_mode.height;
+				int32_t refresh = head->state.custom_mode.refresh;
+				wlr_output_set_custom_mode(output.wlr, width, height, refresh);
+			}
 
-            wlr_output_set_scale(output.wlr, head->state.scale);
-            wlr_output_set_transform(output.wlr, head->state.transform);
-        }
+			wlr_output_set_scale(output.wlr, head->state.scale);
+			wlr_output_set_transform(output.wlr, head->state.transform);
+		}
 
-        if (!wlr_output_commit(output.wlr)) {
-            wlr_log(WLR_ERROR, "Output config commit failed");
-            continue;
-        }
+		if (!wlr_output_commit(output.wlr)) {
+			wlr_log(WLR_ERROR, "Output config commit failed");
+			continue;
+		}
 
-        if (adding) {
-            wlr_output_layout_add_auto(server.output_layout, output.wlr);
-            output.scene_output = wlr_scene_get_scene_output(server.scene, output.wlr);
-        }
+		if (adding) {
+			wlr_output_layout_add_auto(server.output_layout, output.wlr);
+			output.scene_output = wlr_scene_get_scene_output(server.scene, output.wlr);
+		}
 
-        if (enabled) {
-            wlr_box box;
-            wlr_output_layout_get_box(server.output_layout, output.wlr, &box);
-            if (box.x != head->state.x || box.y != head->state.y) {
-                /* This overrides the automatic layout */
-                wlr_output_layout_move(server.output_layout, output.wlr, head->state.x, head->state.y);
-            }
-        }
+		if (enabled) {
+			wlr_box box;
+			wlr_output_layout_get_box(server.output_layout, output.wlr, &box);
+			if (box.x != head->state.x || box.y != head->state.y) {
+				/* This overrides the automatic layout */
+				wlr_output_layout_move(server.output_layout, output.wlr, head->state.x, head->state.y);
+			}
+		}
 
-        if (removing) {
-            wlr_output_layout_remove(server.output_layout, output.wlr);
-            output.scene_output = nullptr;
-        }
+		if (removing) {
+			wlr_output_layout_remove(server.output_layout, output.wlr);
+			output.scene_output = nullptr;
+		}
 	}
 
 	wlr_output_configuration_v1_send_succeeded(&config);
