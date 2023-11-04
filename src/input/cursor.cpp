@@ -335,6 +335,7 @@ void Cursor::process_motion(const uint32_t time) {
 		 * the surface has already has pointer focus or if the client is already
 		 * aware of the coordinates passed.
 		 */
+		current_image = "";
 		wlr_seat_pointer_notify_enter(seat.seat, surface, sx, sy);
 		wlr_seat_pointer_notify_motion(seat.seat, time, sx, sy);
 	} else {
