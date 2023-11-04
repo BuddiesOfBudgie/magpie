@@ -8,8 +8,16 @@ static void foreign_toplevel_handle_request_maximize_notify(wl_listener* listene
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
 	auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
 
-	handle.view.set_minimized(false);
-	handle.view.set_maximized(event.maximized);
+	auto placement = event.maximized ? VIEW_PLACEMENT_MAXIMIZED : VIEW_PLACEMENT_STACKING;
+	handle.view.set_placement(placement);
+}
+
+static void foreign_toplevel_handle_request_fullscreen_notify(wl_listener* listener, void* data) {
+	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
+	auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
+
+	auto placement = event.maximized ? VIEW_PLACEMENT_FULLSCREEN : VIEW_PLACEMENT_STACKING;
+	handle.view.set_placement(placement);
 }
 
 static void foreign_toplevel_handle_request_minimize_notify(wl_listener* listener, void* data) {
@@ -24,12 +32,7 @@ static void foreign_toplevel_handle_request_activate_notify(wl_listener* listene
 	(void) data;
 
 	handle.view.set_minimized(false);
-	handle.view.get_server().focus_view(&handle.view, handle.view.get_wlr_surface());
-}
-
-static void foreign_toplevel_handle_request_fullscreen_notify(wl_listener* listener, void* data) {
-	(void) listener;
-	(void) data;
+	handle.view.get_server().focus_view(&handle.view);
 }
 
 static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, void* data) {
@@ -87,6 +90,11 @@ void ForeignToplevelHandle::set_app_id(const char* app_id) {
 
 void ForeignToplevelHandle::set_parent(std::optional<std::reference_wrapper<const ForeignToplevelHandle>> parent) {
 	wlr_foreign_toplevel_handle_v1_set_parent(&handle, (parent.has_value()) ? nullptr : &parent->get().handle);
+}
+
+void ForeignToplevelHandle::set_placement(const ViewPlacement placement) {
+	set_maximized(placement == VIEW_PLACEMENT_MAXIMIZED);
+	set_fullscreen(placement == VIEW_PLACEMENT_FULLSCREEN);
 }
 
 void ForeignToplevelHandle::set_maximized(const bool maximized) {

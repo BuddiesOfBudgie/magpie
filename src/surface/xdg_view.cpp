@@ -48,7 +48,7 @@ static void xdg_toplevel_request_move_notify(wl_listener* listener, void* data) 
 	XdgView& view = magpie_container_of(listener, view, request_move);
 	(void) data;
 
-	view.set_maximized(false);
+	view.set_placement(VIEW_PLACEMENT_STACKING);
 	view.begin_interactive(MAGPIE_CURSOR_MOVE, 0);
 }
 
@@ -61,7 +61,7 @@ static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data
 	XdgView& view = magpie_container_of(listener, view, request_resize);
 	auto* event = static_cast<wlr_xdg_toplevel_resize_event*>(data);
 
-	view.set_maximized(false);
+	view.set_placement(VIEW_PLACEMENT_STACKING);
 	view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
 }
 
@@ -72,7 +72,15 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* da
 	XdgView& view = magpie_container_of(listener, view, request_maximize);
 	(void) data;
 
-	view.set_maximized(!view.is_maximized);
+	view.toggle_maximize();
+	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
+}
+
+static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* data) {
+	XdgView& view = magpie_container_of(listener, view, request_fullscreen);
+	(void) data;
+
+	view.toggle_fullscreen();
 	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
 }
 
@@ -81,14 +89,6 @@ static void xdg_toplevel_request_minimize_notify(wl_listener* listener, void* da
 	(void) data;
 
 	view.set_minimized(!view.is_minimized);
-	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
-}
-
-static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* data) {
-	XdgView& view = magpie_container_of(listener, view, request_fullscreen);
-	(void) data;
-
-	/* We must send a configure here, even on a no-op. */
 	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
 }
 
@@ -126,8 +126,9 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
 	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, toplevel.base);
 	scene_node = &scene_tree->node;
 
-	wlr_xdg_toplevel_set_wm_capabilities(
-		&toplevel, WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE);
+	wlr_xdg_toplevel_set_wm_capabilities(&toplevel, WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE |
+														WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE |
+														WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
 
 	scene_node->data = this;
 	toplevel.base->surface->data = this;
@@ -214,7 +215,14 @@ void XdgView::map() {
 	}
 
 	wlr_scene_node_set_enabled(scene_node, true);
-	is_maximized = xdg_toplevel.current.maximized;
+	if (xdg_toplevel.current.fullscreen) {
+		set_placement(VIEW_PLACEMENT_FULLSCREEN);
+	} else if (xdg_toplevel.current.maximized) {
+		set_placement(VIEW_PLACEMENT_MAXIMIZED);
+	} else {
+		set_placement(VIEW_PLACEMENT_STACKING);
+	}
+
 	server.focus_view(this);
 }
 

@@ -36,10 +36,11 @@ class ForeignToplevelHandle {
 	void set_title(const char* title);
 	void set_app_id(const char* app_id);
 	void set_parent(std::optional<std::reference_wrapper<const ForeignToplevelHandle>> parent);
-	void set_maximized(bool maximized);
-	void set_minimized(bool minimized);
-	void set_activated(bool activated);
-	void set_fullscreen(bool fullscreen);
+	void set_placement(const ViewPlacement placement);
+	void set_maximized(const bool maximized);
+	void set_fullscreen(const bool fullscreen);
+	void set_minimized(const bool minimized);
+	void set_activated(const bool activated);
 	void output_enter(const Output& output);
 	void output_leave(const Output& output);
 };

@@ -5,6 +5,7 @@
 #include "output.hpp"
 #include "server.hpp"
 
+#include "types.hpp"
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_cursor.h>
@@ -12,6 +13,7 @@
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/util/edges.h>
+#include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
 const std::optional<const Output*> View::find_output_for_maximize() {
@@ -94,8 +96,10 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 }
 
 void View::set_position(const int new_x, const int new_y) {
-	previous.x = current.x;
-	previous.y = current.y;
+	if (curr_placement == VIEW_PLACEMENT_STACKING) {
+		previous.x = current.x;
+		previous.y = current.y;
+	}
 	current.x = new_x;
 	current.y = new_y;
 	wlr_scene_node_set_position(scene_node, new_x, new_y);
@@ -103,6 +107,12 @@ void View::set_position(const int new_x, const int new_y) {
 }
 
 void View::set_size(const int new_width, const int new_height) {
+	if (curr_placement == VIEW_PLACEMENT_STACKING) {
+		previous.width = current.width;
+		previous.height = current.height;
+	}
+	current.width = new_width;
+	current.height = new_height;
 	impl_set_size(new_width, new_height);
 }
 
@@ -114,47 +124,78 @@ void View::set_activated(const bool activated) {
 	}
 }
 
-void View::set_maximized(const bool maximized) {
+void View::set_placement(const ViewPlacement new_placement, const bool force) {
 	Server& server = get_server();
-	if (this->is_maximized == maximized) {
-		/* Don't honor request if already maximized. */
-		return;
-	}
 
-	wlr_surface* focused_surface = server.seat->wlr->pointer_state.focused_surface;
-	if (get_wlr_surface() != wlr_surface_get_root_surface(focused_surface)) {
-		/* Deny maximize requests from unfocused clients. */
-		return;
-	}
-
-	if (this->is_maximized) {
-		set_size(previous.width, previous.height);
-		impl_set_maximized(false);
-		current.x = previous.x;
-		current.y = previous.y;
-		wlr_scene_node_set_position(scene_node, current.x, current.y);
-	} else {
-		previous = get_geometry();
-		previous.x = current.x;
-		previous.y = current.y;
-
-		auto best_output = find_output_for_maximize();
-		if (!best_output.has_value()) {
+	if (!force) {
+		if (curr_placement == new_placement) {
 			return;
 		}
 
-		wlr_box output_box = best_output.value()->usable_area_in_layout_coords();
-		set_size(output_box.width, output_box.height);
-		impl_set_maximized(true);
-		current.x = output_box.x;
-		current.y = output_box.y;
-		wlr_scene_node_set_position(scene_node, current.x, current.y);
+		wlr_surface* focused_surface = server.seat->wlr->pointer_state.focused_surface;
+		if (focused_surface == nullptr || get_wlr_surface() != wlr_surface_get_root_surface(focused_surface)) {
+			/* Deny placement requests from unfocused clients. */
+			return;
+		}
 	}
 
-	this->is_maximized = maximized;
-	if (toplevel_handle.has_value()) {
-		toplevel_handle->set_maximized(maximized);
+	bool res = true;
+
+	switch (new_placement) {
+		case VIEW_PLACEMENT_STACKING:
+			stack();
+			break;
+		case VIEW_PLACEMENT_MAXIMIZED:
+			res = maximize();
+			break;
+		case VIEW_PLACEMENT_FULLSCREEN:
+			res = fullscreen();
+			break;
 	}
+
+	if (res) {
+		prev_placement = curr_placement;
+		curr_placement = new_placement;
+		if (toplevel_handle.has_value()) {
+			toplevel_handle->set_placement(new_placement);
+		}
+	}
+}
+
+void View::stack() {
+	set_size(previous.width, previous.height);
+	impl_set_maximized(false);
+	impl_set_fullscreen(false);
+	set_position(previous.x, previous.y);
+}
+
+bool View::maximize() {
+	auto best_output = find_output_for_maximize();
+	if (!best_output.has_value()) {
+		return false;
+	}
+
+	wlr_box output_box = best_output.value()->usable_area_in_layout_coords();
+	set_size(output_box.width, output_box.height);
+	impl_set_fullscreen(false);
+	impl_set_maximized(true);
+	set_position(output_box.x, output_box.y);
+
+	return true;
+}
+
+bool View::fullscreen() {
+	auto best_output = find_output_for_maximize();
+	if (!best_output.has_value()) {
+		return false;
+	}
+
+	wlr_box output_box = best_output.value()->full_area_in_layout_coords();
+	set_size(output_box.width, output_box.height);
+	impl_set_fullscreen(true);
+	set_position(output_box.x, output_box.y);
+
+	return true;
 }
 
 void View::set_minimized(const bool minimized) {
@@ -173,5 +214,19 @@ void View::set_minimized(const bool minimized) {
 		set_activated(false);
 	} else {
 		map();
+	}
+}
+
+void View::toggle_maximize() {
+	if (curr_placement != VIEW_PLACEMENT_FULLSCREEN) {
+		set_placement(curr_placement != VIEW_PLACEMENT_MAXIMIZED ? VIEW_PLACEMENT_MAXIMIZED : VIEW_PLACEMENT_STACKING);
+	}
+}
+
+void View::toggle_fullscreen() {
+	if (curr_placement == VIEW_PLACEMENT_FULLSCREEN) {
+		set_placement(prev_placement);
+	} else {
+		set_placement(VIEW_PLACEMENT_FULLSCREEN);
 	}
 }

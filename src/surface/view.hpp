@@ -15,8 +15,9 @@
 #include "wlr-wrap-end.hpp"
 
 struct View : public Surface {
-	bool is_maximized;
-	bool is_minimized;
+	ViewPlacement prev_placement = VIEW_PLACEMENT_STACKING;
+	ViewPlacement curr_placement = VIEW_PLACEMENT_STACKING;
+	bool is_minimized = false;
 	wlr_box current;
 	wlr_box pending;
 	wlr_box previous;
@@ -35,11 +36,16 @@ struct View : public Surface {
 	void set_position(const int new_x, const int new_y);
 	void set_size(const int new_width, const int new_height);
 	void set_activated(const bool activated);
-	void set_maximized(const bool maximized);
+	void set_placement(const ViewPlacement placement, const bool force = false);
 	void set_minimized(const bool minimized);
+	void toggle_maximize();
+	void toggle_fullscreen();
 
   private:
 	const std::optional<const Output*> find_output_for_maximize();
+	void stack();
+	bool maximize();
+	bool fullscreen();
 
   protected:
 	virtual void impl_set_position(const int new_x, const int new_y) = 0;
@@ -106,6 +112,8 @@ class XWaylandView : public View {
 		wl_listener request_configure;
 		wl_listener request_move;
 		wl_listener request_resize;
+		wl_listener request_maximize;
+		wl_listener request_fullscreen;
 		wl_listener set_geometry;
 		wl_listener set_title;
 		wl_listener set_class;

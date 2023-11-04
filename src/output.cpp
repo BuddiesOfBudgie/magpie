@@ -94,6 +94,16 @@ void Output::update_layout() {
 	}
 }
 
+wlr_box Output::full_area_in_layout_coords() const {
+	double layout_x = 0, layout_y = 0;
+	wlr_output_layout_output_coords(server.output_layout, &wlr, &layout_x, &layout_y);
+
+	wlr_box box = full_area;
+	box.x += layout_x;
+	box.y += layout_y;
+	return box;
+}
+
 wlr_box Output::usable_area_in_layout_coords() const {
 	double layout_x = 0, layout_y = 0;
 	wlr_output_layout_output_coords(server.output_layout, &wlr, &layout_x, &layout_y);

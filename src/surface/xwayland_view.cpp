@@ -76,7 +76,7 @@ static void xwayland_surface_request_move_notify(wl_listener* listener, void* da
 	XWaylandView& view = magpie_container_of(listener, view, request_move);
 	(void) data;
 
-	wlr_xwayland_surface_set_maximized(&view.xwayland_surface, false);
+	view.set_placement(VIEW_PLACEMENT_STACKING);
 	view.begin_interactive(MAGPIE_CURSOR_MOVE, 0);
 }
 
@@ -87,10 +87,24 @@ static void xwayland_surface_request_move_notify(wl_listener* listener, void* da
  * client, to prevent the client from requesting this whenever they want. */
 static void xwayland_surface_request_resize_notify(wl_listener* listener, void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, request_resize);
-
 	auto* event = static_cast<wlr_xwayland_resize_event*>(data);
-	wlr_xwayland_surface_set_maximized(&view.xwayland_surface, false);
+
+	view.set_placement(VIEW_PLACEMENT_STACKING);
 	view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
+}
+
+static void xwayland_surface_request_maximize_notify(wl_listener* listener, void* data) {
+	XWaylandView& view = magpie_container_of(listener, view, request_maximize);
+	(void) data;
+
+	view.toggle_maximize();
+}
+
+static void xwayland_surface_request_fullscreen_notify(wl_listener* listener, void* data) {
+	XWaylandView& view = magpie_container_of(listener, view, request_fullscreen);
+	(void) data;
+
+	view.toggle_fullscreen();
 }
 
 static void xwayland_surface_set_title_notify(wl_listener* listener, void* data) {
@@ -148,6 +162,10 @@ XWaylandView::XWaylandView(Server& server, wlr_xwayland_surface& xwayland_surfac
 	wl_signal_add(&xwayland_surface.events.request_move, &listeners.request_move);
 	listeners.request_resize.notify = xwayland_surface_request_resize_notify;
 	wl_signal_add(&xwayland_surface.events.request_resize, &listeners.request_resize);
+	listeners.request_maximize.notify = xwayland_surface_request_maximize_notify;
+	wl_signal_add(&xwayland_surface.events.request_maximize, &listeners.request_maximize);
+	listeners.request_fullscreen.notify = xwayland_surface_request_fullscreen_notify;
+	wl_signal_add(&xwayland_surface.events.request_fullscreen, &listeners.request_fullscreen);
 	listeners.set_geometry.notify = xwayland_surface_set_geometry_notify;
 	wl_signal_add(&xwayland_surface.events.set_geometry, &listeners.set_geometry);
 	listeners.set_title.notify = xwayland_surface_set_title_notify;
@@ -208,7 +226,14 @@ void XWaylandView::map() {
 		}
 	}
 
-	wlr_scene_node_set_position(scene_node, current.x, current.y);
+	wlr_scene_node_set_enabled(scene_node, true);
+	if (xwayland_surface.fullscreen) {
+		set_placement(VIEW_PLACEMENT_FULLSCREEN);
+	} else if (xwayland_surface.maximized_horz && xwayland_surface.maximized_vert) {
+		set_placement(VIEW_PLACEMENT_MAXIMIZED);
+	} else {
+		set_placement(VIEW_PLACEMENT_STACKING);
+	}
 
 	server.views.insert(server.views.begin(), this);
 	server.focus_view(this);
