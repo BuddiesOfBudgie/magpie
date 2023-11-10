@@ -101,8 +101,8 @@ void View::set_position(const int new_x, const int new_y) {
 		previous.y = current.y;
 	}
 	current.x = new_x;
-	current.y = new_y;
-	wlr_scene_node_set_position(scene_node, new_x, new_y);
+	current.y = std::max(new_y, 0);
+	wlr_scene_node_set_position(scene_node, current.x, current.y);
 	impl_set_position(new_x, new_y);
 }
 
