@@ -18,7 +18,6 @@
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_xdg_activation_v1.h>
-#include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
@@ -35,15 +34,15 @@ class Server {
   public:
 	struct Listeners {
 		std::reference_wrapper<Server> parent;
-		wl_listener xdg_shell_new_xdg_surface;
-		wl_listener layer_shell_new_layer_surface;
-		wl_listener activation_request_activation;
-		wl_listener backend_new_output;
-		wl_listener drm_lease_request;
-		wl_listener output_layout_change;
-		wl_listener output_manager_apply;
-		wl_listener output_power_manager_set_mode;
-		Listeners(Server& parent) noexcept : parent(parent) {}
+		wl_listener xdg_shell_new_xdg_surface = {};
+		wl_listener layer_shell_new_layer_surface = {};
+		wl_listener activation_request_activation = {};
+		wl_listener backend_new_output = {};
+		wl_listener drm_lease_request = {};
+		wl_listener output_layout_change = {};
+		wl_listener output_manager_apply = {};
+		wl_listener output_power_manager_set_mode = {};
+		explicit Listeners(Server& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -59,7 +58,7 @@ class Server {
 	XWayland* xwayland;
 
 	wlr_scene* scene;
-	wlr_scene_tree* scene_layers[MAGPIE_SCENE_LAYER_LOCK + 1];
+	wlr_scene_tree* scene_layers[MAGPIE_SCENE_LAYER_LOCK + 1] = {};
 
 	wlr_xdg_shell* xdg_shell;
 
@@ -74,9 +73,9 @@ class Server {
 	std::list<View*> views;
 	View* focused_view = nullptr;
 	View* grabbed_view = nullptr;
-	double grab_x, grab_y;
-	wlr_box grab_geobox;
-	uint32_t resize_edges;
+	double grab_x = 0.0, grab_y = 0.0;
+	wlr_box grab_geobox = {};
+	uint32_t resize_edges = 0;
 
 	wlr_output_manager_v1* output_manager;
 	wlr_output_power_manager_v1* output_power_manager;
@@ -91,7 +90,7 @@ class Server {
 
 	Server();
 
-	Surface* surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy);
+	Surface* surface_at(double lx, double ly, wlr_surface** wlr, double* sx, double* sy) const;
 	void focus_view(View* view, wlr_surface* surface = nullptr);
 };
 

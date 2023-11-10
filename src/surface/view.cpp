@@ -4,8 +4,8 @@
 #include "input/seat.hpp"
 #include "output.hpp"
 #include "server.hpp"
-
 #include "types.hpp"
+
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_cursor.h>
@@ -13,30 +13,29 @@
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/util/edges.h>
-#include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-const std::optional<const Output*> View::find_output_for_maximize() {
-	Server& server = get_server();
+std::optional<const Output*> View::find_output_for_maximize() const {
+	const Server& server = get_server();
 
 	if (server.outputs.empty()) {
 		return {};
 	}
 
-	Cursor& cursor = server.seat->cursor;
+	const Cursor& cursor = server.seat->cursor;
 	Output* best_output = nullptr;
-	long best_area = 0;
+	int64_t best_area = 0;
 
 	for (auto* output : server.outputs) {
 		if (!wlr_output_layout_intersects(server.output_layout, &output->wlr, &previous)) {
 			continue;
 		}
 
-		wlr_box output_box;
+		wlr_box output_box = {};
 		wlr_output_layout_get_box(server.output_layout, &output->wlr, &output_box);
-		wlr_box intersection;
+		wlr_box intersection = {};
 		wlr_box_intersection(&intersection, &previous, &output_box);
-		long intersection_area = intersection.width * intersection.height;
+		const int64_t intersection_area = intersection.width * intersection.height;
 
 		if (intersection.width * intersection.height > best_area) {
 			best_area = intersection_area;
@@ -47,7 +46,9 @@ const std::optional<const Output*> View::find_output_for_maximize() {
 	// if it's outside of all outputs, just use the pointer position
 	if (best_output == nullptr) {
 		for (auto* output : server.outputs) {
-			if (wlr_output_layout_contains_point(server.output_layout, &output->wlr, cursor.wlr.x, cursor.wlr.y)) {
+			const auto cx = static_cast<int32_t>(std::round(cursor.wlr.x));
+			const auto cy = static_cast<int32_t>(std::round(cursor.wlr.y));
+			if (wlr_output_layout_contains_point(server.output_layout, &output->wlr, cx, cy)) {
 				best_output = output;
 				break;
 			}
@@ -80,10 +81,10 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 		server.grab_x = cursor.wlr.x - current.x;
 		server.grab_y = cursor.wlr.y - current.y;
 	} else {
-		wlr_box geo_box = get_geometry();
+		const wlr_box geo_box = get_geometry();
 
-		double border_x = (current.x + geo_box.x) + ((edges & WLR_EDGE_RIGHT) ? geo_box.width : 0);
-		double border_y = (current.y + geo_box.y) + ((edges & WLR_EDGE_BOTTOM) ? geo_box.height : 0);
+		const double border_x = current.x + geo_box.x + (edges & WLR_EDGE_RIGHT ? geo_box.width : 0);
+		const double border_y = current.y + geo_box.y + (edges & WLR_EDGE_BOTTOM ? geo_box.height : 0);
 		server.grab_x = cursor.wlr.x - border_x;
 		server.grab_y = cursor.wlr.y - border_y;
 
@@ -125,7 +126,7 @@ void View::set_activated(const bool activated) {
 }
 
 void View::set_placement(const ViewPlacement new_placement, const bool force) {
-	Server& server = get_server();
+	const Server& server = get_server();
 
 	if (!force) {
 		if (curr_placement == new_placement) {
@@ -170,12 +171,12 @@ void View::stack() {
 }
 
 bool View::maximize() {
-	auto best_output = find_output_for_maximize();
+	const auto best_output = find_output_for_maximize();
 	if (!best_output.has_value()) {
 		return false;
 	}
 
-	wlr_box output_box = best_output.value()->usable_area_in_layout_coords();
+	const wlr_box output_box = best_output.value()->usable_area_in_layout_coords();
 	set_size(output_box.width, output_box.height);
 	impl_set_fullscreen(false);
 	impl_set_maximized(true);
@@ -185,12 +186,12 @@ bool View::maximize() {
 }
 
 bool View::fullscreen() {
-	auto best_output = find_output_for_maximize();
+	const auto best_output = find_output_for_maximize();
 	if (!best_output.has_value()) {
 		return false;
 	}
 
-	wlr_box output_box = best_output.value()->full_area_in_layout_coords();
+	const wlr_box output_box = best_output.value()->full_area_in_layout_coords();
 	set_size(output_box.width, output_box.height);
 	impl_set_fullscreen(true);
 	set_position(output_box.x, output_box.y);

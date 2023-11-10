@@ -1,5 +1,5 @@
-#ifndef MAGPIE_XWAYLAND_H
-#define MAGPIE_XWAYLAND_H
+#ifndef MAGPIE_XWAYLAND_HPP
+#define MAGPIE_XWAYLAND_HPP
 
 #include "types.hpp"
 
@@ -29,9 +29,9 @@ class XWayland {
   public:
 	struct Listeners {
 		std::reference_wrapper<XWayland> parent;
-		wl_listener ready;
-		wl_listener new_surface;
-		Listeners(XWayland& parent) noexcept : parent(parent) {}
+		wl_listener ready = {};
+		wl_listener new_surface = {};
+		explicit Listeners(XWayland& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -40,9 +40,9 @@ class XWayland {
   public:
 	Server& server;
 	wlr_xwayland* wlr;
-	xcb_atom_t atoms[ATOM_LAST];
+	xcb_atom_t atoms[ATOM_LAST] = {};
 
-	XWayland(Server& server) noexcept;
+	explicit XWayland(Server& server) noexcept;
 };
 
 #endif

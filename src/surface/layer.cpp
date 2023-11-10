@@ -15,7 +15,7 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-static magpie_scene_layer_t magpie_layer_from_wlr_layer(enum zwlr_layer_shell_v1_layer layer) {
+static magpie_scene_layer_t magpie_layer_from_wlr_layer(const zwlr_layer_shell_v1_layer layer) {
 	switch (layer) {
 		case ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND:
 			return MAGPIE_SCENE_LAYER_BACKGROUND;
@@ -75,12 +75,12 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data
 	Layer& layer = magpie_container_of(listener, layer, commit);
 	(void) data;
 
-	Server& server = layer.output.server;
-	wlr_layer_surface_v1& surface = layer.layer_surface;
+	const Server& server = layer.output.server;
+	const wlr_layer_surface_v1& surface = layer.layer_surface;
 
-	uint32_t committed = surface.current.committed;
+	const uint32_t committed = surface.current.committed;
 	if (committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) {
-		magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface.current.layer);
+		const magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface.current.layer);
 		wlr_scene_node_reparent(layer.scene_node, server.scene_layers[chosen_layer]);
 	}
 
@@ -91,7 +91,7 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data
 
 static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* data) {
 	Layer& layer = magpie_container_of(listener, layer, new_popup);
-	auto* surface = static_cast<Surface*>(layer.layer_surface.surface->data);
+	const auto* surface = static_cast<Surface*>(layer.layer_surface.surface->data);
 
 	new Popup(*surface, *static_cast<wlr_xdg_popup*>(data));
 }
@@ -105,7 +105,7 @@ static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, vo
 
 Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept
 	: listeners(*this), server(output.server), output(output), layer_surface(surface) {
-	magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface.current.layer);
+	const magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface.current.layer);
 	scene_layer_surface = wlr_scene_layer_surface_v1_create(output.server.scene_layers[chosen_layer], &surface);
 	scene_node = &scene_layer_surface->tree->node;
 

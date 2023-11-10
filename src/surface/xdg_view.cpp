@@ -10,8 +10,6 @@
 #include "wlr-wrap-start.hpp"
 #include <wlr/backend.h>
 #include <wlr/types/wlr_cursor.h>
-#include <wlr/types/wlr_foreign_toplevel_management_v1.h>
-#include <wlr/util/edges.h>
 #include "wlr-wrap-end.hpp"
 
 /* Called when the surface is mapped, or ready to display on-screen. */
@@ -59,7 +57,7 @@ static void xdg_toplevel_request_move_notify(wl_listener* listener, void* data) 
  * client, to prevent the client from requesting this whenever they want. */
 static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data) {
 	XdgView& view = magpie_container_of(listener, view, request_resize);
-	auto* event = static_cast<wlr_xdg_toplevel_resize_event*>(data);
+	const auto* event = static_cast<wlr_xdg_toplevel_resize_event*>(data);
 
 	view.set_placement(VIEW_PLACEMENT_STACKING);
 	view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
@@ -111,7 +109,7 @@ static void xdg_toplevel_set_parent_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	if (view.xdg_toplevel.parent != nullptr) {
-		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(view.xdg_toplevel.parent->base->data));
+		const auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(view.xdg_toplevel.parent->base->data));
 		if (m_view != nullptr) {
 			view.toplevel_handle->set_parent(m_view->toplevel_handle);
 			return;
@@ -192,8 +190,8 @@ constexpr Server& XdgView::get_server() const {
 	return server;
 }
 
-const wlr_box XdgView::get_geometry() const {
-	wlr_box box;
+wlr_box XdgView::get_geometry() const {
+	wlr_box box = {};
 	wlr_xdg_surface_get_geometry(xdg_toplevel.base, &box);
 	return box;
 }
@@ -204,11 +202,11 @@ void XdgView::map() {
 		wlr_xdg_surface_get_geometry(xdg_toplevel.base, &current);
 
 		if (!server.outputs.empty()) {
-			auto output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
-			auto usable_area = output->usable_area_in_layout_coords();
-			auto center_x = usable_area.x + (usable_area.width / 2);
-			auto center_y = usable_area.y + (usable_area.height / 2);
-			set_position(center_x - (current.width / 2), center_y - (current.height / 2));
+			const auto output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
+			const auto usable_area = output->usable_area_in_layout_coords();
+			const auto center_x = usable_area.x + usable_area.width / 2;
+			const auto center_y = usable_area.y + usable_area.height / 2;
+			set_position(center_x - current.width / 2, center_y - current.height / 2);
 		}
 
 		pending_map = false;

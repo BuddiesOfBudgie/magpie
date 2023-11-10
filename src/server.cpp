@@ -10,7 +10,7 @@
 #include "xwayland.hpp"
 
 #include <cassert>
-#include <wayland-server.h>
+#include <utility>
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/render/wlr_renderer.h>
@@ -26,12 +26,13 @@
 #include <wlr/types/wlr_xdg_foreign_registry.h>
 #include <wlr/types/wlr_xdg_foreign_v1.h>
 #include <wlr/types/wlr_xdg_foreign_v2.h>
+#include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/util/box.h>
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
 void Server::focus_view(View* view, wlr_surface* surface) {
-	wlr_surface* prev_surface = seat->wlr->keyboard_state.focused_surface;
+	const wlr_surface* prev_surface = seat->wlr->keyboard_state.focused_surface;
 	if (prev_surface == surface && surface != nullptr) {
 		/* Don't re-focus an already focused surface. */
 		return;
@@ -41,7 +42,7 @@ void Server::focus_view(View* view, wlr_surface* surface) {
 		wlr_surface* previous = seat->wlr->keyboard_state.focused_surface;
 
 		if (wlr_surface_is_xdg_surface(previous)) {
-			wlr_xdg_surface* xdg_previous = wlr_xdg_surface_from_wlr_surface(previous);
+			const wlr_xdg_surface* xdg_previous = wlr_xdg_surface_from_wlr_surface(previous);
 			assert(xdg_previous->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 			wlr_xdg_toplevel_set_activated(xdg_previous->toplevel, false);
 		} else if (wlr_surface_is_xwayland_surface(previous)) {
@@ -52,15 +53,17 @@ void Server::focus_view(View* view, wlr_surface* surface) {
 
 	if (view == nullptr) {
 		return;
-	} else if (surface == nullptr) {
+	}
+
+	if (surface == nullptr) {
 		surface = view->get_wlr_surface();
 	}
 
 	/* Move the view to the front */
 	wlr_scene_node_raise_to_top(view->scene_node);
 	(void) std::remove(views.begin(), views.end(), view);
-	for (auto* view : views) {
-		view->set_activated(false);
+	for (auto* it : std::as_const(views)) {
+		it->set_activated(false);
 	}
 
 	/* Activate the new surface */
@@ -84,28 +87,33 @@ void Server::focus_view(View* view, wlr_surface* surface) {
 	seat->set_constraint(constraint);
 }
 
-Surface* Server::surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy) {
+Surface* Server::surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy) const {
 	/* This returns the topmost node in the scene at the given layout coords.
 	 * we only care about surface nodes as we are specifically looking for a
 	 * surface in the surface tree of a magpie_view. */
 	wlr_scene_node* node = wlr_scene_node_at(&scene->tree.node, lx, ly, sx, sy);
-	if (node == NULL || node->type != WLR_SCENE_NODE_BUFFER) {
-		return NULL;
+	if (node == nullptr || node->type != WLR_SCENE_NODE_BUFFER) {
+		return nullptr;
 	}
 	wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
-	wlr_scene_surface* scene_surface = wlr_scene_surface_from_buffer(scene_buffer);
+	const wlr_scene_surface* scene_surface = wlr_scene_surface_from_buffer(scene_buffer);
 	if (!scene_surface) {
-		return NULL;
+		return nullptr;
 	}
 
 	*wlr = scene_surface->surface;
 	/* Find the node corresponding to the magpie_view at the root of this
 	 * surface tree, it is the only one for which we set the data field. */
-	wlr_scene_tree* tree = node->parent;
-	while (tree != NULL && tree->node.data == NULL) {
+	const wlr_scene_tree* tree = node->parent;
+	while (tree != nullptr && tree->node.data == nullptr) {
 		tree = tree->node.parent;
 	}
-	return static_cast<Surface*>(tree->node.data);
+
+	if (tree != nullptr) {
+		return static_cast<Surface*>(tree->node.data);
+	}
+
+	return nullptr;
 }
 
 /* This event is raised by the backend when a new output (aka a display or
@@ -137,7 +145,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	}
 
 	/* Allocates and configures our state for this output */
-	Output* output = new Output(server, *new_output);
+	auto* output = new Output(server, *new_output);
 	server.outputs.emplace(output);
 
 	/* Adds this to the output layout. The add_auto function arranges outputs
@@ -156,7 +164,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 
 static void output_power_manager_set_mode_notify(wl_listener* listener, void* data) {
 	(void) listener;
-	auto& event = *static_cast<wlr_output_power_v1_set_mode_event*>(data);
+	const auto& event = *static_cast<wlr_output_power_v1_set_mode_event*>(data);
 
 	if (event.mode == ZWLR_OUTPUT_POWER_V1_MODE_ON) {
 		wlr_output_enable(event.output, true);
@@ -174,12 +182,12 @@ static void output_power_manager_set_mode_notify(wl_listener* listener, void* da
  * client, either a toplevel (application window) or popup. */
 static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 	Server& server = magpie_container_of(listener, server, xdg_shell_new_xdg_surface);
-	auto& xdg_surface = *static_cast<wlr_xdg_surface*>(data);
+	const auto& xdg_surface = *static_cast<wlr_xdg_surface*>(data);
 
 	if (xdg_surface.role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
 		new XdgView(server, *xdg_surface.toplevel);
 	} else if (xdg_surface.role == WLR_XDG_SURFACE_ROLE_POPUP) {
-		auto* surface = static_cast<Surface*>(xdg_surface.popup->parent->data);
+		const auto* surface = static_cast<Surface*>(xdg_surface.popup->parent->data);
 		new Popup(*surface, *xdg_surface.popup);
 	}
 }
@@ -202,13 +210,13 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 
 static void request_activation_notify(wl_listener* listener, void* data) {
 	Server& server = magpie_container_of(listener, server, activation_request_activation);
-	auto* event = static_cast<wlr_xdg_activation_v1_request_activate_event*>(data);
+	const auto* event = static_cast<wlr_xdg_activation_v1_request_activate_event*>(data);
 
 	if (!wlr_surface_is_xdg_surface(event->surface)) {
 		return;
 	}
 
-	wlr_xdg_surface* xdg_surface = wlr_xdg_surface_from_wlr_surface(event->surface);
+	const wlr_xdg_surface* xdg_surface = wlr_xdg_surface_from_wlr_surface(event->surface);
 	auto* view = dynamic_cast<View*>(static_cast<Surface*>(xdg_surface->surface->data));
 	if (view != nullptr && xdg_surface->mapped) {
 		server.focus_view(view, xdg_surface->surface);
@@ -219,7 +227,7 @@ static void drm_lease_notify(wl_listener* listener, void* data) {
 	Server& server = magpie_container_of(listener, server, drm_lease_request);
 	auto* request = static_cast<wlr_drm_lease_request_v1*>(data);
 
-	wlr_drm_lease_v1* lease = wlr_drm_lease_request_v1_grant(request);
+	const wlr_drm_lease_v1* lease = wlr_drm_lease_request_v1_grant(request);
 	if (lease == nullptr) {
 		wlr_drm_lease_request_v1_reject(request);
 		return;
@@ -248,10 +256,10 @@ void output_layout_change_notify(wl_listener* listener, void* data) {
 
 	wlr_output_configuration_v1* config = wlr_output_configuration_v1_create();
 
-	for (auto* output : server.outputs) {
+	for (const auto* output : std::as_const(server.outputs)) {
 		wlr_output_configuration_head_v1* head = wlr_output_configuration_head_v1_create(config, &output->wlr);
 
-		wlr_box box;
+		wlr_box box = {};
 		wlr_output_layout_get_box(server.output_layout, &output->wlr, &box);
 		if (!wlr_box_empty(&box)) {
 			head->state.x = box.x;
@@ -271,18 +279,18 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 	wlr_output_configuration_head_v1* head;
 	wl_list_for_each(head, &config.heads, link) {
 		Output& output = *static_cast<Output*>(head->state.output->data);
-		bool enabled = head->state.enabled && !output.is_leased;
-		bool adding = enabled && !output.wlr.enabled;
-		bool removing = !enabled && output.wlr.enabled;
+		const bool enabled = head->state.enabled && !output.is_leased;
+		const bool adding = enabled && !output.wlr.enabled;
+		const bool removing = !enabled && output.wlr.enabled;
 
 		wlr_output_enable(&output.wlr, enabled);
 		if (enabled) {
 			if (head->state.mode) {
 				wlr_output_set_mode(&output.wlr, head->state.mode);
 			} else {
-				int32_t width = head->state.custom_mode.width;
-				int32_t height = head->state.custom_mode.height;
-				int32_t refresh = head->state.custom_mode.refresh;
+				const int32_t width = head->state.custom_mode.width;
+				const int32_t height = head->state.custom_mode.height;
+				const int32_t refresh = head->state.custom_mode.refresh;
 				wlr_output_set_custom_mode(&output.wlr, width, height, refresh);
 			}
 
@@ -301,7 +309,7 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 		}
 
 		if (enabled) {
-			wlr_box box;
+			wlr_box box = {};
 			wlr_output_layout_get_box(server.output_layout, &output.wlr, &box);
 			if (box.x != head->state.x || box.y != head->state.y) {
 				/* This overrides the automatic layout */

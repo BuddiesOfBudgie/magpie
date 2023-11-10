@@ -16,11 +16,11 @@ class Output {
   public:
 	struct Listeners {
 		std::reference_wrapper<Output> parent;
-		wl_listener enable;
-		wl_listener mode;
-		wl_listener frame;
-		wl_listener destroy;
-		Listeners(Output& parent) noexcept : parent(parent) {}
+		wl_listener enable = {};
+		wl_listener mode = {};
+		wl_listener frame = {};
+		wl_listener destroy = {};
+		explicit Listeners(Output& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -29,18 +29,18 @@ class Output {
   public:
 	Server& server;
 	wlr_output& wlr;
-	wlr_scene_output* scene_output;
-	wlr_box full_area;
-	wlr_box usable_area;
+	wlr_scene_output* scene_output = nullptr;
+	wlr_box full_area = {};
+	wlr_box usable_area = {};
 	std::set<Layer*> layers;
-	bool is_leased;
+	bool is_leased = false;
 
-	Output(Server& server, wlr_output& output) noexcept;
+	Output(Server& server, wlr_output& wlr) noexcept;
 	~Output() noexcept;
 
 	void update_layout();
-	wlr_box full_area_in_layout_coords() const;
-	wlr_box usable_area_in_layout_coords() const;
+	[[nodiscard]] wlr_box full_area_in_layout_coords() const;
+	[[nodiscard]] wlr_box usable_area_in_layout_coords() const;
 };
 
 #endif

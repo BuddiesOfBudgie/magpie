@@ -13,10 +13,10 @@ class Keyboard {
   public:
 	struct Listeners {
 		std::reference_wrapper<Keyboard> parent;
-		wl_listener modifiers;
-		wl_listener key;
-		wl_listener destroy;
-		Listeners(Keyboard& parent) noexcept : parent(parent) {}
+		wl_listener modifiers = {};
+		wl_listener key = {};
+		wl_listener destroy = {};
+		explicit Listeners(Keyboard& parent) noexcept : parent(parent) {}
 	};
 
   private:

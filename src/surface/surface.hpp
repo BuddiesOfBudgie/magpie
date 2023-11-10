@@ -14,11 +14,11 @@ enum SurfaceType { MAGPIE_SURFACE_TYPE_VIEW, MAGPIE_SURFACE_TYPE_LAYER, MAGPIE_S
 struct Surface {
 	wlr_scene_node* scene_node = nullptr;
 
-	virtual ~Surface() noexcept {};
+	virtual ~Surface() noexcept = default;
 
-	virtual constexpr Server& get_server() const = 0;
-	virtual constexpr wlr_surface* get_wlr_surface() const = 0;
-	virtual constexpr bool is_view() const = 0;
+	[[nodiscard]] virtual constexpr Server& get_server() const = 0;
+	[[nodiscard]] virtual constexpr wlr_surface* get_wlr_surface() const = 0;
+	[[nodiscard]] virtual constexpr bool is_view() const = 0;
 };
 
 #endif

@@ -11,7 +11,6 @@
 #include <wlr/backend/multi.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_seat.h>
-#include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
 /* This event is raised by the keyboard base wlr_input_device to signal
@@ -22,7 +21,7 @@ static void keyboard_handle_destroy(wl_listener* listener, void* data) {
 	(void) data;
 
 	std::vector<Keyboard*>& keyboards = keyboard.seat.keyboards;
-	(void) std::remove(keyboards.begin(), keyboards.end(), &keyboard);
+	(void) std::ranges::remove(keyboards, &keyboard).begin();
 
 	delete &keyboard;
 }
@@ -32,10 +31,11 @@ static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_
 
 	if (modifiers == WLR_MODIFIER_ALT) {
 		switch (sym) {
-			case XKB_KEY_Escape:
+			case XKB_KEY_Escape: {
 				wl_display_terminate(server.display);
 				return true;
-			case XKB_KEY_Tab:
+			}
+			case XKB_KEY_Tab: {
 				/* Cycle to the next view */
 				if (server.views.size() < 2) {
 					return true;
@@ -43,12 +43,15 @@ static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_
 				View* next_view = *server.views.begin()++;
 				server.focus_view(next_view);
 				return true;
+			}
+			default: {
+				break;
+			}
 		}
 	} else if (sym >= XKB_KEY_XF86Switch_VT_1 && sym <= XKB_KEY_XF86Switch_VT_12) {
 		if (wlr_backend_is_multi(keyboard.seat.server.backend)) {
-			wlr_session* session = wlr_backend_get_session(keyboard.seat.server.backend);
-			if (session) {
-				unsigned vt = sym - XKB_KEY_XF86Switch_VT_1 + 1;
+			if (wlr_session* session = wlr_backend_get_session(keyboard.seat.server.backend)) {
+				const unsigned vt = sym - XKB_KEY_XF86Switch_VT_1 + 1;
 				wlr_session_change_vt(session, vt);
 			}
 		}
@@ -62,19 +65,19 @@ static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_
 static void keyboard_handle_key(wl_listener* listener, void* data) {
 	const Keyboard& keyboard = magpie_container_of(listener, keyboard, key);
 
-	auto* event = static_cast<wlr_keyboard_key_event*>(data);
+	const auto* event = static_cast<wlr_keyboard_key_event*>(data);
 	wlr_seat* seat = keyboard.seat.wlr;
 
 	wlr_idle_notifier_v1_notify_activity(keyboard.seat.server.idle_notifier, seat);
 
 	/* Translate libinput keycode -> xkbcommon */
-	uint32_t keycode = event->keycode + 8;
+	const uint32_t keycode = event->keycode + 8;
 	/* Get a list of keysyms based on the keymap for this keyboard */
 	const xkb_keysym_t* syms;
-	int nsyms = xkb_state_key_get_syms(keyboard.wlr.xkb_state, keycode, &syms);
+	const int nsyms = xkb_state_key_get_syms(keyboard.wlr.xkb_state, keycode, &syms);
 
 	bool handled = false;
-	uint32_t modifiers = wlr_keyboard_get_modifiers(&keyboard.wlr);
+	const uint32_t modifiers = wlr_keyboard_get_modifiers(&keyboard.wlr);
 	if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
 		if (modifiers & WLR_MODIFIER_ALT) {
 			/* If alt is held down and this button was _pressed_, we attempt to
@@ -113,7 +116,7 @@ Keyboard::Keyboard(Seat& seat, wlr_keyboard& keyboard) noexcept : listeners(*thi
 	/* We need to prepare an XKB keymap and assign it to the keyboard. This
 	 * assumes the defaults (e.g. layout = "us"). */
 	xkb_context* context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-	xkb_keymap* keymap = xkb_keymap_new_from_names(context, NULL, XKB_KEYMAP_COMPILE_NO_FLAGS);
+	xkb_keymap* keymap = xkb_keymap_new_from_names(context, nullptr, XKB_KEYMAP_COMPILE_NO_FLAGS);
 
 	wlr_keyboard_set_keymap(&keyboard, keymap);
 	xkb_keymap_unref(keymap);

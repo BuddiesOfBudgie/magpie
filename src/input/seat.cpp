@@ -27,7 +27,7 @@ static void new_input_notify(wl_listener* listener, void* data) {
 
 static void new_virtual_pointer_notify(wl_listener* listener, void* data) {
 	Seat& seat = magpie_container_of(listener, seat, new_virtual_pointer);
-	auto* event = static_cast<wlr_virtual_pointer_v1_new_pointer_event*>(data);
+	const auto* event = static_cast<wlr_virtual_pointer_v1_new_pointer_event*>(data);
 
 	seat.new_input_device(&event->new_pointer->pointer.base);
 }
@@ -43,7 +43,7 @@ static void new_pointer_constraint_notify(wl_listener* listener, void* data) {
 	Seat& seat = magpie_container_of(listener, seat, new_pointer_constraint);
 	auto* wlr_constraint = static_cast<wlr_pointer_constraint_v1*>(data);
 
-	auto* focused_surface = seat.wlr->keyboard_state.focused_surface;
+	const auto* focused_surface = seat.wlr->keyboard_state.focused_surface;
 	if (focused_surface == wlr_constraint->surface) {
 		// only allow creating constraints for the focused view
 		seat.set_constraint(wlr_constraint);
@@ -52,9 +52,9 @@ static void new_pointer_constraint_notify(wl_listener* listener, void* data) {
 
 static void request_cursor_notify(wl_listener* listener, void* data) {
 	const Seat& seat = magpie_container_of(listener, seat, request_cursor);
-	auto* event = static_cast<wlr_seat_pointer_request_set_cursor_event*>(data);
+	const auto* event = static_cast<wlr_seat_pointer_request_set_cursor_event*>(data);
 
-	wlr_seat_client* focused_client = seat.wlr->pointer_state.focused_client;
+	const wlr_seat_client* focused_client = seat.wlr->pointer_state.focused_client;
 
 	if (focused_client == event->seat_client) {
 		/* Once we've vetted the client, we can tell the cursor to use the
@@ -71,7 +71,7 @@ static void request_cursor_notify(wl_listener* listener, void* data) {
  */
 static void request_set_selection_notify(wl_listener* listener, void* data) {
 	const Seat& seat = magpie_container_of(listener, seat, request_set_selection);
-	auto* event = static_cast<wlr_seat_request_set_selection_event*>(data);
+	const auto* event = static_cast<wlr_seat_request_set_selection_event*>(data);
 
 	wlr_seat_set_selection(seat.wlr, event->source, event->serial);
 }
@@ -138,7 +138,7 @@ void Seat::set_constraint(wlr_pointer_constraint_v1* wlr_constraint) {
 	}
 
 	if (wlr_constraint != nullptr) {
-		current_constraint = *(new PointerConstraint(*this, *wlr_constraint));
+		current_constraint = *new PointerConstraint(*this, *wlr_constraint);
 		current_constraint.value().get().activate();
 	}
 }

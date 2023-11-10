@@ -8,16 +8,16 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
-class Popup : public Surface {
+class Popup final : public Surface {
   public:
 	struct Listeners {
 		std::reference_wrapper<Popup> parent;
-		wl_listener map;
-		wl_listener unmap;
-		wl_listener destroy;
-		wl_listener commit;
-		wl_listener new_popup;
-		Listeners(Popup& parent) noexcept : parent(parent) {}
+		wl_listener map = {};
+		wl_listener unmap = {};
+		wl_listener destroy = {};
+		wl_listener commit = {};
+		wl_listener new_popup = {};
+		explicit Listeners(Popup& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -28,12 +28,12 @@ class Popup : public Surface {
 	const Surface& parent;
 	wlr_xdg_popup& wlr;
 
-	Popup(const Surface& parent, wlr_xdg_popup& xdg_popup) noexcept;
-	~Popup() noexcept;
+	Popup(const Surface& parent, wlr_xdg_popup& wlr) noexcept;
+	~Popup() noexcept override;
 
-	constexpr wlr_surface* get_wlr_surface() const override;
-	constexpr Server& get_server() const override;
-	constexpr bool is_view() const override;
+	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
+	[[nodiscard]] constexpr Server& get_server() const override;
+	[[nodiscard]] constexpr bool is_view() const override;
 };
 
 #endif

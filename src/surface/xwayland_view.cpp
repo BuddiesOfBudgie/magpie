@@ -10,10 +10,7 @@
 #include <wayland-server-core.h>
 
 #include "wlr-wrap-start.hpp"
-#include <wlr/types/wlr_cursor.h>
-#include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_seat.h>
-#include <wlr/util/edges.h>
 #include "wlr-wrap-end.hpp"
 
 /* Called when the surface is mapped, or ready to display on-screen. */
@@ -45,7 +42,7 @@ static void xwayland_surface_request_configure_notify(wl_listener* listener, voi
 	XWaylandView& view = magpie_container_of(listener, view, request_configure);
 
 	wlr_xwayland_surface& surface = view.xwayland_surface;
-	auto* event = static_cast<wlr_xwayland_surface_configure_event*>(data);
+	const auto* event = static_cast<wlr_xwayland_surface_configure_event*>(data);
 
 	wlr_xwayland_surface_configure(&surface, event->x, event->y, event->width, event->height);
 	view.current = {event->x, event->y, event->width, event->height};
@@ -59,7 +56,7 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, void* da
 	XWaylandView& view = magpie_container_of(listener, view, set_geometry);
 	(void) data;
 
-	wlr_xwayland_surface& surface = view.xwayland_surface;
+	const wlr_xwayland_surface& surface = view.xwayland_surface;
 
 	view.current = {surface.x, surface.y, surface.width, surface.height};
 	if (surface.mapped) {
@@ -87,7 +84,7 @@ static void xwayland_surface_request_move_notify(wl_listener* listener, void* da
  * client, to prevent the client from requesting this whenever they want. */
 static void xwayland_surface_request_resize_notify(wl_listener* listener, void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, request_resize);
-	auto* event = static_cast<wlr_xwayland_resize_event*>(data);
+	const auto* event = static_cast<wlr_xwayland_resize_event*>(data);
 
 	view.set_placement(VIEW_PLACEMENT_STACKING);
 	view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
@@ -145,35 +142,35 @@ static void xwayland_surface_set_parent_notify(wl_listener* listener, void* data
 	}
 }
 
-XWaylandView::XWaylandView(Server& server, wlr_xwayland_surface& xwayland_surface) noexcept
-	: listeners(*this), server(server), xwayland_surface(xwayland_surface) {
-	this->xwayland_surface = xwayland_surface;
+XWaylandView::XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept
+	: listeners(*this), server(server), xwayland_surface(surface) {
+	this->xwayland_surface = surface;
 
 	/* Listen to the various events it can emit */
 	listeners.map.notify = xwayland_surface_map_notify;
-	wl_signal_add(&xwayland_surface.events.map, &listeners.map);
+	wl_signal_add(&surface.events.map, &listeners.map);
 	listeners.unmap.notify = xwayland_surface_unmap_notify;
-	wl_signal_add(&xwayland_surface.events.unmap, &listeners.unmap);
+	wl_signal_add(&surface.events.unmap, &listeners.unmap);
 	listeners.destroy.notify = xwayland_surface_destroy_notify;
-	wl_signal_add(&xwayland_surface.events.destroy, &listeners.destroy);
+	wl_signal_add(&surface.events.destroy, &listeners.destroy);
 	listeners.request_configure.notify = xwayland_surface_request_configure_notify;
-	wl_signal_add(&xwayland_surface.events.request_configure, &listeners.request_configure);
+	wl_signal_add(&surface.events.request_configure, &listeners.request_configure);
 	listeners.request_move.notify = xwayland_surface_request_move_notify;
-	wl_signal_add(&xwayland_surface.events.request_move, &listeners.request_move);
+	wl_signal_add(&surface.events.request_move, &listeners.request_move);
 	listeners.request_resize.notify = xwayland_surface_request_resize_notify;
-	wl_signal_add(&xwayland_surface.events.request_resize, &listeners.request_resize);
+	wl_signal_add(&surface.events.request_resize, &listeners.request_resize);
 	listeners.request_maximize.notify = xwayland_surface_request_maximize_notify;
-	wl_signal_add(&xwayland_surface.events.request_maximize, &listeners.request_maximize);
+	wl_signal_add(&surface.events.request_maximize, &listeners.request_maximize);
 	listeners.request_fullscreen.notify = xwayland_surface_request_fullscreen_notify;
-	wl_signal_add(&xwayland_surface.events.request_fullscreen, &listeners.request_fullscreen);
+	wl_signal_add(&surface.events.request_fullscreen, &listeners.request_fullscreen);
 	listeners.set_geometry.notify = xwayland_surface_set_geometry_notify;
-	wl_signal_add(&xwayland_surface.events.set_geometry, &listeners.set_geometry);
+	wl_signal_add(&surface.events.set_geometry, &listeners.set_geometry);
 	listeners.set_title.notify = xwayland_surface_set_title_notify;
-	wl_signal_add(&xwayland_surface.events.set_title, &listeners.set_title);
+	wl_signal_add(&surface.events.set_title, &listeners.set_title);
 	listeners.set_class.notify = xwayland_surface_set_class_notify;
-	wl_signal_add(&xwayland_surface.events.set_class, &listeners.set_class);
+	wl_signal_add(&surface.events.set_class, &listeners.set_class);
 	listeners.set_parent.notify = xwayland_surface_set_parent_notify;
-	wl_signal_add(&xwayland_surface.events.set_parent, &listeners.set_parent);
+	wl_signal_add(&surface.events.set_parent, &listeners.set_parent);
 }
 
 XWaylandView::~XWaylandView() noexcept {
@@ -197,13 +194,8 @@ constexpr Server& XWaylandView::get_server() const {
 	return server;
 }
 
-const wlr_box XWaylandView::get_geometry() const {
-	wlr_box box;
-	box.x = xwayland_surface.x;
-	box.y = xwayland_surface.y;
-	box.width = xwayland_surface.width;
-	box.height = xwayland_surface.height;
-	return box;
+constexpr wlr_box XWaylandView::get_geometry() const {
+	return {xwayland_surface.x, xwayland_surface.y, xwayland_surface.width, xwayland_surface.height};
 }
 
 void XWaylandView::map() {
@@ -219,7 +211,7 @@ void XWaylandView::map() {
 	scene_node->data = this;
 
 	if (xwayland_surface.parent != nullptr) {
-		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(xwayland_surface.parent->data));
+		const auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(xwayland_surface.parent->data));
 		if (m_view != nullptr) {
 			wlr_scene_node_reparent(scene_node, m_view->scene_node->parent);
 			toplevel_handle->set_parent(m_view->toplevel_handle);
@@ -253,7 +245,7 @@ void XWaylandView::unmap() {
 	}
 
 	if (server.seat->wlr->keyboard_state.focused_surface == xwayland_surface.surface) {
-		server.seat->wlr->keyboard_state.focused_surface = NULL;
+		server.seat->wlr->keyboard_state.focused_surface = nullptr;
 	}
 
 	wlr_scene_node_destroy(scene_node);
@@ -262,18 +254,30 @@ void XWaylandView::unmap() {
 	toplevel_handle.reset();
 }
 
+static constexpr int16_t trunc(const int32_t int32) {
+	if (int32 > INT16_MAX) {
+		return INT16_MAX;
+	}
+
+	if (int32 < INT16_MIN) {
+		return INT16_MIN;
+	}
+
+	return static_cast<int16_t>(int32);
+}
+
 void XWaylandView::impl_set_position(const int new_x, const int new_y) {
-	wlr_xwayland_surface_configure(&xwayland_surface, new_x, new_y, current.width, current.height);
+	wlr_xwayland_surface_configure(&xwayland_surface, trunc(new_x), trunc(new_y), current.width, current.height);
 }
 
 void XWaylandView::impl_set_size(const int new_width, const int new_height) {
-	wlr_xwayland_surface_configure(&xwayland_surface, current.x, current.y, new_width, new_height);
+	wlr_xwayland_surface_configure(&xwayland_surface, trunc(current.x), trunc(current.y), new_width, new_height);
 }
 
-void XWaylandView::impl_set_activated(bool activated) {
+void XWaylandView::impl_set_activated(const bool activated) {
 	wlr_xwayland_surface_activate(&xwayland_surface, activated);
 	if (activated) {
-		wlr_xwayland_surface_restack(&xwayland_surface, NULL, XCB_STACK_MODE_ABOVE);
+		wlr_xwayland_surface_restack(&xwayland_surface, nullptr, XCB_STACK_MODE_ABOVE);
 	}
 }
 

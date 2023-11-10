@@ -5,9 +5,11 @@
 #include "types.hpp"
 
 #include <set>
+#include <utility>
 
 #include <wlr-wrap-start.hpp>
 #include <wlr/types/wlr_layer_shell_v1.h>
+#include <wlr/types/wlr_output_layout.h>
 #include <wlr-wrap-end.hpp>
 
 static void output_enable_notify(wl_listener* listener, void* data) {
@@ -32,19 +34,20 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 	Output& output = magpie_container_of(listener, output, frame);
 	(void) data;
 
+	if (output.scene_output == nullptr) {
+		output.scene_output = wlr_scene_get_scene_output(output.server.scene, &output.wlr);
+	}
+
 	if (output.scene_output == nullptr || output.is_leased || !output.wlr.enabled) {
 		return;
 	}
 
-	wlr_scene* scene = output.server.scene;
-	wlr_scene_output* scene_output = wlr_scene_get_scene_output(scene, &output.wlr);
-
 	/* Render the scene if needed and commit the output */
-	wlr_scene_output_commit(scene_output);
+	wlr_scene_output_commit(output.scene_output);
 
-	timespec now;
+	timespec now = {};
 	timespec_get(&now, TIME_UTC);
-	wlr_scene_output_send_frame_done(scene_output, &now);
+	wlr_scene_output_send_frame_done(output.scene_output, &now);
 }
 
 static void output_destroy_notify(wl_listener* listener, void* data) {
@@ -52,7 +55,7 @@ static void output_destroy_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	output.server.outputs.erase(&output);
-	for (auto* layer : output.layers) {
+	for (const auto* layer : std::as_const(output.layers)) {
 		wlr_layer_surface_v1_destroy(&layer->layer_surface);
 	}
 
@@ -62,7 +65,7 @@ static void output_destroy_notify(wl_listener* listener, void* data) {
 Output::Output(Server& server, wlr_output& wlr) noexcept : listeners(*this), server(server), wlr(wlr) {
 	wlr.data = this;
 
-	is_leased = false;
+	scene_output = wlr_scene_get_scene_output(server.scene, &wlr);
 
 	listeners.enable.notify = output_enable_notify;
 	wl_signal_add(&wlr.events.enable, &listeners.enable);
@@ -81,7 +84,7 @@ Output::~Output() noexcept {
 }
 
 void Output::update_layout() {
-	wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, &wlr);
+	const wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, &wlr);
 
 	full_area.x = scene_output->x;
 	full_area.y = scene_output->y;
@@ -89,7 +92,7 @@ void Output::update_layout() {
 
 	usable_area = full_area;
 
-	for (auto* layer : layers) {
+	for (const auto* layer : std::as_const(layers)) {
 		wlr_scene_layer_surface_v1_configure(layer->scene_layer_surface, &full_area, &usable_area);
 	}
 }
@@ -99,8 +102,8 @@ wlr_box Output::full_area_in_layout_coords() const {
 	wlr_output_layout_output_coords(server.output_layout, &wlr, &layout_x, &layout_y);
 
 	wlr_box box = full_area;
-	box.x += layout_x;
-	box.y += layout_y;
+	box.x += static_cast<int>(std::round(layout_x));
+	box.y += static_cast<int>(std::round(layout_y));
 	return box;
 }
 
@@ -109,7 +112,7 @@ wlr_box Output::usable_area_in_layout_coords() const {
 	wlr_output_layout_output_coords(server.output_layout, &wlr, &layout_x, &layout_y);
 
 	wlr_box box = usable_area;
-	box.x += layout_x;
-	box.y += layout_y;
+	box.x += static_cast<int>(std::round(layout_x));
+	box.y += static_cast<int>(std::round(layout_y));
 	return box;
 }

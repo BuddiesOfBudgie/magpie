@@ -1,5 +1,3 @@
-#define _POSIX_C_SOURCE 200809L
-
 #include "xwayland.hpp"
 
 #include "input/seat.hpp"
@@ -31,9 +29,8 @@ static void ready_notify(wl_listener* listener, void* data) {
 
 	wlr_xwayland_set_seat(xwayland.wlr, xwayland.server.seat->wlr);
 
-	xcb_connection_t* xcb_conn = xcb_connect(NULL, NULL);
-	int err = xcb_connection_has_error(xcb_conn);
-	if (err) {
+	xcb_connection_t* xcb_conn = xcb_connect(nullptr, nullptr);
+	if (const int err = xcb_connection_has_error(xcb_conn)) {
 		wlr_log(WLR_ERROR, "XCB connect failed: %d", err);
 		return;
 	}
@@ -43,14 +40,14 @@ static void ready_notify(wl_listener* listener, void* data) {
 		cookies[i] = xcb_intern_atom(xcb_conn, 0, strlen(atom_map[i]), atom_map[i]);
 	}
 	for (size_t i = 0; i < ATOM_LAST; i++) {
-		xcb_generic_error_t* error = NULL;
+		xcb_generic_error_t* error = nullptr;
 		xcb_intern_atom_reply_t* reply = xcb_intern_atom_reply(xcb_conn, cookies[i], &error);
-		if (reply != NULL && error == NULL) {
+		if (reply != nullptr && error == nullptr) {
 			xwayland.atoms[i] = reply->atom;
 		}
 		free(reply);
 
-		if (error != NULL) {
+		if (error != nullptr) {
 			wlr_log(WLR_ERROR, "could not resolve atom %s: X11 error code %d", atom_map[i], error->error_code);
 			free(error);
 			break;

@@ -14,7 +14,7 @@
 #include <wlr/xwayland.h>
 #include "wlr-wrap-end.hpp"
 
-struct View : public Surface {
+struct View : Surface {
 	ViewPlacement prev_placement = VIEW_PLACEMENT_STACKING;
 	ViewPlacement curr_placement = VIEW_PLACEMENT_STACKING;
 	bool is_minimized = false;
@@ -23,56 +23,56 @@ struct View : public Surface {
 	wlr_box previous;
 	std::optional<ForeignToplevelHandle> toplevel_handle = {};
 
-	virtual ~View() noexcept {};
+	~View() noexcept override = default;
 
-	virtual const wlr_box get_geometry() const = 0;
+	[[nodiscard]] virtual wlr_box get_geometry() const = 0;
 	virtual void map() = 0;
 	virtual void unmap() = 0;
 
-	constexpr bool is_view() const override {
+	[[nodiscard]] constexpr bool is_view() const override {
 		return true;
 	}
-	void begin_interactive(const CursorMode mode, const uint32_t edges);
-	void set_position(const int new_x, const int new_y);
-	void set_size(const int new_width, const int new_height);
-	void set_activated(const bool activated);
-	void set_placement(const ViewPlacement placement, const bool force = false);
-	void set_minimized(const bool minimized);
+	void begin_interactive(CursorMode mode, uint32_t edges);
+	void set_position(int new_x, int new_y);
+	void set_size(int new_width, int new_height);
+	void set_activated(bool activated);
+	void set_placement(ViewPlacement new_placement, bool force = false);
+	void set_minimized(bool minimized);
 	void toggle_maximize();
 	void toggle_fullscreen();
 
   private:
-	const std::optional<const Output*> find_output_for_maximize();
+	[[nodiscard]] std::optional<const Output*> find_output_for_maximize() const;
 	void stack();
 	bool maximize();
 	bool fullscreen();
 
   protected:
-	virtual void impl_set_position(const int new_x, const int new_y) = 0;
-	virtual void impl_set_size(const int new_width, const int new_height) = 0;
-	virtual void impl_set_activated(const bool activated) = 0;
-	virtual void impl_set_fullscreen(const bool fullscreen) = 0;
-	virtual void impl_set_maximized(const bool maximized) = 0;
-	virtual void impl_set_minimized(const bool minimized) = 0;
+	virtual void impl_set_position(int new_x, int new_y) = 0;
+	virtual void impl_set_size(int new_width, int new_height) = 0;
+	virtual void impl_set_activated(bool activated) = 0;
+	virtual void impl_set_fullscreen(bool fullscreen) = 0;
+	virtual void impl_set_maximized(bool maximized) = 0;
+	virtual void impl_set_minimized(bool minimized) = 0;
 };
 
-class XdgView : public View {
+class XdgView final : public View {
   public:
 	struct Listeners {
 		std::reference_wrapper<XdgView> parent;
-		wl_listener map;
-		wl_listener unmap;
-		wl_listener destroy;
-		wl_listener commit;
-		wl_listener request_move;
-		wl_listener request_resize;
-		wl_listener request_maximize;
-		wl_listener request_minimize;
-		wl_listener request_fullscreen;
-		wl_listener set_title;
-		wl_listener set_app_id;
-		wl_listener set_parent;
-		Listeners(XdgView& parent) noexcept : parent(parent) {}
+		wl_listener map = {};
+		wl_listener unmap = {};
+		wl_listener destroy = {};
+		wl_listener commit = {};
+		wl_listener request_move = {};
+		wl_listener request_resize = {};
+		wl_listener request_maximize = {};
+		wl_listener request_minimize = {};
+		wl_listener request_fullscreen = {};
+		wl_listener set_title = {};
+		wl_listener set_app_id = {};
+		wl_listener set_parent = {};
+		explicit Listeners(XdgView& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -84,11 +84,11 @@ class XdgView : public View {
 	wlr_xdg_toplevel& xdg_toplevel;
 
 	XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept;
-	~XdgView() noexcept;
+	~XdgView() noexcept override;
 
-	constexpr wlr_surface* get_wlr_surface() const override;
-	constexpr Server& get_server() const override;
-	const wlr_box get_geometry() const override;
+	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
+	[[nodiscard]] constexpr Server& get_server() const override;
+	[[nodiscard]] wlr_box get_geometry() const override;
 	void map() override;
 	void unmap() override;
 
@@ -101,24 +101,24 @@ class XdgView : public View {
 	void impl_set_minimized(bool minimized) override;
 };
 
-class XWaylandView : public View {
+class XWaylandView final : public View {
   public:
 	struct Listeners {
 		std::reference_wrapper<XWaylandView> parent;
-		wl_listener map;
-		wl_listener unmap;
-		wl_listener destroy;
-		wl_listener commit;
-		wl_listener request_configure;
-		wl_listener request_move;
-		wl_listener request_resize;
-		wl_listener request_maximize;
-		wl_listener request_fullscreen;
-		wl_listener set_geometry;
-		wl_listener set_title;
-		wl_listener set_class;
-		wl_listener set_parent;
-		Listeners(XWaylandView& parent) noexcept : parent(parent) {}
+		wl_listener map = {};
+		wl_listener unmap = {};
+		wl_listener destroy = {};
+		wl_listener commit = {};
+		wl_listener request_configure = {};
+		wl_listener request_move = {};
+		wl_listener request_resize = {};
+		wl_listener request_maximize = {};
+		wl_listener request_fullscreen = {};
+		wl_listener set_geometry = {};
+		wl_listener set_title = {};
+		wl_listener set_class = {};
+		wl_listener set_parent = {};
+		explicit Listeners(XWaylandView& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -129,11 +129,11 @@ class XWaylandView : public View {
 	wlr_xwayland_surface& xwayland_surface;
 
 	XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept;
-	~XWaylandView() noexcept;
+	~XWaylandView() noexcept override;
 
-	constexpr wlr_surface* get_wlr_surface() const override;
-	constexpr Server& get_server() const override;
-	const wlr_box get_geometry() const override;
+	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
+	[[nodiscard]] constexpr Server& get_server() const override;
+	[[nodiscard]] constexpr wlr_box get_geometry() const override;
 	void map() override;
 	void unmap() override;
 

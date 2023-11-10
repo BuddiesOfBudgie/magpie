@@ -14,13 +14,13 @@ class ForeignToplevelHandle {
   public:
 	struct Listeners {
 		std::reference_wrapper<ForeignToplevelHandle> parent;
-		wl_listener request_maximize;
-		wl_listener request_minimize;
-		wl_listener request_activate;
-		wl_listener request_fullscreen;
-		wl_listener request_close;
-		wl_listener set_rectangle;
-		Listeners(ForeignToplevelHandle& parent) noexcept : parent(parent) {}
+		wl_listener request_maximize = {};
+		wl_listener request_minimize = {};
+		wl_listener request_activate = {};
+		wl_listener request_fullscreen = {};
+		wl_listener request_close = {};
+		wl_listener set_rectangle = {};
+		explicit Listeners(ForeignToplevelHandle& parent) noexcept : parent(parent) {}
 	};
 
   private:
@@ -30,19 +30,19 @@ class ForeignToplevelHandle {
 	View& view;
 	wlr_foreign_toplevel_handle_v1& handle;
 
-	ForeignToplevelHandle(View& view) noexcept;
+	explicit ForeignToplevelHandle(View& view) noexcept;
 	~ForeignToplevelHandle() noexcept;
 
-	void set_title(const char* title);
-	void set_app_id(const char* app_id);
-	void set_parent(std::optional<std::reference_wrapper<const ForeignToplevelHandle>> parent);
-	void set_placement(const ViewPlacement placement);
-	void set_maximized(const bool maximized);
-	void set_fullscreen(const bool fullscreen);
-	void set_minimized(const bool minimized);
-	void set_activated(const bool activated);
-	void output_enter(const Output& output);
-	void output_leave(const Output& output);
+	void set_title(const char* title) const;
+	void set_app_id(const char* app_id) const;
+	void set_parent(std::optional<std::reference_wrapper<const ForeignToplevelHandle>> parent) const;
+	void set_placement(ViewPlacement placement) const;
+	void set_maximized(bool maximized) const;
+	void set_fullscreen(bool fullscreen) const;
+	void set_minimized(bool minimized) const;
+	void set_activated(bool activated) const;
+	void output_enter(const Output& output) const;
+	void output_leave(const Output& output) const;
 };
 
 #endif
