@@ -1,23 +1,23 @@
-#define _POSIX_C_SOURCE 200809L
-
 #include "server.hpp"
 
 #include <cstdio>
 #include <getopt.h>
+#include <string>
 #include <unistd.h>
+#include <utility>
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/backend.h>
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-int main(int argc, char** argv) {
-	char* startup_cmd = NULL;
+int main(const int argc, char** argv) {
+	std::vector<std::string> startup_cmds;
 	int c;
 	while ((c = getopt(argc, argv, "s:h")) != -1) {
 		switch (c) {
 			case 's':
-				startup_cmd = optarg;
+				startup_cmds.emplace_back(optarg);
 				break;
 			default:
 				std::printf("Usage: %s [-s startup command]\n", argv[0]);
@@ -30,9 +30,9 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	wlr_log_init(WLR_INFO, NULL);
+	wlr_log_init(WLR_INFO, nullptr);
 
-	Server server = Server();
+	const Server server = Server();
 
 	/* Add a Unix socket to the Wayland display. */
 	const char* socket = wl_display_add_socket_auto(server.display);
@@ -51,8 +51,10 @@ int main(int argc, char** argv) {
 	std::printf("Running compositor on wayland display '%s'\n", socket);
 	setenv("WAYLAND_DISPLAY", socket, true);
 
-	if (startup_cmd && fork() == 0) {
-		execl("/bin/sh", "/bin/sh", "-c", startup_cmd, nullptr);
+	for (const auto& cmd : std::as_const(startup_cmds)) {
+		if (fork() == 0) {
+			execl("/bin/sh", "/bin/sh", "-c", cmd.c_str(), nullptr);
+		}
 	}
 
 	/* Run the Wayland event loop. This does not return until you exit the
