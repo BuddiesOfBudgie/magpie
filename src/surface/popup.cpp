@@ -41,9 +41,9 @@ Popup::Popup(const Surface& parent, wlr_xdg_popup& wlr) noexcept
 	wlr.base->surface->data = this;
 
 	listeners.map.notify = popup_map_notify;
-	wl_signal_add(&wlr.base->events.map, &listeners.map);
+	wl_signal_add(&wlr.base->surface->events.map, &listeners.map);
 	listeners.unmap.notify = popup_unmap_notify;
-	wl_signal_add(&wlr.base->events.unmap, &listeners.unmap);
+	wl_signal_add(&wlr.base->surface->events.unmap, &listeners.unmap);
 	listeners.destroy.notify = popup_destroy_notify;
 	wl_signal_add(&wlr.base->events.destroy, &listeners.destroy);
 	listeners.commit.notify = popup_commit_notify;

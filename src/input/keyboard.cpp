@@ -9,6 +9,7 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/backend/multi.h>
+#include <wlr/backend/session.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_seat.h>
 #include "wlr-wrap-end.hpp"
@@ -50,10 +51,8 @@ static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_
 		}
 	} else if (sym >= XKB_KEY_XF86Switch_VT_1 && sym <= XKB_KEY_XF86Switch_VT_12) {
 		if (wlr_backend_is_multi(keyboard.seat.server.backend)) {
-			if (wlr_session* session = wlr_backend_get_session(keyboard.seat.server.backend)) {
-				const unsigned vt = sym - XKB_KEY_XF86Switch_VT_1 + 1;
-				wlr_session_change_vt(session, vt);
-			}
+			const unsigned vt = sym - XKB_KEY_XF86Switch_VT_1 + 1;
+			wlr_session_change_vt(keyboard.seat.server.session, vt);
 		}
 		return true;
 	}

@@ -144,9 +144,9 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
 	}
 
 	listeners.map.notify = xdg_toplevel_map_notify;
-	wl_signal_add(&toplevel.base->events.map, &listeners.map);
+	wl_signal_add(&toplevel.base->surface->events.map, &listeners.map);
 	listeners.unmap.notify = xdg_toplevel_unmap_notify;
-	wl_signal_add(&toplevel.base->events.unmap, &listeners.unmap);
+	wl_signal_add(&toplevel.base->surface->events.unmap, &listeners.unmap);
 	listeners.destroy.notify = xdg_toplevel_destroy_notify;
 	wl_signal_add(&toplevel.base->events.destroy, &listeners.destroy);
 	listeners.request_move.notify = xdg_toplevel_request_move_notify;

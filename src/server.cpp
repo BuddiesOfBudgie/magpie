@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "wlr-wrap-start.hpp"
+#include <wlr/backend/session.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_data_device.h>
@@ -41,12 +42,10 @@ void Server::focus_view(View* view, wlr_surface* surface) {
 	if (prev_surface) {
 		wlr_surface* previous = seat->wlr->keyboard_state.focused_surface;
 
-		if (wlr_surface_is_xdg_surface(previous)) {
-			const wlr_xdg_surface* xdg_previous = wlr_xdg_surface_from_wlr_surface(previous);
+		if (const auto* xdg_previous = wlr_xdg_surface_try_from_wlr_surface(previous)) {
 			assert(xdg_previous->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 			wlr_xdg_toplevel_set_activated(xdg_previous->toplevel, false);
-		} else if (wlr_surface_is_xwayland_surface(previous)) {
-			wlr_xwayland_surface* xwayland_previous = wlr_xwayland_surface_from_wlr_surface(previous);
+		} else if (auto* xwayland_previous = wlr_xwayland_surface_try_from_wlr_surface(previous)) {
 			wlr_xwayland_surface_activate(xwayland_previous, false);
 		}
 	}
@@ -96,7 +95,7 @@ Surface* Server::surface_at(const double lx, const double ly, wlr_surface** wlr,
 		return nullptr;
 	}
 	wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
-	const wlr_scene_surface* scene_surface = wlr_scene_surface_from_buffer(scene_buffer);
+	const wlr_scene_surface* scene_surface = wlr_scene_surface_try_from_buffer(scene_buffer);
 	if (!scene_surface) {
 		return nullptr;
 	}
@@ -212,13 +211,13 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 	Server& server = magpie_container_of(listener, server, activation_request_activation);
 	const auto* event = static_cast<wlr_xdg_activation_v1_request_activate_event*>(data);
 
-	if (!wlr_surface_is_xdg_surface(event->surface)) {
+	const auto* xdg_surface = wlr_xdg_surface_try_from_wlr_surface(event->surface);
+	if (xdg_surface == nullptr) {
 		return;
 	}
 
-	const wlr_xdg_surface* xdg_surface = wlr_xdg_surface_from_wlr_surface(event->surface);
 	auto* view = dynamic_cast<View*>(static_cast<Surface*>(xdg_surface->surface->data));
-	if (view != nullptr && xdg_surface->mapped) {
+	if (view != nullptr && xdg_surface->surface->mapped) {
 		server.focus_view(view, xdg_surface->surface);
 	}
 }
@@ -313,7 +312,7 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 			wlr_output_layout_get_box(server.output_layout, &output.wlr, &box);
 			if (box.x != head->state.x || box.y != head->state.y) {
 				/* This overrides the automatic layout */
-				wlr_output_layout_move(server.output_layout, &output.wlr, head->state.x, head->state.y);
+				wlr_output_layout_add(server.output_layout, &output.wlr, head->state.x, head->state.y);
 			}
 		}
 
@@ -339,11 +338,14 @@ Server::Server() : listeners(*this) {
 	display = wl_display_create();
 	assert(display);
 
+	session = wlr_session_create(display);
+	assert(session);
+
 	/* The backend is a wlroots feature which abstracts the underlying input and
 	 * output hardware. The autocreate option will choose the most suitable
 	 * backend based on the current environment, such as opening an X11 window
 	 * if an X11 server is running. */
-	backend = wlr_backend_autocreate(display);
+	backend = wlr_backend_autocreate(display, &session);
 	assert(backend);
 
 	/* Autocreates a renderer, either Pixman, GLES2 or Vulkan for us. The user
@@ -368,7 +370,7 @@ Server::Server() : listeners(*this) {
 	 * to dig your fingers in and play with their behavior if you want. Note that
 	 * the clients cannot set the selection directly without compositor approval,
 	 * see the handling of the request_set_selection event below.*/
-	compositor = wlr_compositor_create(display, renderer);
+	compositor = wlr_compositor_create(display, 6, renderer);
 	wlr_subcompositor_create(display);
 	wlr_data_device_manager_create(display);
 
@@ -411,7 +413,7 @@ Server::Server() : listeners(*this) {
 		wlr_scene_node_raise_to_top(&scene_layers[idx]->node);
 	}
 
-	wlr_scene_attach_output_layout(scene, output_layout);
+	scene_layout = wlr_scene_attach_output_layout(scene, output_layout);
 
 	auto* presentation = wlr_presentation_create(display, backend);
 	assert(presentation);
@@ -421,7 +423,7 @@ Server::Server() : listeners(*this) {
 	listeners.xdg_shell_new_xdg_surface.notify = new_xdg_surface_notify;
 	wl_signal_add(&xdg_shell->events.new_surface, &listeners.xdg_shell_new_xdg_surface);
 
-	layer_shell = wlr_layer_shell_v1_create(display);
+	layer_shell = wlr_layer_shell_v1_create(display, 4);
 	listeners.layer_shell_new_layer_surface.notify = new_layer_surface_notify;
 	wl_signal_add(&layer_shell->events.new_surface, &listeners.layer_shell_new_layer_surface);
 
