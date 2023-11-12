@@ -1,7 +1,6 @@
 #include "server.hpp"
 
 #include <cstdio>
-#include <getopt.h>
 #include <string>
 #include <unistd.h>
 #include <utility>

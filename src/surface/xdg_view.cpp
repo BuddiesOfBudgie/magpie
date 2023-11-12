@@ -8,7 +8,6 @@
 #include "input/seat.hpp"
 
 #include "wlr-wrap-start.hpp"
-#include <wlr/backend.h>
 #include <wlr/types/wlr_cursor.h>
 #include "wlr-wrap-end.hpp"
 
