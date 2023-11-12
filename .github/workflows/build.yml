@@ -13,3 +13,21 @@ jobs:
         meson setup build
         meson compile -C build
       shell: alpine.sh {0}
+
+  fedora:
+    runs-on: ubuntu-latest
+    container: "registry.fedoraproject.org/fedora:rawhide"
+    steps:
+    - name: Install pre-requisites
+      run: |
+        dnf --assumeyes install gcc-c++ meson git-core \
+                                'pkgconfig(wayland-protocols)' \
+                                'pkgconfig(wayland-scanner)' \
+                                'pkgconfig(wayland-server)' \
+                                'pkgconfig(wlroots)' \
+                                'pkgconfig(xcb)' 'pkgconfig(xkbcommon)'
+    - uses: actions/checkout@v2
+    - name: Build magpie
+      run: |
+        meson setup build
+        meson compile -C build
