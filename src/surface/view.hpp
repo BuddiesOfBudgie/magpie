@@ -28,6 +28,7 @@ struct View : Surface {
 	[[nodiscard]] virtual wlr_box get_geometry() const = 0;
 	virtual void map() = 0;
 	virtual void unmap() = 0;
+	virtual void close() = 0;
 
 	[[nodiscard]] constexpr bool is_view() const override {
 		return true;
@@ -91,6 +92,7 @@ class XdgView final : public View {
 	[[nodiscard]] wlr_box get_geometry() const override;
 	void map() override;
 	void unmap() override;
+	void close() override;
 
   protected:
 	void impl_set_position(int new_x, int new_y) override;
@@ -136,6 +138,7 @@ class XWaylandView final : public View {
 	[[nodiscard]] constexpr wlr_box get_geometry() const override;
 	void map() override;
 	void unmap() override;
+	void close() override;
 
   protected:
 	void impl_set_position(int new_x, int new_y) override;

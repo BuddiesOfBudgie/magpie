@@ -254,6 +254,10 @@ void XWaylandView::unmap() {
 	toplevel_handle.reset();
 }
 
+void XWaylandView::close() {
+	wlr_xwayland_surface_close(&xwayland_surface);
+}
+
 static constexpr int16_t trunc(const int32_t int32) {
 	if (int32 > INT16_MAX) {
 		return INT16_MAX;

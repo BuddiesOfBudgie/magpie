@@ -236,6 +236,10 @@ void XdgView::unmap() {
 	}
 }
 
+void XdgView::close() {
+	wlr_xdg_toplevel_send_close(&xdg_toplevel);
+}
+
 void XdgView::impl_set_position(const int new_x, const int new_y) {
 	(void) new_x;
 	(void) new_y;

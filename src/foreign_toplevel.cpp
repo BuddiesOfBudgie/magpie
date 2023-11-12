@@ -36,8 +36,10 @@ static void foreign_toplevel_handle_request_activate_notify(wl_listener* listene
 }
 
 static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, void* data) {
-	(void) listener;
+	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_close);
 	(void) data;
+
+	handle.view.close();
 }
 
 static void foreign_toplevel_handle_set_rectangle_notify(wl_listener* listener, void* data) {
