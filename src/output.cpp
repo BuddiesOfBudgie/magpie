@@ -14,10 +14,11 @@
 
 /* This function is called every time an output is ready to display a frame,
  * generally at the output's refresh rate (e.g. 60Hz). */
-static void output_mode_notify(wl_listener* listener, void* data) {
+static void output_request_state_notify(wl_listener* listener, void* data) {
 	Output& output = magpie_container_of(listener, output, request_state);
-	(void) data;
+	const auto* event = static_cast<wlr_output_event_request_state*>(data);
 
+	wlr_output_commit_state(&output.wlr, event->state);
 	output.update_layout();
 }
 
@@ -70,7 +71,7 @@ Output::Output(Server& server, wlr_output& wlr) noexcept : listeners(*this), ser
 	wlr_output_commit_state(&wlr, &state);
 	wlr_output_state_finish(&state);
 
-	listeners.request_state.notify = output_mode_notify;
+	listeners.request_state.notify = output_request_state_notify;
 	wl_signal_add(&wlr.events.request_state, &listeners.request_state);
 	listeners.frame.notify = output_frame_notify;
 	wl_signal_add(&wlr.events.frame, &listeners.frame);
