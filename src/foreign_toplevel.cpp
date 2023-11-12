@@ -76,15 +76,15 @@ ForeignToplevelHandle::~ForeignToplevelHandle() noexcept {
 	wl_list_remove(&listeners.set_rectangle.link);
 }
 
-void ForeignToplevelHandle::set_title(const char* title) const {
-	if (title != nullptr) {
-		wlr_foreign_toplevel_handle_v1_set_title(&handle, title);
+void ForeignToplevelHandle::set_title(const std::string& title) const {
+	if (!title.empty()) {
+		wlr_foreign_toplevel_handle_v1_set_title(&handle, title.c_str());
 	}
 }
 
-void ForeignToplevelHandle::set_app_id(const char* app_id) const {
-	if (app_id != nullptr) {
-		wlr_foreign_toplevel_handle_v1_set_app_id(&handle, app_id);
+void ForeignToplevelHandle::set_app_id(const std::string& app_id) const {
+	if (!app_id.empty()) {
+		wlr_foreign_toplevel_handle_v1_set_app_id(&handle, app_id.c_str());
 	}
 }
 
