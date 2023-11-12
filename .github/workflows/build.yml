@@ -8,7 +8,7 @@ jobs:
     - uses: jirutka/setup-alpine@v1
       with:
         branch: edge
-        packages: build-base meson wlroots-dev wayland-dev wayland-protocols libdecor
+        packages: build-base meson wlroots-dev wayland-dev wayland-protocols libdecor git
     - run: |
         meson setup build
         meson compile -C build
