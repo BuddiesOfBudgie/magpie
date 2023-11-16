@@ -8,7 +8,7 @@ jobs:
     - uses: jirutka/setup-alpine@v1
       with:
         branch: edge
-        packages: build-base meson wlroots-dev wayland-dev wayland-protocols libdecor
+        packages: build-base git meson eudev-dev glslang-dev hwdata-dev libcap-dev libdisplay-info-dev libinput-dev libliftoff-dev libseat-dev libxcb-dev libxkbcommon-dev mesa-dev pixman-dev vulkan-loader-dev wayland-dev wayland-protocols xcb-util-image-dev xcb-util-renderutil-dev xcb-util-wm-dev xkeyboard-config-dev xwayland-dev
     - run: |
         meson setup build
         meson compile -C build
