@@ -18,6 +18,13 @@ dep_wlroots = dependency('wlroots', version: ['>= 0.17', '< 0.18.0'], fallback: 
 dep_xcb = dependency('xcb')
 dep_xkbcommon = dependency('xkbcommon')
 
+foreach feature : ['libdrm_backend', 'libinput_backend', 'session', 'xwayland']
+    var_feature = 'have_' + feature
+    if dep_wlroots.get_variable(pkgconfig: var_feature, internal: var_feature) != 'true'
+        error('Wlroots was not built with ' + feature + ' support. Check for missing dependencies.')
+    endif
+endforeach
+
 wayland_protocol_dir = dep_wayland_protocols.get_variable('pkgdatadir')
 
 wayland_scanner = find_program(
