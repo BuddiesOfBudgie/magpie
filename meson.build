@@ -14,7 +14,7 @@ dep_m = meson.get_compiler('cpp').find_library('m', required: false)
 dep_wayland_protocols = dependency('wayland-protocols', version: '>= 1.31')
 dep_wayland_scanner = dependency('wayland-scanner')
 dep_wayland_server = dependency('wayland-server')
-dep_wlroots = dependency('wlroots', version: ['>= 0.17', '< 0.18.0'], fallback: ['wlroots'])
+dep_wlroots = dependency('wlroots', version: ['>= 0.17', '< 0.18.0'], fallback: ['wlroots'], default_options: ['examples=false'])
 dep_xcb = dependency('xcb')
 dep_xkbcommon = dependency('xkbcommon')
 
