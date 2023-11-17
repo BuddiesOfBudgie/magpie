@@ -20,12 +20,21 @@ jobs:
     steps:
     - name: Install pre-requisites
       run: |
-        dnf --assumeyes install gcc-c++ meson git-core \
-                                'pkgconfig(wayland-protocols)' \
-                                'pkgconfig(wayland-scanner)' \
-                                'pkgconfig(wayland-server)' \
-                                'pkgconfig(wlroots)' \
-                                'pkgconfig(xcb)' 'pkgconfig(xkbcommon)'
+        dnf --assumeyes install gcc-c++ meson git-core pixman-devel \
+          'pkgconfig(hwdata)' \
+          'pkgconfig(libdisplay-info)' \
+          'pkgconfig(libdrm)' \
+          'pkgconfig(libliftoff)' \
+          'pkgconfig(libseat)' \
+          'pkgconfig(wayland-protocols)' \
+          'pkgconfig(wayland-scanner)' \
+          'pkgconfig(wayland-server)' \
+          'pkgconfig(wlroots)' \
+          'pkgconfig(xcb)' \
+          'pkgconfig(xcb-ewmh)' \
+          'pkgconfig(xcb-renderutil)' \
+          'pkgconfig(xkbcommon)' \
+          'pkgconfig(xwayland)'
     - uses: actions/checkout@v2
     - name: Build magpie
       run: |
