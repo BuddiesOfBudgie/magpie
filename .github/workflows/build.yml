@@ -2,13 +2,13 @@ name: Build
 on: [push, pull_request]
 jobs:
   alpine:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container: "alpine:edge"
     steps:
-    - name: Install pre-requisites
+    - name: Install prerequisites
       run: |
         apk add build-base git meson hwdata-dev libdisplay-info-dev libinput-dev libliftoff-dev libseat-dev libxcb-dev libxkbcommon-dev pixman-dev wayland-dev wayland-protocols xcb-util-renderutil-dev xcb-util-wm-dev xwayland-dev
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Build magpie
       run: |
         meson setup build
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     container: "registry.fedoraproject.org/fedora:rawhide"
     steps:
-    - name: Install pre-requisites
+    - name: Install prerequisites
       run: |
         dnf --assumeyes install gcc-c++ meson git-core pixman-devel \
           'pkgconfig(hwdata)' \
@@ -35,7 +35,7 @@ jobs:
           'pkgconfig(xcb-renderutil)' \
           'pkgconfig(xkbcommon)' \
           'pkgconfig(xwayland)'
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Build magpie
       run: |
         meson setup build
