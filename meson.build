@@ -18,9 +18,9 @@ dep_wlroots = dependency('wlroots', version: ['>= 0.17', '< 0.18.0'], fallback: 
 dep_xcb = dependency('xcb')
 dep_xkbcommon = dependency('xkbcommon')
 
-foreach feature : ['libdrm_backend', 'libinput_backend', 'session', 'xwayland']
+foreach feature : ['drm_backend', 'libinput_backend', 'session', 'xwayland']
     var_feature = 'have_' + feature
-    if dep_wlroots.get_variable(pkgconfig: var_feature, internal: var_feature) != 'true'
+    if dep_wlroots.get_variable(pkgconfig: var_feature, internal: var_feature, default_value: 'false') != 'true'
         error('Wlroots was not built with ' + feature + ' support. Check for missing dependencies.')
     endif
 endforeach
