@@ -1,5 +1,7 @@
 #include "view.hpp"
 
+#include <utility>
+
 #include "foreign_toplevel.hpp"
 #include "input/seat.hpp"
 #include "output.hpp"
@@ -117,6 +119,21 @@ void View::set_size(const int new_width, const int new_height) {
 	impl_set_size(new_width, new_height);
 }
 
+void View::update_outputs() const {
+	for (auto& output : std::as_const(get_server().outputs)) {
+		wlr_box output_area = output->full_area;
+		wlr_box prev_intersect = {}, curr_intersect = {};
+		wlr_box_intersection(&prev_intersect, &previous, &output_area);
+		wlr_box_intersection(&curr_intersect, &current, &output_area);
+
+		if (wlr_box_empty(&prev_intersect) && !wlr_box_empty(&curr_intersect)) {
+			toplevel_handle->output_enter(*output);
+		} else if (!wlr_box_empty(&prev_intersect) && wlr_box_empty(&curr_intersect)) {
+			toplevel_handle->output_leave(*output);
+		}
+	}
+}
+
 void View::set_activated(const bool activated) {
 	impl_set_activated(activated);
 
@@ -168,6 +185,7 @@ void View::stack() {
 	impl_set_maximized(false);
 	impl_set_fullscreen(false);
 	set_position(previous.x, previous.y);
+	update_outputs();
 }
 
 bool View::maximize() {
@@ -181,6 +199,7 @@ bool View::maximize() {
 	impl_set_fullscreen(false);
 	impl_set_maximized(true);
 	set_position(output_box.x, output_box.y);
+	update_outputs();
 
 	return true;
 }
@@ -195,6 +214,7 @@ bool View::fullscreen() {
 	set_size(output_box.width, output_box.height);
 	impl_set_fullscreen(true);
 	set_position(output_box.x, output_box.y);
+	update_outputs();
 
 	return true;
 }

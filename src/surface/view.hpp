@@ -18,9 +18,8 @@ struct View : Surface {
 	ViewPlacement prev_placement = VIEW_PLACEMENT_STACKING;
 	ViewPlacement curr_placement = VIEW_PLACEMENT_STACKING;
 	bool is_minimized = false;
-	wlr_box current;
-	wlr_box pending;
-	wlr_box previous;
+	wlr_box current = {};
+	wlr_box previous = {};
 	std::optional<ForeignToplevelHandle> toplevel_handle = {};
 
 	~View() noexcept override = default;
@@ -36,6 +35,7 @@ struct View : Surface {
 	void begin_interactive(CursorMode mode, uint32_t edges);
 	void set_position(int new_x, int new_y);
 	void set_size(int new_width, int new_height);
+	void update_outputs() const;
 	void set_activated(bool activated);
 	void set_placement(ViewPlacement new_placement, bool force = false);
 	void set_minimized(bool minimized);

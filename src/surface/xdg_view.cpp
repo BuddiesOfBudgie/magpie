@@ -197,7 +197,7 @@ wlr_box XdgView::get_geometry() const {
 
 void XdgView::map() {
 	if (pending_map) {
-		previous = {0, 0, 0, 0};
+		wlr_xdg_surface_get_geometry(xdg_toplevel.base, &previous);
 		wlr_xdg_surface_get_geometry(xdg_toplevel.base, &current);
 
 		if (!server.outputs.empty()) {

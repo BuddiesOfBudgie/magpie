@@ -1,6 +1,7 @@
 #include "cursor.hpp"
 
 #include "input/constraint.hpp"
+#include "output.hpp"
 #include "seat.hpp"
 #include "server.hpp"
 #include "surface/surface.hpp"
@@ -12,7 +13,6 @@
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_pointer.h>
-#include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/util/edges.h>
 #include "wlr-wrap-end.hpp"
@@ -67,18 +67,22 @@ void Cursor::process_resize(const uint32_t time) const {
 	const int new_width = new_right - new_left;
 	const int new_height = new_bottom - new_top;
 	view.set_size(new_width, new_height);
+
+	view.update_outputs();
 }
 
 void Cursor::process_move(const uint32_t time) {
 	(void) time;
 
-	/* Move the grabbed view to the new position. */
-	View* view = seat.server.grabbed_view;
-	view->current.x = static_cast<int32_t>(std::round(wlr.x - seat.server.grab_x));
-	view->current.y = static_cast<int32_t>(std::round(std::fmax(wlr.y - seat.server.grab_y, 0)));
-
 	set_image("fleur");
-	wlr_scene_node_set_position(view->scene_node, view->current.x, view->current.y);
+
+	/* Move the grabbed view to the new position. */
+	View& view = *seat.server.grabbed_view;
+	const auto new_x = static_cast<int32_t>(std::round(wlr.x - seat.server.grab_x));
+	const auto new_y = static_cast<int32_t>(std::round(std::fmax(wlr.y - seat.server.grab_y, 0)));
+	view.set_position(new_x, new_y);
+
+	view.update_outputs();
 }
 
 /* This event is forwarded by the cursor when a pointer emits an axis event,
