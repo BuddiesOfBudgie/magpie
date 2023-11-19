@@ -12,13 +12,17 @@
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr-wrap-end.hpp>
 
-/* This function is called every time an output is ready to display a frame,
- * generally at the output's refresh rate (e.g. 60Hz). */
-static void output_request_state_notify(wl_listener* listener, void* data) {
-	Output& output = magpie_container_of(listener, output, request_state);
-	const auto* event = static_cast<wlr_output_event_request_state*>(data);
+static void output_enable_notify(wl_listener* listener, void* data) {
+	Output& output = magpie_container_of(listener, output, enable);
+	(void) data;
 
-	wlr_output_commit_state(&output.wlr, event->state);
+	output.scene_output = wlr_scene_get_scene_output(output.server.scene, &output.wlr);
+}
+
+static void output_mode_notify(wl_listener* listener, void* data) {
+	Output& output = magpie_container_of(listener, output, mode);
+	(void) data;
+
 	output.update_layout();
 }
 
@@ -28,18 +32,20 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 	Output& output = magpie_container_of(listener, output, frame);
 	(void) data;
 
-	wlr_scene_output* scene_output = wlr_scene_get_scene_output(output.server.scene, &output.wlr);
+	if (output.scene_output == nullptr) {
+		output.scene_output = wlr_scene_get_scene_output(output.server.scene, &output.wlr);
+	}
 
-	if (scene_output == nullptr || output.is_leased || !output.wlr.enabled) {
+	if (output.scene_output == nullptr || output.is_leased || !output.wlr.enabled) {
 		return;
 	}
 
 	/* Render the scene if needed and commit the output */
-	wlr_scene_output_commit(scene_output, nullptr);
+	wlr_scene_output_commit(output.scene_output);
 
 	timespec now = {};
 	timespec_get(&now, TIME_UTC);
-	wlr_scene_output_send_frame_done(scene_output, &now);
+	wlr_scene_output_send_frame_done(output.scene_output, &now);
 }
 
 static void output_destroy_notify(wl_listener* listener, void* data) {
@@ -57,43 +63,26 @@ static void output_destroy_notify(wl_listener* listener, void* data) {
 Output::Output(Server& server, wlr_output& wlr) noexcept : listeners(*this), server(server), wlr(wlr) {
 	wlr.data = this;
 
-	wlr_output_init_render(&wlr, server.allocator, server.renderer);
+	scene_output = wlr_scene_get_scene_output(server.scene, &wlr);
 
-	wlr_output_state state = {};
-	wlr_output_state_init(&state);
-	wlr_output_state_set_enabled(&state, true);
-
-	wlr_output_mode* mode = wlr_output_preferred_mode(&wlr);
-	if (mode != nullptr) {
-		wlr_output_state_set_mode(&state, mode);
-	}
-
-	wlr_output_commit_state(&wlr, &state);
-	wlr_output_state_finish(&state);
-
-	listeners.request_state.notify = output_request_state_notify;
-	wl_signal_add(&wlr.events.request_state, &listeners.request_state);
+	listeners.enable.notify = output_enable_notify;
+	wl_signal_add(&wlr.events.enable, &listeners.enable);
+	listeners.mode.notify = output_mode_notify;
+	wl_signal_add(&wlr.events.mode, &listeners.mode);
 	listeners.frame.notify = output_frame_notify;
 	wl_signal_add(&wlr.events.frame, &listeners.frame);
 	listeners.destroy.notify = output_destroy_notify;
 	wl_signal_add(&wlr.events.destroy, &listeners.destroy);
-
-	wlr_output_layout_output* layout_output = wlr_output_layout_add_auto(server.output_layout, &wlr);
-	wlr_scene_output* scene_output = wlr_scene_output_create(server.scene, &wlr);
-	wlr_scene_output_layout_add_output(server.scene_layout, layout_output, scene_output);
 }
 
 Output::~Output() noexcept {
-	wl_list_remove(&listeners.request_state.link);
+	wl_list_remove(&listeners.mode.link);
 	wl_list_remove(&listeners.frame.link);
 	wl_list_remove(&listeners.destroy.link);
 }
 
 void Output::update_layout() {
 	const wlr_scene_output* scene_output = wlr_scene_get_scene_output(server.scene, &wlr);
-	if (scene_output == nullptr) {
-		return;
-	}
 
 	full_area.x = scene_output->x;
 	full_area.y = scene_output->y;

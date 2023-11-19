@@ -7,7 +7,7 @@ jobs:
     steps:
     - name: Install prerequisites
       run: |
-        apk add build-base git meson hwdata-dev libdisplay-info-dev libinput-dev libliftoff-dev libseat-dev libxcb-dev libxkbcommon-dev pixman-dev wayland-dev wayland-protocols xcb-util-renderutil-dev xcb-util-wm-dev xwayland-dev
+        apk add build-base git meson wlroots-dev hwdata-dev libdisplay-info-dev libinput-dev libliftoff-dev libseat-dev libxcb-dev libxkbcommon-dev pixman-dev wayland-dev wayland-protocols xcb-util-renderutil-dev xcb-util-wm-dev xwayland-dev
     - uses: actions/checkout@v4
     - name: Build magpie
       run: |
@@ -20,7 +20,7 @@ jobs:
     steps:
     - name: Install prerequisites
       run: |
-        dnf --assumeyes install gcc-c++ meson git-core pixman-devel \
+        dnf --assumeyes install gcc-c++ meson git-core wlroots-devel pixman-devel \
           'pkgconfig(hwdata)' \
           'pkgconfig(libdisplay-info)' \
           'pkgconfig(libdrm)' \

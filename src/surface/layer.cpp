@@ -113,9 +113,9 @@ Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept
 	surface.surface->data = this;
 
 	listeners.map.notify = wlr_layer_surface_v1_map_notify;
-	wl_signal_add(&surface.surface->events.map, &listeners.map);
+	wl_signal_add(&surface.events.map, &listeners.map);
 	listeners.unmap.notify = wlr_layer_surface_v1_unmap_notify;
-	wl_signal_add(&surface.surface->events.unmap, &listeners.unmap);
+	wl_signal_add(&surface.events.unmap, &listeners.unmap);
 	listeners.destroy.notify = wlr_layer_surface_v1_destroy_notify;
 	wl_signal_add(&surface.events.destroy, &listeners.destroy);
 	listeners.commit.notify = wlr_layer_surface_v1_commit_notify;

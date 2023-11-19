@@ -382,5 +382,5 @@ void Cursor::set_image(const std::string& name) {
 }
 
 void Cursor::reload_image() const {
-	wlr_cursor_set_xcursor(&wlr, cursor_mgr, current_image.c_str());
+	wlr_xcursor_manager_set_cursor_image(cursor_mgr, current_image.c_str(), &wlr);
 }

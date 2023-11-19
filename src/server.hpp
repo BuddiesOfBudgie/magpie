@@ -8,7 +8,6 @@
 #include <set>
 
 #include "wlr-wrap-start.hpp"
-#include <wlr/backend/session.h>
 #include <wlr/render/allocator.h>
 #include <wlr/types/wlr_drm_lease_v1.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
@@ -51,7 +50,6 @@ class Server {
 
   public:
 	wl_display* display;
-	wlr_session* session;
 	wlr_backend* backend;
 	wlr_renderer* renderer;
 	wlr_allocator* allocator;
@@ -60,7 +58,6 @@ class Server {
 	XWayland* xwayland;
 
 	wlr_scene* scene;
-	wlr_scene_output_layout* scene_layout;
 	wlr_scene_tree* scene_layers[MAGPIE_SCENE_LAYER_LOCK + 1] = {};
 
 	wlr_xdg_shell* xdg_shell;

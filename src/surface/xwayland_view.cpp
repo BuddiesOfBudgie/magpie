@@ -47,7 +47,7 @@ static void xwayland_surface_request_configure_notify(wl_listener* listener, voi
 	wlr_xwayland_surface_configure(&surface, event->x, event->y, event->width, event->height);
 	view.current = {event->x, event->y, event->width, event->height};
 
-	if (surface.surface->mapped) {
+	if (surface.mapped) {
 		wlr_scene_node_set_position(view.scene_node, event->x, event->y);
 	}
 }
@@ -59,7 +59,7 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, void* da
 	const wlr_xwayland_surface& surface = view.xwayland_surface;
 
 	view.current = {surface.x, surface.y, surface.width, surface.height};
-	if (surface.surface->mapped) {
+	if (surface.mapped) {
 		wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
 	}
 }
@@ -148,9 +148,9 @@ XWaylandView::XWaylandView(Server& server, wlr_xwayland_surface& surface) noexce
 
 	/* Listen to the various events it can emit */
 	listeners.map.notify = xwayland_surface_map_notify;
-	wl_signal_add(&surface.surface->events.map, &listeners.map);
+	wl_signal_add(&surface.events.map, &listeners.map);
 	listeners.unmap.notify = xwayland_surface_unmap_notify;
-	wl_signal_add(&surface.surface->events.unmap, &listeners.unmap);
+	wl_signal_add(&surface.events.unmap, &listeners.unmap);
 	listeners.destroy.notify = xwayland_surface_destroy_notify;
 	wl_signal_add(&surface.events.destroy, &listeners.destroy);
 	listeners.request_configure.notify = xwayland_surface_request_configure_notify;
