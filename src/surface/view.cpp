@@ -211,10 +211,10 @@ void View::set_minimized(const bool minimized) {
 	this->is_minimized = minimized;
 
 	if (minimized) {
-		unmap();
+		wlr_scene_node_set_enabled(scene_node, false);
 		set_activated(false);
 	} else {
-		map();
+		wlr_scene_node_set_enabled(scene_node, true);
 	}
 }
 
