@@ -2,6 +2,7 @@
 
 #include "foreign_toplevel.hpp"
 #include "input/seat.hpp"
+#include "output.hpp"
 #include "server.hpp"
 #include "surface.hpp"
 #include "types.hpp"
@@ -45,10 +46,10 @@ static void xwayland_surface_request_configure_notify(wl_listener* listener, voi
 	const auto* event = static_cast<wlr_xwayland_surface_configure_event*>(data);
 
 	wlr_xwayland_surface_configure(&surface, event->x, event->y, event->width, event->height);
-	view.current = {event->x, event->y, event->width, event->height};
+	view.set_size(event->width, event->height);
 
 	if (surface.mapped) {
-		wlr_scene_node_set_position(view.scene_node, event->x, event->y);
+		view.set_position(event->x, event->y);
 	}
 }
 
@@ -58,9 +59,9 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, void* da
 
 	const wlr_xwayland_surface& surface = view.xwayland_surface;
 
-	view.current = {surface.x, surface.y, surface.width, surface.height};
+	view.set_size(surface.width, surface.height);
 	if (surface.mapped) {
-		wlr_scene_node_set_position(view.scene_node, view.current.x, view.current.y);
+		view.set_position(surface.x, surface.y);
 	}
 }
 
@@ -232,6 +233,7 @@ void XWaylandView::map() {
 	}
 
 	server.views.insert(server.views.begin(), this);
+	update_outputs(true);
 	server.focus_view(this);
 }
 

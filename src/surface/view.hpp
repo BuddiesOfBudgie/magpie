@@ -35,7 +35,7 @@ struct View : Surface {
 	void begin_interactive(CursorMode mode, uint32_t edges);
 	void set_position(int new_x, int new_y);
 	void set_size(int new_width, int new_height);
-	void update_outputs() const;
+	void update_outputs(bool ignore_previous = false) const;
 	void set_activated(bool activated);
 	void set_placement(ViewPlacement new_placement, bool force = false);
 	void set_minimized(bool minimized);

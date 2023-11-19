@@ -220,6 +220,8 @@ void XdgView::map() {
 		set_placement(VIEW_PLACEMENT_STACKING);
 	}
 
+	update_outputs(true);
+
 	server.focus_view(this);
 }
 

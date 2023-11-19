@@ -119,16 +119,23 @@ void View::set_size(const int new_width, const int new_height) {
 	impl_set_size(new_width, new_height);
 }
 
-void View::update_outputs() const {
+void View::update_outputs(const bool ignore_previous) const {
 	for (auto& output : std::as_const(get_server().outputs)) {
 		wlr_box output_area = output->full_area;
 		wlr_box prev_intersect = {}, curr_intersect = {};
 		wlr_box_intersection(&prev_intersect, &previous, &output_area);
 		wlr_box_intersection(&curr_intersect, &current, &output_area);
 
-		if (wlr_box_empty(&prev_intersect) && !wlr_box_empty(&curr_intersect)) {
+		if (ignore_previous) {
+			if (!wlr_box_empty(&curr_intersect)) {
+				std::printf("Output %p entered\n", (void*) &output);
+				toplevel_handle->output_enter(*output);
+			}
+		} else if (wlr_box_empty(&prev_intersect) && !wlr_box_empty(&curr_intersect)) {
+			std::printf("Output %p entered\n", (void*) &output);
 			toplevel_handle->output_enter(*output);
 		} else if (!wlr_box_empty(&prev_intersect) && wlr_box_empty(&curr_intersect)) {
+			std::printf("Output %p left\n", (void*) &output);
 			toplevel_handle->output_leave(*output);
 		}
 	}
