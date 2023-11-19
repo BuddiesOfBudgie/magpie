@@ -176,7 +176,7 @@ bool View::maximize() {
 		return false;
 	}
 
-	const wlr_box output_box = best_output.value()->usable_area_in_layout_coords();
+	const wlr_box output_box = best_output.value()->usable_area;
 	set_size(output_box.width, output_box.height);
 	impl_set_fullscreen(false);
 	impl_set_maximized(true);
@@ -191,7 +191,7 @@ bool View::fullscreen() {
 		return false;
 	}
 
-	const wlr_box output_box = best_output.value()->full_area_in_layout_coords();
+	const wlr_box output_box = best_output.value()->full_area;
 	set_size(output_box.width, output_box.height);
 	impl_set_fullscreen(true);
 	set_position(output_box.x, output_box.y);

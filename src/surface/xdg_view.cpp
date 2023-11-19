@@ -202,7 +202,7 @@ void XdgView::map() {
 
 		if (!server.outputs.empty()) {
 			const auto output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
-			const auto usable_area = output->usable_area_in_layout_coords();
+			const auto usable_area = output->usable_area;
 			const auto center_x = usable_area.x + usable_area.width / 2;
 			const auto center_y = usable_area.y + usable_area.height / 2;
 			set_position(center_x - current.width / 2, center_y - current.height / 2);
