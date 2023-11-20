@@ -195,6 +195,16 @@ wlr_box XdgView::get_geometry() const {
 	return box;
 }
 
+constexpr wlr_box XdgView::get_min_size() const {
+	return {0, 0, xdg_toplevel.current.min_width, xdg_toplevel.current.min_height};
+}
+
+constexpr wlr_box XdgView::get_max_size() const {
+	const int32_t max_width = xdg_toplevel.current.max_width > 0 ? xdg_toplevel.current.max_width : INT32_MAX;
+	const int32_t max_height = xdg_toplevel.current.max_height > 0 ? xdg_toplevel.current.max_height : INT32_MAX;
+	return {0, 0, max_width, max_height};
+}
+
 void XdgView::map() {
 	if (pending_map) {
 		wlr_xdg_surface_get_geometry(xdg_toplevel.base, &previous);
@@ -216,8 +226,6 @@ void XdgView::map() {
 		set_placement(VIEW_PLACEMENT_FULLSCREEN);
 	} else if (xdg_toplevel.current.maximized) {
 		set_placement(VIEW_PLACEMENT_MAXIMIZED);
-	} else {
-		set_placement(VIEW_PLACEMENT_STACKING);
 	}
 
 	update_outputs(true);
@@ -242,13 +250,19 @@ void XdgView::close() {
 	wlr_xdg_toplevel_send_close(&xdg_toplevel);
 }
 
-void XdgView::impl_set_position(const int32_t new_x, const int32_t new_y) {
-	(void) new_x;
-	(void) new_y;
+void XdgView::impl_set_position(const int32_t x, const int32_t y) {
+	(void) x;
+	(void) y;
 }
 
-void XdgView::impl_set_size(const int32_t new_width, const int32_t new_height) {
-	wlr_xdg_toplevel_set_size(&xdg_toplevel, new_width, new_height);
+void XdgView::impl_set_size(const int32_t width, const int32_t height) {
+	wlr_xdg_toplevel_set_size(&xdg_toplevel, width, height);
+}
+
+void XdgView::impl_set_geometry(const int x, const int y, const int width, const int height) {
+	(void) x;
+	(void) y;
+	wlr_xdg_toplevel_set_size(&xdg_toplevel, width, height);
 }
 
 void XdgView::impl_set_activated(const bool activated) {

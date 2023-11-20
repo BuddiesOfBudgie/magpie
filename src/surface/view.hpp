@@ -25,6 +25,9 @@ struct View : Surface {
 	~View() noexcept override = default;
 
 	[[nodiscard]] virtual wlr_box get_geometry() const = 0;
+	[[nodiscard]] virtual wlr_box get_min_size() const = 0;
+	[[nodiscard]] virtual wlr_box get_max_size() const = 0;
+
 	virtual void map() = 0;
 	virtual void unmap() = 0;
 	virtual void close() = 0;
@@ -33,8 +36,9 @@ struct View : Surface {
 		return true;
 	}
 	void begin_interactive(CursorMode mode, uint32_t edges);
-	void set_position(int32_t new_x, int32_t new_y);
-	void set_size(int32_t new_width, int32_t new_height);
+	void set_position(int32_t x, int32_t y);
+	void set_size(int32_t width, int32_t height);
+	void set_geometry(int32_t x, int32_t y, int32_t width, int32_t height);
 	void update_outputs(bool ignore_previous = false) const;
 	void set_activated(bool activated);
 	void set_placement(ViewPlacement new_placement, bool force = false);
@@ -49,8 +53,9 @@ struct View : Surface {
 	bool fullscreen();
 
   protected:
-	virtual void impl_set_position(int32_t new_x, int32_t new_y) = 0;
-	virtual void impl_set_size(int32_t new_width, int32_t new_height) = 0;
+	virtual void impl_set_position(int32_t x, int32_t y) = 0;
+	virtual void impl_set_size(int32_t width, int32_t height) = 0;
+	virtual void impl_set_geometry(int x, int y, int width, int height) = 0;
 	virtual void impl_set_activated(bool activated) = 0;
 	virtual void impl_set_fullscreen(bool fullscreen) = 0;
 	virtual void impl_set_maximized(bool maximized) = 0;
@@ -89,14 +94,19 @@ class XdgView final : public View {
 
 	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
 	[[nodiscard]] constexpr Server& get_server() const override;
+
 	[[nodiscard]] wlr_box get_geometry() const override;
+	[[nodiscard]] constexpr wlr_box get_min_size() const override;
+	[[nodiscard]] constexpr wlr_box get_max_size() const override;
+
 	void map() override;
 	void unmap() override;
 	void close() override;
 
   protected:
-	void impl_set_position(int32_t new_x, int32_t new_y) override;
-	void impl_set_size(int32_t new_width, int32_t new_height) override;
+	void impl_set_position(int32_t x, int32_t y) override;
+	void impl_set_size(int32_t width, int32_t height) override;
+	void impl_set_geometry(int x, int y, int width, int height) override;
 	void impl_set_activated(bool activated) override;
 	void impl_set_fullscreen(bool fullscreen) override;
 	void impl_set_maximized(bool maximized) override;
@@ -135,14 +145,19 @@ class XWaylandView final : public View {
 
 	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
 	[[nodiscard]] constexpr Server& get_server() const override;
+
 	[[nodiscard]] constexpr wlr_box get_geometry() const override;
+	[[nodiscard]] constexpr wlr_box get_min_size() const override;
+	[[nodiscard]] constexpr wlr_box get_max_size() const override;
+
 	void map() override;
 	void unmap() override;
 	void close() override;
 
   protected:
-	void impl_set_position(int32_t new_x, int32_t new_y) override;
-	void impl_set_size(int32_t new_width, int32_t new_height) override;
+	void impl_set_position(int32_t x, int32_t y) override;
+	void impl_set_size(int32_t width, int32_t height) override;
+	void impl_set_geometry(int32_t x, int32_t y, int width, int height) override;
 	void impl_set_activated(bool activated) override;
 	void impl_set_fullscreen(bool fullscreen) override;
 	void impl_set_maximized(bool maximized) override;

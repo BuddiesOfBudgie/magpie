@@ -31,6 +31,8 @@ void Cursor::process_resize(const uint32_t time) const {
 	 * commit any movement that was prepared.
 	 */
 	View& view = *seat.server.grabbed_view;
+	const wlr_box min_size = view.get_min_size();
+	const wlr_box max_size = view.get_max_size();
 	const double border_x = wlr.x - seat.server.grab_x;
 	const double border_y = wlr.y - seat.server.grab_y;
 	int32_t new_left = seat.server.grab_geobox.x;
@@ -62,11 +64,11 @@ void Cursor::process_resize(const uint32_t time) const {
 	}
 
 	const wlr_box geo_box = view.get_geometry();
-	view.set_position(new_left - geo_box.x, new_top - geo_box.y);
-
-	const int32_t new_width = new_right - new_left;
-	const int32_t new_height = new_bottom - new_top;
-	view.set_size(new_width, new_height);
+	const int32_t new_width = std::clamp(new_right - new_left, min_size.width, max_size.width);
+	const int32_t new_height = std::clamp(new_bottom - new_top, min_size.height, max_size.height);
+	const int32_t new_x = new_width == view.current.width ? view.current.x : new_left - geo_box.x;
+	const int32_t new_y = new_height == view.current.height ? view.current.y : new_top - geo_box.y;
+	view.set_geometry(new_x, new_y, new_width, new_height);
 
 	view.update_outputs();
 }

@@ -98,25 +98,48 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	}
 }
 
-void View::set_position(const int32_t new_x, const int32_t new_y) {
+void View::set_geometry(const int32_t x, const int32_t y, const int32_t width, const int32_t height) {
+	const wlr_box min_size = get_min_size();
+	const wlr_box max_size = get_max_size();
+	const int32_t bounded_width = std::clamp(width, min_size.width, max_size.width);
+	const int32_t bounded_height = std::clamp(height, min_size.height, max_size.height);
+
+	if (curr_placement == VIEW_PLACEMENT_STACKING) {
+		previous = current;
+	}
+	current = {x, std::max(y, 0), bounded_width, bounded_height};
+	if (scene_node != nullptr) {
+		wlr_scene_node_set_position(scene_node, current.x, current.y);
+	}
+	impl_set_geometry(current.x, current.y, current.width, current.height);
+}
+
+void View::set_position(const int32_t x, const int32_t y) {
 	if (curr_placement == VIEW_PLACEMENT_STACKING) {
 		previous.x = current.x;
 		previous.y = current.y;
 	}
-	current.x = new_x;
-	current.y = std::max(new_y, 0);
-	wlr_scene_node_set_position(scene_node, current.x, current.y);
-	impl_set_position(new_x, new_y);
+	current.x = x;
+	current.y = std::max(y, 0);
+	if (scene_node != nullptr) {
+		wlr_scene_node_set_position(scene_node, current.x, current.y);
+	}
+	impl_set_position(current.x, current.y);
 }
 
-void View::set_size(const int32_t new_width, const int32_t new_height) {
+void View::set_size(const int32_t width, const int32_t height) {
+	const wlr_box min_size = get_min_size();
+	const wlr_box max_size = get_max_size();
+	const int32_t bounded_width = std::clamp(width, min_size.width, max_size.width);
+	const int32_t bounded_height = std::clamp(height, min_size.height, max_size.height);
+
 	if (curr_placement == VIEW_PLACEMENT_STACKING) {
 		previous.width = current.width;
 		previous.height = current.height;
 	}
-	current.width = new_width;
-	current.height = new_height;
-	impl_set_size(new_width, new_height);
+	current.width = bounded_width;
+	current.height = bounded_height;
+	impl_set_size(current.width, current.height);
 }
 
 void View::update_outputs(const bool ignore_previous) const {
@@ -128,14 +151,11 @@ void View::update_outputs(const bool ignore_previous) const {
 
 		if (ignore_previous) {
 			if (!wlr_box_empty(&curr_intersect)) {
-				std::printf("Output %p entered\n", (void*) &output);
 				toplevel_handle->output_enter(*output);
 			}
 		} else if (wlr_box_empty(&prev_intersect) && !wlr_box_empty(&curr_intersect)) {
-			std::printf("Output %p entered\n", (void*) &output);
 			toplevel_handle->output_enter(*output);
 		} else if (!wlr_box_empty(&prev_intersect) && wlr_box_empty(&curr_intersect)) {
-			std::printf("Output %p left\n", (void*) &output);
 			toplevel_handle->output_leave(*output);
 		}
 	}
@@ -188,10 +208,9 @@ void View::set_placement(const ViewPlacement new_placement, const bool force) {
 }
 
 void View::stack() {
-	set_size(previous.width, previous.height);
 	impl_set_maximized(false);
 	impl_set_fullscreen(false);
-	set_position(previous.x, previous.y);
+	set_geometry(previous.x, previous.y, previous.width, previous.height);
 	update_outputs();
 }
 
@@ -202,10 +221,20 @@ bool View::maximize() {
 	}
 
 	const wlr_box output_box = best_output.value()->usable_area;
-	set_size(output_box.width, output_box.height);
+
+	const wlr_box min_size = get_min_size();
+	if (output_box.width < min_size.width || output_box.height < min_size.height) {
+		return false;
+	}
+
+	const wlr_box max_size = get_max_size();
+	if (output_box.width > max_size.width || output_box.height > max_size.height) {
+		return false;
+	}
+
 	impl_set_fullscreen(false);
 	impl_set_maximized(true);
-	set_position(output_box.x, output_box.y);
+	set_geometry(output_box.x, output_box.y, output_box.width, output_box.height);
 	update_outputs();
 
 	return true;
@@ -218,9 +247,19 @@ bool View::fullscreen() {
 	}
 
 	const wlr_box output_box = best_output.value()->full_area;
-	set_size(output_box.width, output_box.height);
+
+	const wlr_box min_size = get_min_size();
+	if (output_box.width < min_size.width || output_box.height < min_size.height) {
+		return false;
+	}
+
+	const wlr_box max_size = get_max_size();
+	if (output_box.width > max_size.width || output_box.height > max_size.height) {
+		return false;
+	}
+
 	impl_set_fullscreen(true);
-	set_position(output_box.x, output_box.y);
+	set_geometry(output_box.x, output_box.y, output_box.width, output_box.height);
 	update_outputs();
 
 	return true;
