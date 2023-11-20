@@ -10,9 +10,9 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-int main(const int argc, char** argv) {
+int32_t main(const int32_t argc, char** argv) {
 	std::vector<std::string> startup_cmds;
-	int c;
+	int32_t c;
 	while ((c = getopt(argc, argv, "s:h")) != -1) {
 		switch (c) {
 			case 's':

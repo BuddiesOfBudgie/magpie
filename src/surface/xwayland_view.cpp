@@ -276,11 +276,11 @@ static constexpr int16_t trunc(const int32_t int32) {
 	return static_cast<int16_t>(int32);
 }
 
-void XWaylandView::impl_set_position(const int new_x, const int new_y) {
+void XWaylandView::impl_set_position(const int32_t new_x, const int32_t new_y) {
 	wlr_xwayland_surface_configure(&xwayland_surface, trunc(new_x), trunc(new_y), current.width, current.height);
 }
 
-void XWaylandView::impl_set_size(const int new_width, const int new_height) {
+void XWaylandView::impl_set_size(const int32_t new_width, const int32_t new_height) {
 	wlr_xwayland_surface_configure(&xwayland_surface, trunc(current.x), trunc(current.y), new_width, new_height);
 }
 

@@ -406,7 +406,7 @@ Server::Server() : listeners(*this) {
 	 */
 	scene = wlr_scene_create();
 	assert(scene);
-	for (int idx = 0; idx <= MAGPIE_SCENE_LAYER_LOCK; idx++) {
+	for (int32_t idx = 0; idx <= MAGPIE_SCENE_LAYER_LOCK; idx++) {
 		scene_layers[idx] = wlr_scene_tree_create(&scene->tree);
 		wlr_scene_node_raise_to_top(&scene_layers[idx]->node);
 	}

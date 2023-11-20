@@ -242,12 +242,12 @@ void XdgView::close() {
 	wlr_xdg_toplevel_send_close(&xdg_toplevel);
 }
 
-void XdgView::impl_set_position(const int new_x, const int new_y) {
+void XdgView::impl_set_position(const int32_t new_x, const int32_t new_y) {
 	(void) new_x;
 	(void) new_y;
 }
 
-void XdgView::impl_set_size(const int new_width, const int new_height) {
+void XdgView::impl_set_size(const int32_t new_width, const int32_t new_height) {
 	wlr_xdg_toplevel_set_size(&xdg_toplevel, new_width, new_height);
 }
 

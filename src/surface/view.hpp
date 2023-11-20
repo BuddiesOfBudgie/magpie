@@ -33,8 +33,8 @@ struct View : Surface {
 		return true;
 	}
 	void begin_interactive(CursorMode mode, uint32_t edges);
-	void set_position(int new_x, int new_y);
-	void set_size(int new_width, int new_height);
+	void set_position(int32_t new_x, int32_t new_y);
+	void set_size(int32_t new_width, int32_t new_height);
 	void update_outputs(bool ignore_previous = false) const;
 	void set_activated(bool activated);
 	void set_placement(ViewPlacement new_placement, bool force = false);
@@ -49,8 +49,8 @@ struct View : Surface {
 	bool fullscreen();
 
   protected:
-	virtual void impl_set_position(int new_x, int new_y) = 0;
-	virtual void impl_set_size(int new_width, int new_height) = 0;
+	virtual void impl_set_position(int32_t new_x, int32_t new_y) = 0;
+	virtual void impl_set_size(int32_t new_width, int32_t new_height) = 0;
 	virtual void impl_set_activated(bool activated) = 0;
 	virtual void impl_set_fullscreen(bool fullscreen) = 0;
 	virtual void impl_set_maximized(bool maximized) = 0;
@@ -95,8 +95,8 @@ class XdgView final : public View {
 	void close() override;
 
   protected:
-	void impl_set_position(int new_x, int new_y) override;
-	void impl_set_size(int new_width, int new_height) override;
+	void impl_set_position(int32_t new_x, int32_t new_y) override;
+	void impl_set_size(int32_t new_width, int32_t new_height) override;
 	void impl_set_activated(bool activated) override;
 	void impl_set_fullscreen(bool fullscreen) override;
 	void impl_set_maximized(bool maximized) override;
@@ -141,8 +141,8 @@ class XWaylandView final : public View {
 	void close() override;
 
   protected:
-	void impl_set_position(int new_x, int new_y) override;
-	void impl_set_size(int new_width, int new_height) override;
+	void impl_set_position(int32_t new_x, int32_t new_y) override;
+	void impl_set_size(int32_t new_width, int32_t new_height) override;
 	void impl_set_activated(bool activated) override;
 	void impl_set_fullscreen(bool fullscreen) override;
 	void impl_set_maximized(bool maximized) override;

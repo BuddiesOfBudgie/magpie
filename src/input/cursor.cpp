@@ -33,10 +33,10 @@ void Cursor::process_resize(const uint32_t time) const {
 	View& view = *seat.server.grabbed_view;
 	const double border_x = wlr.x - seat.server.grab_x;
 	const double border_y = wlr.y - seat.server.grab_y;
-	int new_left = seat.server.grab_geobox.x;
-	int new_right = seat.server.grab_geobox.x + seat.server.grab_geobox.width;
-	int new_top = seat.server.grab_geobox.y;
-	int new_bottom = seat.server.grab_geobox.y + seat.server.grab_geobox.height;
+	int32_t new_left = seat.server.grab_geobox.x;
+	int32_t new_right = seat.server.grab_geobox.x + seat.server.grab_geobox.width;
+	int32_t new_top = seat.server.grab_geobox.y;
+	int32_t new_bottom = seat.server.grab_geobox.y + seat.server.grab_geobox.height;
 
 	if (seat.server.resize_edges & WLR_EDGE_TOP) {
 		new_top = static_cast<int32_t>(std::round(border_y));
@@ -64,8 +64,8 @@ void Cursor::process_resize(const uint32_t time) const {
 	const wlr_box geo_box = view.get_geometry();
 	view.set_position(new_left - geo_box.x, new_top - geo_box.y);
 
-	const int new_width = new_right - new_left;
-	const int new_height = new_bottom - new_top;
+	const int32_t new_width = new_right - new_left;
+	const int32_t new_height = new_bottom - new_top;
 	view.set_size(new_width, new_height);
 
 	view.update_outputs();

@@ -98,7 +98,7 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	}
 }
 
-void View::set_position(const int new_x, const int new_y) {
+void View::set_position(const int32_t new_x, const int32_t new_y) {
 	if (curr_placement == VIEW_PLACEMENT_STACKING) {
 		previous.x = current.x;
 		previous.y = current.y;
@@ -109,7 +109,7 @@ void View::set_position(const int new_x, const int new_y) {
 	impl_set_position(new_x, new_y);
 }
 
-void View::set_size(const int new_width, const int new_height) {
+void View::set_size(const int32_t new_width, const int32_t new_height) {
 	if (curr_placement == VIEW_PLACEMENT_STACKING) {
 		previous.width = current.width;
 		previous.height = current.height;

@@ -51,7 +51,7 @@ static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_
 	} else if (sym >= XKB_KEY_XF86Switch_VT_1 && sym <= XKB_KEY_XF86Switch_VT_12) {
 		if (wlr_backend_is_multi(keyboard.seat.server.backend)) {
 			if (wlr_session* session = wlr_backend_get_session(keyboard.seat.server.backend)) {
-				const unsigned vt = sym - XKB_KEY_XF86Switch_VT_1 + 1;
+				const uint32_t vt = sym - XKB_KEY_XF86Switch_VT_1 + 1;
 				wlr_session_change_vt(session, vt);
 			}
 		}
@@ -74,7 +74,7 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 	const uint32_t keycode = event->keycode + 8;
 	/* Get a list of keysyms based on the keymap for this keyboard */
 	const xkb_keysym_t* syms;
-	const int nsyms = xkb_state_key_get_syms(keyboard.wlr.xkb_state, keycode, &syms);
+	const int32_t nsyms = xkb_state_key_get_syms(keyboard.wlr.xkb_state, keycode, &syms);
 
 	bool handled = false;
 	const uint32_t modifiers = wlr_keyboard_get_modifiers(&keyboard.wlr);
@@ -82,7 +82,7 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 		if (modifiers & WLR_MODIFIER_ALT) {
 			/* If alt is held down and this button was _pressed_, we attempt to
 			 * process it as a compositor keybinding. */
-			for (int i = 0; i < nsyms; i++) {
+			for (int32_t i = 0; i < nsyms; i++) {
 				handled = handle_compositor_keybinding(keyboard, modifiers, syms[i]);
 			}
 		}

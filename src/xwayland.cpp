@@ -30,7 +30,7 @@ static void ready_notify(wl_listener* listener, void* data) {
 	wlr_xwayland_set_seat(xwayland.wlr, xwayland.server.seat->wlr);
 
 	xcb_connection_t* xcb_conn = xcb_connect(nullptr, nullptr);
-	if (const int err = xcb_connection_has_error(xcb_conn)) {
+	if (const int32_t err = xcb_connection_has_error(xcb_conn)) {
 		wlr_log(WLR_ERROR, "XCB connect failed: %d", err);
 		return;
 	}
