@@ -9,9 +9,9 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_cursor_shape_v1.h>
 #include <wlr/types/wlr_pointer_gestures_v1.h>
 #include <wlr/types/wlr_relative_pointer_v1.h>
-#include <wlr/types/wlr_xcursor_manager.h>
 #include "wlr-wrap-end.hpp"
 
 enum CursorMode { MAGPIE_CURSOR_PASSTHROUGH, MAGPIE_CURSOR_MOVE, MAGPIE_CURSOR_RESIZE };
@@ -34,6 +34,7 @@ class Cursor {
 		wl_listener gesture_swipe_end = {};
 		wl_listener gesture_hold_begin = {};
 		wl_listener gesture_hold_end = {};
+		wl_listener request_set_shape = {};
 		explicit Listeners(Cursor& parent) noexcept : parent(parent) {}
 	};
 
@@ -49,6 +50,7 @@ class Cursor {
 
 	CursorMode mode;
 	wlr_xcursor_manager* cursor_mgr;
+	wlr_cursor_shape_manager_v1* shape_mgr;
 	wlr_relative_pointer_manager_v1* relative_pointer_mgr;
 	wlr_pointer_gestures_v1* pointer_gestures;
 	std::string current_image;

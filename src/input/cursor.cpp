@@ -11,9 +11,11 @@
 #include <iostream>
 
 #include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_cursor_shape_v1.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/types/wlr_seat.h>
+#include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/edges.h>
 #include "wlr-wrap-end.hpp"
 
@@ -243,6 +245,13 @@ static void gesture_hold_end_notify(wl_listener* listener, void* data) {
 	wlr_pointer_gestures_v1_send_hold_end(cursor.pointer_gestures, cursor.seat.wlr, event->time_msec, event->cancelled);
 }
 
+static void request_set_shape_notify(wl_listener* listener, void* data) {
+	Cursor& cursor = magpie_container_of(listener, cursor, request_set_shape);
+	const auto* event = static_cast<wlr_cursor_shape_manager_v1_request_set_shape_event*>(data);
+
+	cursor.set_image(wlr_cursor_shape_v1_name(event->shape));
+}
+
 Cursor::Cursor(Seat& seat) noexcept : listeners(*this), seat(seat), wlr(*wlr_cursor_create()) {
 	/*
 	 * Creates a cursor, which is a wlroots utility for tracking the cursor
@@ -259,6 +268,7 @@ Cursor::Cursor(Seat& seat) noexcept : listeners(*this), seat(seat), wlr(*wlr_cur
 
 	relative_pointer_mgr = wlr_relative_pointer_manager_v1_create(seat.server.display);
 	pointer_gestures = wlr_pointer_gestures_v1_create(seat.server.display);
+	shape_mgr = wlr_cursor_shape_manager_v1_create(seat.server.display, 1);
 
 	/*
 	 * wlr_cursor *only* displays an image on screen. It does not move around
@@ -300,6 +310,9 @@ Cursor::Cursor(Seat& seat) noexcept : listeners(*this), seat(seat), wlr(*wlr_cur
 	wl_signal_add(&wlr.events.hold_begin, &listeners.gesture_swipe_update);
 	listeners.gesture_hold_end.notify = gesture_hold_end_notify;
 	wl_signal_add(&wlr.events.hold_end, &listeners.gesture_swipe_end);
+
+	listeners.request_set_shape.notify = request_set_shape_notify;
+	wl_signal_add(&shape_mgr->events.request_set_shape, &listeners.request_set_shape);
 }
 
 void Cursor::attach_input_device(wlr_input_device* device) const {

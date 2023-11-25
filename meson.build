@@ -40,6 +40,14 @@ content_type_protocol = custom_target(
     build_by_default: false,
 )
 
+cursor_shape_protocol = custom_target(
+    'cursor_shape_v1_protocol_h',
+    input: join_paths(wayland_protocol_dir, 'staging', 'cursor-shape', 'cursor-shape-v1.xml'),
+    output: 'cursor-shape-v1-protocol.h',
+    command: [wayland_scanner, 'server-header', '@INPUT@', '@OUTPUT@'],
+    build_by_default: false,
+)
+
 xdg_shell_protocol = custom_target(
     'xdg_shell_server_h',
     input: join_paths(wayland_protocol_dir, 'stable', 'xdg-shell', 'xdg-shell.xml'),
