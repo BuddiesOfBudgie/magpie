@@ -32,6 +32,14 @@ wayland_scanner = find_program(
   	native: true,
 )
 
+content_type_protocol = custom_target(
+    'content_type_v1_protocol_h',
+    input: join_paths(wayland_protocol_dir, 'staging', 'content-type', 'content-type-v1.xml'),
+    output: 'content-type-v1-protocol.h',
+    command: [wayland_scanner, 'server-header', '@INPUT@', '@OUTPUT@'],
+    build_by_default: false,
+)
+
 xdg_shell_protocol = custom_target(
     'xdg_shell_server_h',
     input: join_paths(wayland_protocol_dir, 'stable', 'xdg-shell', 'xdg-shell.xml'),

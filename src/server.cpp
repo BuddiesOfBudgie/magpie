@@ -454,4 +454,6 @@ Server::Server() : listeners(*this) {
 		listeners.drm_lease_request.notify = drm_lease_notify;
 		wl_signal_add(&drm_manager->events.request, &listeners.drm_lease_request);
 	}
+
+	content_type_manager = wlr_content_type_manager_v1_create(display, 1);
 }

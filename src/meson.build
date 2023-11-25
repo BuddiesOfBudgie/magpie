@@ -13,6 +13,7 @@ magpie_sources = [
     'surface/view.cpp',
     'surface/xdg_view.cpp',
     'surface/xwayland_view.cpp',
+    content_type_protocol,
     xdg_shell_protocol,
     wlr_layer_shell_protocol,
     wlr_output_power_management_protocol,

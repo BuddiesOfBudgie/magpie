@@ -10,6 +10,7 @@
 #include "wlr-wrap-start.hpp"
 #include <wlr/backend/session.h>
 #include <wlr/render/allocator.h>
+#include <wlr/types/wlr_content_type_v1.h>
 #include <wlr/types/wlr_drm_lease_v1.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_idle_inhibit_v1.h>
@@ -90,6 +91,7 @@ class Server {
 	wlr_idle_inhibit_manager_v1* idle_inhibit_manager;
 
 	wlr_drm_lease_v1_manager* drm_manager;
+	wlr_content_type_manager_v1* content_type_manager;
 
 	Server();
 
