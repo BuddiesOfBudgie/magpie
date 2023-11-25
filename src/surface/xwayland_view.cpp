@@ -30,6 +30,24 @@ static void xwayland_surface_unmap_notify(wl_listener* listener, void* data) {
 	view.unmap();
 }
 
+static void xwayland_surface_associate_notify(wl_listener* listener, void* data) {
+	XWaylandView& view = magpie_container_of(listener, view, associate);
+	(void) data;
+
+	view.listeners.map.notify = xwayland_surface_map_notify;
+	wl_signal_add(&view.xwayland_surface.surface->events.map, &view.listeners.map);
+	view.listeners.unmap.notify = xwayland_surface_unmap_notify;
+	wl_signal_add(&view.xwayland_surface.surface->events.unmap, &view.listeners.unmap);
+}
+
+static void xwayland_surface_dissociate_notify(wl_listener* listener, void* data) {
+	XWaylandView& view = magpie_container_of(listener, view, dissociate);
+	(void) data;
+
+	wl_list_remove(&view.listeners.map.link);
+	wl_list_remove(&view.listeners.unmap.link);
+}
+
 /* Called when the surface is destroyed and should never be shown again. */
 static void xwayland_surface_destroy_notify(wl_listener* listener, void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, destroy);
@@ -139,13 +157,11 @@ static void xwayland_surface_set_parent_notify(wl_listener* listener, void* data
 
 XWaylandView::XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept
 	: listeners(*this), server(server), xwayland_surface(surface) {
-	this->xwayland_surface = surface;
 
-	/* Listen to the various events it can emit */
-	listeners.map.notify = xwayland_surface_map_notify;
-	wl_signal_add(&surface.surface->events.map, &listeners.map);
-	listeners.unmap.notify = xwayland_surface_unmap_notify;
-	wl_signal_add(&surface.surface->events.unmap, &listeners.unmap);
+	listeners.associate.notify = xwayland_surface_associate_notify;
+	wl_signal_add(&surface.events.associate, &listeners.associate);
+	listeners.dissociate.notify = xwayland_surface_dissociate_notify;
+	wl_signal_add(&surface.events.dissociate, &listeners.dissociate);
 	listeners.destroy.notify = xwayland_surface_destroy_notify;
 	wl_signal_add(&surface.events.destroy, &listeners.destroy);
 	listeners.request_configure.notify = xwayland_surface_request_configure_notify;
@@ -169,8 +185,7 @@ XWaylandView::XWaylandView(Server& server, wlr_xwayland_surface& surface) noexce
 }
 
 XWaylandView::~XWaylandView() noexcept {
-	wl_list_remove(&listeners.map.link);
-	wl_list_remove(&listeners.unmap.link);
+	wl_list_remove(&listeners.associate.link);
 	wl_list_remove(&listeners.destroy.link);
 	wl_list_remove(&listeners.request_configure.link);
 	wl_list_remove(&listeners.request_move.link);

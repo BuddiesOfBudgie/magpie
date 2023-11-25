@@ -119,6 +119,8 @@ class XWaylandView final : public View {
 		std::reference_wrapper<XWaylandView> parent;
 		wl_listener map = {};
 		wl_listener unmap = {};
+		wl_listener associate = {};
+		wl_listener dissociate = {};
 		wl_listener destroy = {};
 		wl_listener commit = {};
 		wl_listener request_configure = {};
@@ -131,12 +133,8 @@ class XWaylandView final : public View {
 		wl_listener set_class = {};
 		wl_listener set_parent = {};
 		explicit Listeners(XWaylandView& parent) noexcept : parent(parent) {}
-	};
+	} listeners;
 
-  private:
-	Listeners listeners;
-
-  public:
 	Server& server;
 	wlr_xwayland_surface& xwayland_surface;
 
