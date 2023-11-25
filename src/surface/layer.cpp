@@ -28,6 +28,13 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(const zwlr_layer_shell_v
 	}
 }
 
+static void subsurface_map_notify(wl_listener* listener, void* data) {
+	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, map);
+	(void) data;
+
+	wlr_surface_send_enter(subsurface.subsurface.surface, &subsurface.parent.output.wlr);
+}
+
 static void subsurface_destroy_notify(wl_listener* listener, void* data) {
 	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, destroy);
 	(void) data;
@@ -38,11 +45,14 @@ static void subsurface_destroy_notify(wl_listener* listener, void* data) {
 
 LayerSubsurface::LayerSubsurface(Layer& parent, wlr_subsurface& subsurface) noexcept
 	: listeners(*this), parent(parent), subsurface(subsurface) {
+	listeners.map.notify = subsurface_map_notify;
+	wl_signal_add(&subsurface.surface->events.map, &listeners.map);
 	listeners.destroy.notify = subsurface_destroy_notify;
 	wl_signal_add(&subsurface.events.destroy, &listeners.destroy);
 }
 
 LayerSubsurface::~LayerSubsurface() noexcept {
+	wl_list_remove(&listeners.map.link);
 	wl_list_remove(&listeners.destroy.link);
 }
 
@@ -52,6 +62,7 @@ static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void* data) {
 	(void) data;
 
 	wlr_scene_node_set_enabled(layer.scene_node, true);
+	wlr_surface_send_enter(layer.get_wlr_surface(), &layer.output.wlr);
 }
 
 /* Called when the surface is unmapped, and should no longer be shown. */

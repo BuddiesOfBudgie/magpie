@@ -1,11 +1,28 @@
 #include "popup.hpp"
 
+#include "output.hpp"
+#include "server.hpp"
 #include "surface.hpp"
 #include "types.hpp"
 
+#include <utility>
+
 static void popup_map_notify(wl_listener* listener, void* data) {
-	(void) listener;
+	Popup& popup = magpie_container_of(listener, popup, map);
 	(void) data;
+
+	wlr_box current = {};
+	wlr_xdg_surface_get_geometry(popup.wlr.base, &current);
+
+	for (auto& output : std::as_const(popup.server.outputs)) {
+		wlr_box output_area = output->full_area;
+		wlr_box intersect = {};
+		wlr_box_intersection(&intersect, &current, &output_area);
+
+		if (!wlr_box_empty(&current)) {
+			wlr_surface_send_enter(popup.wlr.base->surface, &output->wlr);
+		}
+	}
 }
 
 static void popup_unmap_notify(wl_listener* listener, void* data) {

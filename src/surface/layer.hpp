@@ -47,9 +47,7 @@ class LayerSubsurface {
 	struct Listeners {
 		std::reference_wrapper<LayerSubsurface> parent;
 		wl_listener map = {};
-		wl_listener unmap = {};
 		wl_listener destroy = {};
-		wl_listener commit = {};
 		explicit Listeners(LayerSubsurface& parent) noexcept : parent(parent) {}
 	};
 
