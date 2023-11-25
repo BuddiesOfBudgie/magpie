@@ -143,9 +143,9 @@ XWaylandView::XWaylandView(Server& server, wlr_xwayland_surface& surface) noexce
 
 	/* Listen to the various events it can emit */
 	listeners.map.notify = xwayland_surface_map_notify;
-	wl_signal_add(&surface.events.map, &listeners.map);
+	wl_signal_add(&surface.surface->events.map, &listeners.map);
 	listeners.unmap.notify = xwayland_surface_unmap_notify;
-	wl_signal_add(&surface.events.unmap, &listeners.unmap);
+	wl_signal_add(&surface.surface->events.unmap, &listeners.unmap);
 	listeners.destroy.notify = xwayland_surface_destroy_notify;
 	wl_signal_add(&surface.events.destroy, &listeners.destroy);
 	listeners.request_configure.notify = xwayland_surface_request_configure_notify;
