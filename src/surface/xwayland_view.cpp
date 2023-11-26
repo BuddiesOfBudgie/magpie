@@ -15,24 +15,21 @@
 #include "wlr-wrap-end.hpp"
 
 /* Called when the surface is mapped, or ready to display on-screen. */
-static void xwayland_surface_map_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_map_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, map);
-	(void) data;
 
 	view.map();
 }
 
 /* Called when the surface is unmapped, and should no longer be shown. */
-static void xwayland_surface_unmap_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_unmap_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, unmap);
-	(void) data;
 
 	view.unmap();
 }
 
-static void xwayland_surface_associate_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_associate_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, associate);
-	(void) data;
 
 	view.listeners.map.notify = xwayland_surface_map_notify;
 	wl_signal_add(&view.xwayland_surface.surface->events.map, &view.listeners.map);
@@ -40,18 +37,16 @@ static void xwayland_surface_associate_notify(wl_listener* listener, void* data)
 	wl_signal_add(&view.xwayland_surface.surface->events.unmap, &view.listeners.unmap);
 }
 
-static void xwayland_surface_dissociate_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_dissociate_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, dissociate);
-	(void) data;
 
 	wl_list_remove(&view.listeners.map.link);
 	wl_list_remove(&view.listeners.unmap.link);
 }
 
 /* Called when the surface is destroyed and should never be shown again. */
-static void xwayland_surface_destroy_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_destroy_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, destroy);
-	(void) data;
 
 	view.server.views.remove(&view);
 	delete &view;
@@ -64,9 +59,8 @@ static void xwayland_surface_request_configure_notify(wl_listener* listener, voi
 	view.set_geometry(event.x, event.y, event.width, event.height);
 }
 
-static void xwayland_surface_set_geometry_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_set_geometry_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, set_geometry);
-	(void) data;
 
 	if (view.server.grabbed_view != &view) {
 		const wlr_xwayland_surface& surface = view.xwayland_surface;
@@ -82,9 +76,8 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, void* da
  * decorations. Note that a more sophisticated compositor should check the
  * provided serial against a list of button press serials sent to this
  * client, to prevent the client from requesting this whenever they want. */
-static void xwayland_surface_request_move_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_request_move_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, request_move);
-	(void) data;
 
 	view.set_placement(VIEW_PLACEMENT_STACKING);
 	view.begin_interactive(MAGPIE_CURSOR_MOVE, 0);
@@ -103,41 +96,36 @@ static void xwayland_surface_request_resize_notify(wl_listener* listener, void* 
 	view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
 }
 
-static void xwayland_surface_request_maximize_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_request_maximize_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, request_maximize);
-	(void) data;
 
 	view.toggle_maximize();
 }
 
-static void xwayland_surface_request_fullscreen_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_request_fullscreen_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, request_fullscreen);
-	(void) data;
 
 	view.toggle_fullscreen();
 }
 
-static void xwayland_surface_set_title_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_set_title_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, set_title);
-	(void) data;
 
 	if (view.toplevel_handle.has_value()) {
 		view.toplevel_handle->set_title(view.xwayland_surface.title);
 	}
 }
 
-static void xwayland_surface_set_class_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_set_class_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, set_class);
-	(void) data;
 
 	if (view.toplevel_handle.has_value()) {
 		view.toplevel_handle->set_app_id(view.xwayland_surface._class);
 	}
 }
 
-static void xwayland_surface_set_parent_notify(wl_listener* listener, void* data) {
+static void xwayland_surface_set_parent_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, set_parent);
-	(void) data;
 
 	if (view.xwayland_surface.parent != nullptr) {
 		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(view.xwayland_surface.parent->data));
@@ -157,7 +145,6 @@ static void xwayland_surface_set_parent_notify(wl_listener* listener, void* data
 
 XWaylandView::XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept
 	: listeners(*this), server(server), xwayland_surface(surface) {
-
 	listeners.associate.notify = xwayland_surface_associate_notify;
 	wl_signal_add(&surface.events.associate, &listeners.associate);
 	listeners.dissociate.notify = xwayland_surface_dissociate_notify;

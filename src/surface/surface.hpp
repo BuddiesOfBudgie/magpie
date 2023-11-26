@@ -3,8 +3,6 @@
 
 #include "types.hpp"
 
-#include <functional>
-
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_scene.h>
 #include "wlr-wrap-end.hpp"

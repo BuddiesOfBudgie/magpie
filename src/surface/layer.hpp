@@ -3,6 +3,8 @@
 
 #include "surface.hpp"
 #include "types.hpp"
+
+#include <functional>
 #include <set>
 
 #include "wlr-wrap-start.hpp"

@@ -47,7 +47,7 @@ struct View : Surface {
 	void toggle_fullscreen();
 
   private:
-	[[nodiscard]] std::optional<const Output*> find_output_for_maximize() const;
+	[[nodiscard]] std::optional<std::reference_wrapper<Output>> find_output_for_maximize() const;
 	void stack();
 	bool maximize();
 	bool fullscreen();
@@ -89,7 +89,7 @@ class XdgView final : public View {
 	Server& server;
 	wlr_xdg_toplevel& xdg_toplevel;
 
-	XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept;
+	XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept;
 	~XdgView() noexcept override;
 
 	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;

@@ -24,9 +24,8 @@ static void output_request_state_notify(wl_listener* listener, void* data) {
 
 /* This function is called every time an output is ready to display a frame,
  * generally at the output's refresh rate (e.g. 60Hz). */
-static void output_frame_notify(wl_listener* listener, void* data) {
+static void output_frame_notify(wl_listener* listener, void*) {
 	Output& output = magpie_container_of(listener, output, frame);
-	(void) data;
 
 	wlr_scene_output* scene_output = wlr_scene_get_scene_output(output.server.scene, &output.wlr);
 
@@ -42,9 +41,8 @@ static void output_frame_notify(wl_listener* listener, void* data) {
 	wlr_scene_output_send_frame_done(scene_output, &now);
 }
 
-static void output_destroy_notify(wl_listener* listener, void* data) {
+static void output_destroy_notify(wl_listener* listener, void*) {
 	Output& output = magpie_container_of(listener, output, destroy);
-	(void) data;
 
 	output.server.outputs.erase(&output);
 	for (const auto* layer : std::as_const(output.layers)) {

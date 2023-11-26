@@ -104,9 +104,8 @@ static void cursor_axis_notify(wl_listener* listener, void* data) {
  * event. Frame events are sent after regular pointer events to group
  * multiple events together. For instance, two axis events may happen at the
  * same time, in which case a frame event won't be sent in between. */
-static void cursor_frame_notify(wl_listener* listener, void* data) {
+static void cursor_frame_notify(wl_listener* listener, void*) {
 	Cursor& cursor = magpie_container_of(listener, cursor, frame);
-	(void) data;
 
 	/* Notify the client with pointer focus of the frame event. */
 	wlr_seat_pointer_notify_frame(cursor.seat.wlr);

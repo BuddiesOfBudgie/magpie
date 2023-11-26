@@ -23,9 +23,8 @@ static const char* atom_map[ATOM_LAST] = {
 	"_NET_WM_STATE_MODAL",
 };
 
-static void ready_notify(wl_listener* listener, void* data) {
+static void ready_notify(wl_listener* listener, void*) {
 	XWayland& xwayland = magpie_container_of(listener, xwayland, ready);
-	(void) data;
 
 	wlr_xwayland_set_seat(xwayland.wlr, xwayland.server.seat->wlr);
 

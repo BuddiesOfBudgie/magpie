@@ -17,7 +17,7 @@
 #include <wlr/util/edges.h>
 #include "wlr-wrap-end.hpp"
 
-std::optional<const Output*> View::find_output_for_maximize() const {
+std::optional<std::reference_wrapper<Output>> View::find_output_for_maximize() const {
 	const Server& server = get_server();
 
 	if (server.outputs.empty()) {
@@ -62,7 +62,11 @@ std::optional<const Output*> View::find_output_for_maximize() const {
 		best_output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
 	}
 
-	return best_output;
+	if (best_output == nullptr) {
+		return {};
+	}
+
+	return std::ref(*best_output);
 }
 
 void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
@@ -223,7 +227,7 @@ bool View::maximize() {
 		return false;
 	}
 
-	const wlr_box output_box = best_output.value()->usable_area;
+	const wlr_box output_box = best_output->get().usable_area;
 
 	const wlr_box min_size = get_min_size();
 	if (output_box.width < min_size.width || output_box.height < min_size.height) {
@@ -249,7 +253,7 @@ bool View::fullscreen() {
 		return false;
 	}
 
-	const wlr_box output_box = best_output.value()->full_area;
+	const wlr_box output_box = best_output->get().full_area;
 
 	const wlr_box min_size = get_min_size();
 	if (output_box.width < min_size.width || output_box.height < min_size.height) {

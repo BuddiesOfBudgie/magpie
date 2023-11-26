@@ -12,25 +12,22 @@
 #include "wlr-wrap-end.hpp"
 
 /* Called when the surface is mapped, or ready to display on-screen. */
-static void xdg_toplevel_map_notify(wl_listener* listener, void* data) {
+static void xdg_toplevel_map_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, map);
-	(void) data;
 
 	view.map();
 }
 
 /* Called when the surface is unmapped, and should no longer be shown. */
-static void xdg_toplevel_unmap_notify(wl_listener* listener, void* data) {
+static void xdg_toplevel_unmap_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, unmap);
-	(void) data;
 
 	view.unmap();
 }
 
 /* Called when the surface is destroyed and should never be shown again. */
-static void xdg_toplevel_destroy_notify(wl_listener* listener, void* data) {
+static void xdg_toplevel_destroy_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, destroy);
-	(void) data;
 
 	view.server.views.remove(&view);
 	delete &view;
@@ -41,9 +38,8 @@ static void xdg_toplevel_destroy_notify(wl_listener* listener, void* data) {
  * decorations. Note that a more sophisticated compositor should check the
  * provided serial against a list of button press serials sent to this
  * client, to prevent the client from requesting this whenever they want. */
-static void xdg_toplevel_request_move_notify(wl_listener* listener, void* data) {
+static void xdg_toplevel_request_move_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, request_move);
-	(void) data;
 
 	view.set_placement(VIEW_PLACEMENT_STACKING);
 	view.begin_interactive(MAGPIE_CURSOR_MOVE, 0);
@@ -65,47 +61,41 @@ static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data
 /* This event is raised when a client would like to maximize itself,
  * typically because the user clicked on the maximize button on
  * client-side decorations. */
-static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void* data) {
+static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, request_maximize);
-	(void) data;
 
 	view.toggle_maximize();
 	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
 }
 
-static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void* data) {
+static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, request_fullscreen);
-	(void) data;
 
 	view.toggle_fullscreen();
 	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
 }
 
-static void xdg_toplevel_request_minimize_notify(wl_listener* listener, void* data) {
+static void xdg_toplevel_request_minimize_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, request_minimize);
-	(void) data;
 
 	view.set_minimized(!view.is_minimized);
 	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
 }
 
-static void xdg_toplevel_set_title_notify(wl_listener* listener, void* data) {
+static void xdg_toplevel_set_title_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, set_title);
-	(void) data;
 
 	view.toplevel_handle->set_title(view.xdg_toplevel.title);
 }
 
-static void xdg_toplevel_set_app_id_notify(wl_listener* listener, void* data) {
+static void xdg_toplevel_set_app_id_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, set_app_id);
-	(void) data;
 
 	view.toplevel_handle->set_app_id(view.xdg_toplevel.app_id);
 }
 
-static void xdg_toplevel_set_parent_notify(wl_listener* listener, void* data) {
+static void xdg_toplevel_set_parent_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, set_parent);
-	(void) data;
 
 	if (view.xdg_toplevel.parent != nullptr) {
 		const auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(view.xdg_toplevel.parent->base->data));
@@ -118,19 +108,17 @@ static void xdg_toplevel_set_parent_notify(wl_listener* listener, void* data) {
 	view.toplevel_handle->set_parent({});
 }
 
-XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
-	: listeners(*this), server(server), xdg_toplevel(toplevel) {
-	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, toplevel.base);
+XdgView::XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept : listeners(*this), server(server), xdg_toplevel(wlr) {
+	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, wlr.base);
 	scene_node = &scene_tree->node;
 
-	wlr_xdg_toplevel_set_wm_capabilities(&toplevel, WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE |
-														WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE |
-														WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
+	wlr_xdg_toplevel_set_wm_capabilities(&wlr,
+		WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE |
+			WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
 
 	scene_node->data = this;
-	toplevel.base->surface->data = this;
+	wlr.base->surface->data = this;
 
-	xdg_toplevel = toplevel;
 	toplevel_handle.emplace(*this);
 	toplevel_handle->set_title(xdg_toplevel.title);
 	toplevel_handle->set_app_id(xdg_toplevel.app_id);
@@ -143,11 +131,11 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& toplevel) noexcept
 	}
 
 	listeners.map.notify = xdg_toplevel_map_notify;
-	wl_signal_add(&toplevel.base->surface->events.map, &listeners.map);
+	wl_signal_add(&wlr.base->surface->events.map, &listeners.map);
 	listeners.unmap.notify = xdg_toplevel_unmap_notify;
-	wl_signal_add(&toplevel.base->surface->events.unmap, &listeners.unmap);
+	wl_signal_add(&wlr.base->surface->events.unmap, &listeners.unmap);
 	listeners.destroy.notify = xdg_toplevel_destroy_notify;
-	wl_signal_add(&toplevel.base->events.destroy, &listeners.destroy);
+	wl_signal_add(&wlr.base->events.destroy, &listeners.destroy);
 	listeners.request_move.notify = xdg_toplevel_request_move_notify;
 	wl_signal_add(&xdg_toplevel.events.request_move, &listeners.request_move);
 	listeners.request_resize.notify = xdg_toplevel_request_resize_notify;

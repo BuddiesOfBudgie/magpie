@@ -27,17 +27,15 @@ static void foreign_toplevel_handle_request_minimize_notify(wl_listener* listene
 	handle.view.set_minimized(event.minimized);
 }
 
-static void foreign_toplevel_handle_request_activate_notify(wl_listener* listener, void* data) {
+static void foreign_toplevel_handle_request_activate_notify(wl_listener* listener, void*) {
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
-	(void) data;
 
 	handle.view.set_minimized(false);
 	handle.view.get_server().focus_view(&handle.view);
 }
 
-static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, void* data) {
+static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, void*) {
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_close);
-	(void) data;
 
 	handle.view.close();
 }

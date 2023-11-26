@@ -246,9 +246,8 @@ static void drm_lease_notify(wl_listener* listener, void* data) {
 	}
 }
 
-void output_layout_change_notify(wl_listener* listener, void* data) {
+void output_layout_change_notify(wl_listener* listener, void*) {
 	Server& server = magpie_container_of(listener, server, output_layout_change);
-	(void) data;
 
 	if (server.num_pending_output_layout_changes > 0) {
 		return;

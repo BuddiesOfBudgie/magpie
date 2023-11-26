@@ -171,5 +171,5 @@ void Seat::apply_constraint(const wlr_pointer* pointer, double* dx, double* dy) 
 
 bool Seat::is_pointer_locked(const wlr_pointer* pointer) const {
 	return current_constraint.has_value() && pointer->base.type == WLR_INPUT_DEVICE_POINTER &&
-		   current_constraint->get().wlr.type == WLR_POINTER_CONSTRAINT_V1_LOCKED;
+		current_constraint->get().wlr.type == WLR_POINTER_CONSTRAINT_V1_LOCKED;
 }

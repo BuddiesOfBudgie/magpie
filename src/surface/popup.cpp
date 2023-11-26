@@ -7,9 +7,8 @@
 
 #include <utility>
 
-static void popup_map_notify(wl_listener* listener, void* data) {
+static void popup_map_notify(wl_listener* listener, void*) {
 	Popup& popup = magpie_container_of(listener, popup, map);
-	(void) data;
 
 	wlr_box current = {};
 	wlr_xdg_surface_get_geometry(popup.wlr.base, &current);
@@ -25,21 +24,10 @@ static void popup_map_notify(wl_listener* listener, void* data) {
 	}
 }
 
-static void popup_unmap_notify(wl_listener* listener, void* data) {
-	(void) listener;
-	(void) data;
-}
-
-static void popup_destroy_notify(wl_listener* listener, void* data) {
+static void popup_destroy_notify(wl_listener* listener, void*) {
 	Popup& popup = magpie_container_of(listener, popup, destroy);
-	(void) data;
 
 	delete &popup;
-}
-
-static void popup_commit_notify(wl_listener* listener, void* data) {
-	(void) listener;
-	(void) data;
 }
 
 static void popup_new_popup_notify(wl_listener* listener, void* data) {
@@ -59,21 +47,15 @@ Popup::Popup(const Surface& parent, wlr_xdg_popup& wlr) noexcept
 
 	listeners.map.notify = popup_map_notify;
 	wl_signal_add(&wlr.base->surface->events.map, &listeners.map);
-	listeners.unmap.notify = popup_unmap_notify;
-	wl_signal_add(&wlr.base->surface->events.unmap, &listeners.unmap);
 	listeners.destroy.notify = popup_destroy_notify;
 	wl_signal_add(&wlr.base->events.destroy, &listeners.destroy);
-	listeners.commit.notify = popup_commit_notify;
-	wl_signal_add(&wlr.base->surface->events.commit, &listeners.commit);
 	listeners.new_popup.notify = popup_new_popup_notify;
 	wl_signal_add(&wlr.base->events.new_popup, &listeners.new_popup);
 }
 
 Popup::~Popup() noexcept {
 	wl_list_remove(&listeners.map.link);
-	wl_list_remove(&listeners.unmap.link);
 	wl_list_remove(&listeners.destroy.link);
-	wl_list_remove(&listeners.commit.link);
 	wl_list_remove(&listeners.new_popup.link);
 }
 

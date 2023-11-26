@@ -14,8 +14,6 @@ class PointerConstraint {
   public:
 	struct Listeners {
 		std::reference_wrapper<PointerConstraint> parent;
-		wl_listener set_region = {};
-		wl_listener surface_commit = {};
 		wl_listener destroy = {};
 		explicit Listeners(PointerConstraint& parent) noexcept : parent(parent) {}
 	};

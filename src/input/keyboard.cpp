@@ -17,9 +17,8 @@
 /* This event is raised by the keyboard base wlr_input_device to signal
  * the destruction of the wlr_keyboard. It will no longer receive events
  * and should be destroyed. */
-static void keyboard_handle_destroy(wl_listener* listener, void* data) {
+static void keyboard_handle_destroy(wl_listener* listener, void*) {
 	Keyboard& keyboard = magpie_container_of(listener, keyboard, destroy);
-	(void) data;
 
 	std::vector<Keyboard*>& keyboards = keyboard.seat.keyboards;
 	(void) std::ranges::remove(keyboards, &keyboard).begin();
@@ -96,9 +95,8 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 
 /* This event is raised when a modifier key, such as shift or alt, is
  * pressed. We simply communicate this to the client. */
-static void keyboard_handle_modifiers(wl_listener* listener, void* data) {
+static void keyboard_handle_modifiers(wl_listener* listener, void*) {
 	Keyboard& keyboard = magpie_container_of(listener, keyboard, modifiers);
-	(void) data;
 
 	/*
 	 * A seat can only have one keyboard, but this is a limitation of the

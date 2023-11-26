@@ -4,6 +4,8 @@
 #include "surface.hpp"
 #include "types.hpp"
 
+#include <functional>
+
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
@@ -13,9 +15,7 @@ class Popup final : public Surface {
 	struct Listeners {
 		std::reference_wrapper<Popup> parent;
 		wl_listener map = {};
-		wl_listener unmap = {};
 		wl_listener destroy = {};
-		wl_listener commit = {};
 		wl_listener new_popup = {};
 		explicit Listeners(Popup& parent) noexcept : parent(parent) {}
 	};

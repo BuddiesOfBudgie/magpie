@@ -28,16 +28,14 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(const zwlr_layer_shell_v
 	}
 }
 
-static void subsurface_map_notify(wl_listener* listener, void* data) {
+static void subsurface_map_notify(wl_listener* listener, void*) {
 	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, map);
-	(void) data;
 
 	wlr_surface_send_enter(subsurface.subsurface.surface, &subsurface.parent.output.wlr);
 }
 
-static void subsurface_destroy_notify(wl_listener* listener, void* data) {
+static void subsurface_destroy_notify(wl_listener* listener, void*) {
 	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, destroy);
-	(void) data;
 
 	subsurface.parent.subsurfaces.erase(&subsurface);
 	delete &subsurface;
@@ -57,34 +55,30 @@ LayerSubsurface::~LayerSubsurface() noexcept {
 }
 
 /* Called when the surface is mapped, or ready to display on-screen. */
-static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void* data) {
+static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void*) {
 	Layer& layer = magpie_container_of(listener, layer, map);
-	(void) data;
 
 	wlr_scene_node_set_enabled(layer.scene_node, true);
 	wlr_surface_send_enter(layer.get_wlr_surface(), &layer.output.wlr);
 }
 
 /* Called when the surface is unmapped, and should no longer be shown. */
-static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, void* data) {
+static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, void*) {
 	Layer& layer = magpie_container_of(listener, layer, unmap);
-	(void) data;
 
 	wlr_scene_node_set_enabled(layer.scene_node, false);
 }
 
 /* Called when the surface is destroyed and should never be shown again. */
-static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void* data) {
+static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void*) {
 	Layer& layer = magpie_container_of(listener, layer, destroy);
-	(void) data;
 
 	layer.output.layers.erase(&layer);
 	delete &layer;
 }
 
-static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void* data) {
+static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void*) {
 	Layer& layer = magpie_container_of(listener, layer, commit);
-	(void) data;
 
 	const Server& server = layer.output.server;
 	const wlr_layer_surface_v1& surface = layer.layer_surface;
