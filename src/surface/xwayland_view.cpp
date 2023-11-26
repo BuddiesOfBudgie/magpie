@@ -233,12 +233,8 @@ void XWaylandView::map() {
 	xwayland_surface.surface->data = this;
 
 	toplevel_handle.emplace(*this);
-	if (xwayland_surface.title != nullptr) {
-		toplevel_handle->set_title(xwayland_surface.title);
-	}
-	if (xwayland_surface._class != nullptr) {
-		toplevel_handle->set_app_id(xwayland_surface._class);
-	}
+	toplevel_handle->set_title(xwayland_surface.title);
+	toplevel_handle->set_app_id(xwayland_surface._class);
 
 	wlr_scene_tree* scene_tree = wlr_scene_subsurface_tree_create(&server.scene->tree, xwayland_surface.surface);
 	scene_node = &scene_tree->node;
