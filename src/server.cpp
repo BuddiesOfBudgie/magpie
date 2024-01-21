@@ -9,6 +9,7 @@
 #include "types.hpp"
 #include "xwayland.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <utility>
 

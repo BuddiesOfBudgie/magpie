@@ -1,5 +1,6 @@
 #include "view.hpp"
 
+#include <algorithm>
 #include <utility>
 
 #include "foreign_toplevel.hpp"

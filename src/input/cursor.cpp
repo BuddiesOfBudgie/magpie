@@ -7,6 +7,7 @@
 #include "surface/surface.hpp"
 #include "surface/view.hpp"
 
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 
