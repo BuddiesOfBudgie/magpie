@@ -47,7 +47,6 @@ int32_t main(const int32_t argc, char** argv) {
 		return 1;
 	}
 
-	std::printf("Running compositor on wayland display '%s'\n", socket);
 	setenv("WAYLAND_DISPLAY", socket, true);
 
 	for (const auto& cmd : std::as_const(startup_cmds)) {
