@@ -374,7 +374,7 @@ void Cursor::reset_mode() {
 	seat.server.grabbed_view = nullptr;
 }
 
-void Cursor::warp_to_constraint(PointerConstraint& constraint) const {
+void Cursor::warp_to_constraint(const PointerConstraint& constraint) const {
 	if (seat.server.focused_view == nullptr) {
 		// only warp to constraints tied to views...
 		return;

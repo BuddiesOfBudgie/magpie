@@ -60,7 +60,7 @@ class Cursor {
 	void attach_input_device(wlr_input_device* device) const;
 	void process_motion(uint32_t time);
 	void reset_mode();
-	void warp_to_constraint(PointerConstraint& constraint) const;
+	void warp_to_constraint(const PointerConstraint& constraint) const;
 	void set_image(const std::string& name);
 	void reload_image() const;
 };

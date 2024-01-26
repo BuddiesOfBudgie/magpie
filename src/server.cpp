@@ -62,7 +62,7 @@ void Server::focus_view(View* view, wlr_surface* surface) {
 
 	/* Move the view to the front */
 	wlr_scene_node_raise_to_top(view->scene_node);
-	(void) std::remove(views.begin(), views.end(), view);
+	std::ranges::remove(views, view);
 	for (auto* it : std::as_const(views)) {
 		it->set_activated(false);
 	}
@@ -77,7 +77,7 @@ void Server::focus_view(View* view, wlr_surface* surface) {
 	 * track of this and automatically send key events to the appropriate
 	 * clients without additional work on your part.
 	 */
-	wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat->wlr);
+	const wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat->wlr);
 	if (keyboard != nullptr) {
 		wlr_seat_keyboard_notify_enter(
 			seat->wlr, view->get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
@@ -163,8 +163,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	output->update_layout();
 }
 
-static void output_power_manager_set_mode_notify(wl_listener* listener, void* data) {
-	(void) listener;
+static void output_power_manager_set_mode_notify(wl_listener*, void* data) {
 	const auto& event = *static_cast<wlr_output_power_v1_set_mode_event*>(data);
 
 	if (event.mode == ZWLR_OUTPUT_POWER_V1_MODE_ON) {
