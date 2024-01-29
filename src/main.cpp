@@ -2,6 +2,7 @@
 
 #include <csignal>
 #include <cstdio>
+#include <future>
 #include <optional>
 #include <string>
 #include <thread>
@@ -13,13 +14,41 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-static pthread_t main_thread;
+int32_t socket = 0;
 
-static void kiosk_run(const int32_t argc, char** argv) {
-	if (argc != 1)
-		return;
-	system(argv[0]);
-	pthread_kill(main_thread, SIGINT);
+int32_t run_compositor(const std::vector<std::string>& startup_cmds, std::promise<const char*> socket_promise) {
+	const auto server = Server();
+
+	/* Add a Unix socket to the Wayland display. */
+	const char* socket = wl_display_add_socket_auto(server.display);
+	if (socket == nullptr) {
+		std::printf("Unix socket for display failed to initialize\n");
+		return 1;
+	}
+
+	socket_promise.set_value(socket);
+
+	/* Start the backend. This will enumerate outputs and inputs, become the DRM master, etc */
+	if (!wlr_backend_start(server.backend)) {
+		wlr_backend_destroy(server.backend);
+		wl_display_destroy(server.display);
+		return 1;
+	}
+
+	setenv("WAYLAND_DISPLAY", socket, true);
+	wlr_log(WLR_INFO, "Running Wayland compositor on WAYLAND_DISPLAY=%s", socket);
+
+	for (const auto& cmd : std::as_const(startup_cmds)) {
+		if (fork() == 0) {
+			execl("/bin/sh", "/bin/sh", "-c", cmd.c_str(), nullptr);
+		}
+	}
+
+	wl_display_run(server.display);
+	wl_display_destroy_clients(server.display);
+	wl_display_destroy(server.display);
+
+	return 0;
 }
 
 int32_t main(const int32_t argc, char** argv) {
@@ -56,45 +85,15 @@ int32_t main(const int32_t argc, char** argv) {
 
 	wlr_log_init(WLR_INFO, nullptr);
 
-	const auto server = Server();
-
-	/* Add a Unix socket to the Wayland display. */
-	const char* socket = wl_display_add_socket_auto(server.display);
-	if (socket == nullptr) {
-		std::printf("Unix socket for display failed to initialize\n");
-		return 1;
-	}
-
-	/* Start the backend. This will enumerate outputs and inputs, become the DRM master, etc */
-	if (!wlr_backend_start(server.backend)) {
-		wlr_backend_destroy(server.backend);
-		wl_display_destroy(server.display);
-		return 1;
-	}
-
-	setenv("WAYLAND_DISPLAY", socket, true);
-
 	if (kiosk_cmd.has_value()) {
 		wlr_log(WLR_INFO, "Running in kiosk mode with command '%s'.", kiosk_cmd->c_str());
-		main_thread = pthread_self();
-		char* kiosk_argv[1] = {strdup(kiosk_cmd.value().c_str())};
-		auto kiosk_thread = std::thread(kiosk_run, 1, kiosk_argv);
-		kiosk_thread.detach();
-	} else
-		for (const auto& cmd : std::as_const(startup_cmds)) {
-			if (fork() == 0) {
-				execl("/bin/sh", "/bin/sh", "-c", cmd.c_str(), nullptr);
-			}
-		}
+		std::promise<const char*> socket_promise;
+		std::future<const char*> socket_future = socket_promise.get_future();
+		auto display_thread = std::thread(run_compositor, startup_cmds, std::move(socket_promise));
+		display_thread.detach();
+		setenv("WAYLAND_DISPLAY", socket_future.get(), true);
+		return system(kiosk_cmd.value().c_str());
+	}
 
-	/* Run the Wayland event loop. This does not return until you exit the
-	 * compositor. Starting the backend rigged up all of the necessary event
-	 * loop configuration to listen to libinput events, DRM events, generate
-	 * frame events at the refresh rate, and so on. */
-	wlr_log(WLR_INFO, "Running Wayland compositor on WAYLAND_DISPLAY=%s", socket);
-	wl_display_run(server.display);
-	wl_display_destroy_clients(server.display);
-	wl_display_destroy(server.display);
-
-	return 0;
+	return run_compositor(startup_cmds, {});
 }
