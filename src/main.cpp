@@ -1,5 +1,6 @@
 #include "server.hpp"
 
+#include <argparse/argparse.hpp>
 #include <csignal>
 #include <cstdio>
 #include <future>
@@ -16,7 +17,7 @@
 
 int32_t socket = 0;
 
-int32_t run_compositor(const std::vector<std::string>& startup_cmds, std::promise<const char*> socket_promise) {
+int32_t run_compositor(const std::vector<std::string>& startup_cmds, std::promise<const char*> socket_promise = {}) {
 	const auto server = Server();
 
 	/* Add a Unix socket to the Wayland display. */
@@ -52,36 +53,26 @@ int32_t run_compositor(const std::vector<std::string>& startup_cmds, std::promis
 }
 
 int32_t main(const int32_t argc, char** argv) {
-	std::optional<std::string> kiosk_cmd;
-	std::vector<std::string> startup_cmds;
+	auto argparser = argparse::ArgumentParser(argv[0], PROJECT_VERSION);
 
-	int32_t c;
-	while ((c = getopt(argc, argv, "s:k:h")) != -1) {
-		switch (c) {
-			case 's':
-				if (kiosk_cmd.has_value()) {
-					std::printf("-s and -k options are mutually exclusive\n");
-					return 1;
-				}
-				startup_cmds.emplace_back(optarg);
-				break;
-			case 'k':
-				if (!startup_cmds.empty()) {
-					std::printf("-s and -k options are mutually exclusive\n");
-					return 1;
-				}
-				kiosk_cmd = optarg;
-				break;
-			default:
-				std::printf("Usage: %s [-s <startup command>] [-k <kiosk command>]\n", argv[0]);
-				return 0;
-		}
+	auto& subprocess_group = argparser.add_mutually_exclusive_group();
+	subprocess_group.add_argument("-k", "--kiosk")
+		.help("specify a single executable whose lifecycle will be adopted, such as a login manager")
+		.nargs(1);
+	subprocess_group.add_argument("-s", "--subprocess")
+		.help("specify one or more executables which will be started as detached subprocesses")
+		.nargs(argparse::nargs_pattern::at_least_one);
+
+	try {
+		argparser.parse_args(argc, argv);
+	} catch (const std::exception& err) {
+		std::cerr << err.what() << std::endl;
+		std::cerr << argparser;
+		return 1;
 	}
 
-	if (optind < argc) {
-		std::printf("Usage: %s [-s <startup command>] [-k <kiosk command>]\n", argv[0]);
-		return 0;
-	}
+	const auto kiosk_cmd = argparser.present("--kiosk");
+	const auto startup_cmds = argparser.get<std::vector<std::string>>("--subprocess");
 
 	wlr_log_init(WLR_INFO, nullptr);
 
@@ -95,5 +86,5 @@ int32_t main(const int32_t argc, char** argv) {
 		return system(kiosk_cmd.value().c_str());
 	}
 
-	return run_compositor(startup_cmds, {});
+	return run_compositor(startup_cmds);
 }

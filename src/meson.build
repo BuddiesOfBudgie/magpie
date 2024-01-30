@@ -24,6 +24,7 @@ magpie_sources = [
 exe = executable(
     'magpie-wm',
     sources: magpie_sources,
-    dependencies: [dep_m, dep_wayland_server, dep_wlroots, dep_xcb, dep_xkbcommon],
+    dependencies: [dep_argparse, dep_m, dep_wayland_server, dep_wlroots, dep_xcb, dep_xkbcommon],
+    cpp_args: '-DPROJECT_VERSION="' + meson.project_version() + '"',
     install: true
 )

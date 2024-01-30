@@ -11,6 +11,7 @@ project(
 
 dep_m = meson.get_compiler('cpp').find_library('m', required: false)
 
+dep_argparse = dependency('argparse', version: '>= 3.0', fallback: ['argparse'])
 dep_wayland_protocols = dependency('wayland-protocols', version: '>= 1.31')
 dep_wayland_scanner = dependency('wayland-scanner')
 dep_wayland_server = dependency('wayland-server')
