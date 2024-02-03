@@ -338,13 +338,11 @@ Server::Server() : listeners(*this) {
 	display = wl_display_create();
 	assert(display);
 
-	session = wlr_session_create(display);
-	assert(session);
-
 	/* The backend is a wlroots feature which abstracts the underlying input and
 	 * output hardware. The autocreate option will choose the most suitable
 	 * backend based on the current environment, such as opening an X11 window
 	 * if an X11 server is running. */
+	session = nullptr;
 	backend = wlr_backend_autocreate(display, &session);
 	assert(backend);
 
