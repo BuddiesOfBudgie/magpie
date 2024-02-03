@@ -9,6 +9,9 @@ project(
     ],
 )
 
+prefix = get_option('prefix')
+datadir = join_paths(prefix, get_option('datadir'))
+
 dep_m = meson.get_compiler('cpp').find_library('m', required: false)
 
 dep_argparse = dependency('argparse', version: '>= 3.0', fallback: ['argparse'])
@@ -82,3 +85,4 @@ wlr_layer_shell_protocol = custom_target(
 )
 
 subdir('src')
+subdir('data')
