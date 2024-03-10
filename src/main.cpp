@@ -15,8 +15,6 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-int32_t socket = 0;
-
 int32_t run_compositor(const std::vector<std::string>& startup_cmds, std::promise<const char*> socket_promise = {}) {
 	const auto server = Server();
 
