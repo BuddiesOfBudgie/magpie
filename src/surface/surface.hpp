@@ -5,12 +5,14 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_scene.h>
+#include <wlr/types/wlr_tearing_control_v1.h>
 #include "wlr-wrap-end.hpp"
 
 enum SurfaceType { MAGPIE_SURFACE_TYPE_VIEW, MAGPIE_SURFACE_TYPE_LAYER, MAGPIE_SURFACE_TYPE_POPUP };
 
 struct Surface {
 	wlr_scene_node* scene_node = nullptr;
+	wp_tearing_control_v1_presentation_hint tearing_hint = WP_TEARING_CONTROL_V1_PRESENTATION_HINT_VSYNC;
 
 	virtual ~Surface() noexcept = default;
 

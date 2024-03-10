@@ -3,6 +3,7 @@ magpie_sources = [
     'foreign_toplevel.cpp',
     'output.cpp',
     'server.cpp',
+    'tearing.cpp',
     'xwayland.cpp',
     'input/constraint.cpp',
     'input/cursor.cpp',
@@ -15,10 +16,11 @@ magpie_sources = [
     'surface/xwayland_view.cpp',
     content_type_protocol,
     cursor_shape_protocol,
-    xdg_shell_protocol,
+    tearing_control_protocol,
     wlr_layer_shell_protocol,
     wlr_output_power_management_protocol,
     wlr_pointer_constraints_protocol,
+    xdg_shell_protocol,
 ]
 
 exe = executable(

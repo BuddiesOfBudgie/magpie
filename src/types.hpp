@@ -2,8 +2,9 @@
 #define MAGPIE_TYPES_HPP
 
 class Server;
-class XWayland;
 class Output;
+class TearingManager;
+class XWayland;
 
 class Seat;
 class Keyboard;

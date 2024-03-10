@@ -34,6 +34,8 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
+#include <tearing.hpp>
+
 void Server::focus_view(View* view, wlr_surface* surface) {
 	const wlr_surface* prev_surface = seat->wlr->keyboard_state.focused_surface;
 	if (prev_surface == surface && surface != nullptr) {
@@ -454,4 +456,6 @@ Server::Server() : listeners(*this) {
 	}
 
 	content_type_manager = wlr_content_type_manager_v1_create(display, 1);
+
+	tearing_manager = new TearingManager(*this);
 }

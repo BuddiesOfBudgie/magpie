@@ -44,6 +44,7 @@ class Server {
 		wl_listener output_layout_change = {};
 		wl_listener output_manager_apply = {};
 		wl_listener output_power_manager_set_mode = {};
+		wl_listener tearing_manager_new_object = {};
 		explicit Listeners(Server& parent) noexcept : parent(parent) {}
 	};
 
@@ -59,6 +60,8 @@ class Server {
 	wlr_compositor* compositor;
 
 	XWayland* xwayland;
+	Seat* seat;
+	TearingManager* tearing_manager;
 
 	wlr_scene* scene;
 	wlr_scene_output_layout* scene_layout;
@@ -71,8 +74,6 @@ class Server {
 	wlr_foreign_toplevel_manager_v1* foreign_toplevel_manager;
 
 	wlr_layer_shell_v1* layer_shell;
-
-	Seat* seat;
 
 	std::list<View*> views;
 	View* focused_view = nullptr;

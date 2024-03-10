@@ -52,6 +52,14 @@ cursor_shape_protocol = custom_target(
     build_by_default: false,
 )
 
+tearing_control_protocol = custom_target(
+    'tearing_control_v1_protocol_h',
+    input: join_paths(wayland_protocol_dir, 'staging', 'tearing-control', 'tearing-control-v1.xml'),
+    output: 'tearing-control-v1-protocol.h',
+    command: [wayland_scanner, 'server-header', '@INPUT@', '@OUTPUT@'],
+    build_by_default: false,
+)
+
 xdg_shell_protocol = custom_target(
     'xdg_shell_server_h',
     input: join_paths(wayland_protocol_dir, 'stable', 'xdg-shell', 'xdg-shell.xml'),
