@@ -70,6 +70,33 @@ std::optional<std::reference_wrapper<Output>> View::find_output_for_maximize() c
 	return std::ref(*best_output);
 }
 
+int32_t View::find_min_y() const {
+	const Server& server = get_server();
+
+	if (server.outputs.empty()) {
+		return 0;
+	}
+
+	wlr_box current_copy = {current.x, 0, current.width, current.height + current.y};
+	current_copy.height += current_copy.y;
+	current_copy.y = 0;
+
+	int32_t min_y = INT32_MAX;
+
+	for (auto* output : server.outputs) {
+		wlr_box output_box = {};
+		wlr_output_layout_get_box(server.output_layout, &output->wlr, &output_box);
+		wlr_box intersection = {};
+		wlr_box_intersection(&intersection, &previous, &output_box);
+
+		if (!wlr_box_empty(&intersection)) {
+			min_y = std::min(min_y, output_box.y);
+		}
+	}
+
+	return min_y == INT32_MAX ? 0 : min_y;
+}
+
 void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	Server& server = get_server();
 
@@ -112,7 +139,8 @@ void View::set_geometry(const int32_t x, const int32_t y, const int32_t width, c
 	if (curr_placement == VIEW_PLACEMENT_STACKING) {
 		previous = current;
 	}
-	current = {x, std::max(y, 0), bounded_width, bounded_height};
+	current = {x, y, bounded_width, bounded_height};
+	current.y = find_min_y();
 	if (scene_node != nullptr) {
 		wlr_scene_node_set_position(scene_node, current.x, current.y);
 	}
@@ -125,7 +153,8 @@ void View::set_position(const int32_t x, const int32_t y) {
 		previous.y = current.y;
 	}
 	current.x = x;
-	current.y = std::max(y, 0);
+	current.y = y;
+	current.y = find_min_y();
 	if (scene_node != nullptr) {
 		wlr_scene_node_set_position(scene_node, current.x, current.y);
 	}
