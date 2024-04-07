@@ -242,7 +242,6 @@ static void drm_lease_notify(wl_listener* listener, void* data) {
 		wlr_output_commit(&output->wlr);
 		wlr_output_layout_remove(server.output_layout, &output->wlr);
 		output->is_leased = true;
-		output->scene_output = nullptr;
 	}
 }
 
@@ -304,7 +303,6 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 
 		if (adding) {
 			wlr_output_layout_add_auto(server.output_layout, &output.wlr);
-			output.scene_output = wlr_scene_get_scene_output(server.scene, &output.wlr);
 		}
 
 		if (enabled) {
@@ -318,7 +316,6 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 
 		if (removing) {
 			wlr_output_layout_remove(server.output_layout, &output.wlr);
-			output.scene_output = nullptr;
 		}
 	}
 

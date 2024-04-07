@@ -16,7 +16,6 @@ class Output {
   public:
 	struct Listeners {
 		std::reference_wrapper<Output> parent;
-		wl_listener enable = {};
 		wl_listener request_state = {};
 		wl_listener frame = {};
 		wl_listener destroy = {};
@@ -29,7 +28,6 @@ class Output {
   public:
 	Server& server;
 	wlr_output& wlr;
-	wlr_scene_output* scene_output = nullptr;
 	wlr_box full_area = {};
 	wlr_box usable_area = {};
 	std::set<Layer*> layers;
