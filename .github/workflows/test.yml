@@ -6,8 +6,14 @@ jobs:
     name: flawfinder
     runs-on: ubuntu-latest
     steps:
-      - name: flawfinder_scan
+      - name: Flawfinder Scan
         uses: david-a-wheeler/flawfinder@2.0.19
         with:
-          arguments: '--sarif ./'
-          output: 'flawfinder_results.sarif'
+          arguments: 'src'
+          output: 'flawfinder_results.txt'
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'flawfinder_results.txt'
+          path: 'flawfinder_results.txt'
+          retention-days: 7
