@@ -48,7 +48,7 @@ struct View : Surface {
 
   private:
 	[[nodiscard]] std::optional<std::reference_wrapper<Output>> find_output_for_maximize() const;
-	[[nodiscard]] int32_t find_upper_bound() const;
+	[[nodiscard]] int32_t find_min_y() const;
 	void stack();
 	bool maximize();
 	bool fullscreen();
