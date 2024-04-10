@@ -9,7 +9,7 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-static const char* atom_map[ATOM_LAST] = {
+static const std::string atom_map[ATOM_LAST] = {
 	"_NET_WM_WINDOW_TYPE_NORMAL",
 	"_NET_WM_WINDOW_TYPE_DIALOG",
 	"_NET_WM_WINDOW_TYPE_UTILITY",
@@ -36,7 +36,7 @@ static void ready_notify(wl_listener* listener, void*) {
 
 	xcb_intern_atom_cookie_t cookies[ATOM_LAST];
 	for (size_t i = 0; i < ATOM_LAST; i++) {
-		cookies[i] = xcb_intern_atom(xcb_conn, 0, strlen(atom_map[i]), atom_map[i]);
+		cookies[i] = xcb_intern_atom(xcb_conn, 0, atom_map[i].length(), atom_map[i].c_str());
 	}
 	for (size_t i = 0; i < ATOM_LAST; i++) {
 		xcb_generic_error_t* error = nullptr;
@@ -47,7 +47,7 @@ static void ready_notify(wl_listener* listener, void*) {
 		free(reply);
 
 		if (error != nullptr) {
-			wlr_log(WLR_ERROR, "could not resolve atom %s: X11 error code %d", atom_map[i], error->error_code);
+			wlr_log(WLR_ERROR, "could not resolve atom %s: X11 error code %d", atom_map[i].c_str(), error->error_code);
 			free(error);
 			break;
 		}
