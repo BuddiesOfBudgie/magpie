@@ -7,6 +7,10 @@
 
 #include <utility>
 
+#include "wlr-wrap-start.hpp"
+#include <wlr/util/log.h>
+#include "wlr-wrap-end.hpp"
+
 static void popup_map_notify(wl_listener* listener, void*) {
 	Popup& popup = magpie_container_of(listener, popup, map);
 
@@ -31,6 +35,11 @@ static void popup_destroy_notify(wl_listener* listener, void*) {
 }
 
 static void popup_new_popup_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_layer_surface_v1.events.new_popup");
+		return;
+	}
+
 	const Popup& popup = magpie_container_of(listener, popup, new_popup);
 
 	new Popup(popup, *static_cast<wlr_xdg_popup*>(data));

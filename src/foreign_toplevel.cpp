@@ -1,10 +1,19 @@
 #include "foreign_toplevel.hpp"
-
 #include "output.hpp"
+
 #include "server.hpp"
 #include "surface/view.hpp"
 
+#include "wlr-wrap-start.hpp"
+#include <wlr/util/log.h>
+#include "wlr-wrap-end.hpp"
+
 static void foreign_toplevel_handle_request_maximize_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_foreign_toplevel_handle_v1.events.request_maximize");
+		return;
+	}
+
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
 	const auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
 
@@ -13,6 +22,11 @@ static void foreign_toplevel_handle_request_maximize_notify(wl_listener* listene
 }
 
 static void foreign_toplevel_handle_request_fullscreen_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_foreign_toplevel_handle_v1.events.request_fullscreen");
+		return;
+	}
+
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
 	const auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
 
@@ -21,6 +35,11 @@ static void foreign_toplevel_handle_request_fullscreen_notify(wl_listener* liste
 }
 
 static void foreign_toplevel_handle_request_minimize_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_foreign_toplevel_handle_v1.events.request_minimize");
+		return;
+	}
+
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
 	const auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_minimized_event*>(data);
 
@@ -41,6 +60,11 @@ static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, 
 }
 
 static void foreign_toplevel_handle_set_rectangle_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_foreign_toplevel_handle_v1.events.set_rectangle");
+		return;
+	}
+
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, set_rectangle);
 	const auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_set_rectangle_event*>(data);
 

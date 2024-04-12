@@ -19,6 +19,11 @@
 #include "wlr-wrap-end.hpp"
 
 static void new_input_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.new_input");
+		return;
+	}
+
 	Seat& seat = magpie_container_of(listener, seat, new_input);
 	auto* device = static_cast<wlr_input_device*>(data);
 
@@ -26,6 +31,11 @@ static void new_input_notify(wl_listener* listener, void* data) {
 }
 
 static void new_virtual_pointer_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.new_virtual_pointer");
+		return;
+	}
+
 	Seat& seat = magpie_container_of(listener, seat, new_virtual_pointer);
 	const auto* event = static_cast<wlr_virtual_pointer_v1_new_pointer_event*>(data);
 
@@ -33,6 +43,11 @@ static void new_virtual_pointer_notify(wl_listener* listener, void* data) {
 }
 
 static void new_virtual_keyboard_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.new_virtual_keyboard");
+		return;
+	}
+
 	Seat& seat = magpie_container_of(listener, seat, new_virtual_keyboard);
 	auto* keyboard = static_cast<wlr_virtual_keyboard_v1*>(data);
 
@@ -40,6 +55,11 @@ static void new_virtual_keyboard_notify(wl_listener* listener, void* data) {
 }
 
 static void new_pointer_constraint_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.new_pointer_constraint");
+		return;
+	}
+
 	Seat& seat = magpie_container_of(listener, seat, new_pointer_constraint);
 	auto* wlr_constraint = static_cast<wlr_pointer_constraint_v1*>(data);
 
@@ -51,6 +71,11 @@ static void new_pointer_constraint_notify(wl_listener* listener, void* data) {
 }
 
 static void request_cursor_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.request_cursor");
+		return;
+	}
+
 	const Seat& seat = magpie_container_of(listener, seat, request_cursor);
 	const auto* event = static_cast<wlr_seat_pointer_request_set_cursor_event*>(data);
 
@@ -70,6 +95,11 @@ static void request_cursor_notify(wl_listener* listener, void* data) {
  * ignore such requests if they so choose, but in magpie we always honor
  */
 static void request_set_selection_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.request_set_selection");
+		return;
+	}
+
 	const Seat& seat = magpie_container_of(listener, seat, request_set_selection);
 	const auto* event = static_cast<wlr_seat_request_set_selection_event*>(data);
 

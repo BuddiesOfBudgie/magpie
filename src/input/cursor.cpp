@@ -18,6 +18,7 @@
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/edges.h>
+#include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
 void Cursor::process_resize(const uint32_t time) const {
@@ -93,6 +94,11 @@ void Cursor::process_move(const uint32_t time) {
 /* This event is forwarded by the cursor when a pointer emits an axis event,
  * for example when you move the scroll wheel. */
 static void cursor_axis_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.cursor_axis");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, axis);
 	const auto* event = static_cast<wlr_pointer_axis_event*>(data);
 
@@ -119,6 +125,11 @@ static void cursor_frame_notify(wl_listener* listener, void*) {
  * so we have to warp the mouse there. There is also some hardware which
  * emits these events. */
 static void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.motion_absolute");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, motion_absolute);
 	const auto* event = static_cast<wlr_pointer_motion_absolute_event*>(data);
 
@@ -142,6 +153,11 @@ static void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
 
 /* This event is forwarded by the cursor when a pointer emits a button event. */
 static void cursor_button_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.button");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, button);
 	const auto* event = static_cast<wlr_pointer_button_event*>(data);
 
@@ -170,6 +186,11 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 /* This event is forwarded by the cursor when a pointer emits a _relative_
  * pointer motion event (i.e. a delta) */
 static void cursor_motion_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.motion");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, motion);
 	const auto* event = static_cast<wlr_pointer_motion_event*>(data);
 
@@ -189,6 +210,11 @@ static void cursor_motion_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_pinch_begin_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.pinch_begin");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, gesture_pinch_begin);
 	const auto* event = static_cast<wlr_pointer_pinch_begin_event*>(data);
 
@@ -196,6 +222,11 @@ static void gesture_pinch_begin_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_pinch_update_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.pinch_update");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, gesture_pinch_update);
 	const auto* event = static_cast<wlr_pointer_pinch_update_event*>(data);
 
@@ -204,6 +235,11 @@ static void gesture_pinch_update_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_pinch_end_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.pinch_end");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, gesture_pinch_end);
 	const auto* event = static_cast<wlr_pointer_pinch_end_event*>(data);
 
@@ -211,6 +247,11 @@ static void gesture_pinch_end_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_swipe_begin_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.swipe_begin");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, gesture_swipe_begin);
 	const auto* event = static_cast<wlr_pointer_swipe_begin_event*>(data);
 
@@ -218,6 +259,11 @@ static void gesture_swipe_begin_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_swipe_update_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.swipe_update");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, gesture_swipe_update);
 	const auto* event = static_cast<wlr_pointer_swipe_update_event*>(data);
 
@@ -225,6 +271,11 @@ static void gesture_swipe_update_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_swipe_end_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.swipe_end");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, gesture_swipe_end);
 	const auto* event = static_cast<wlr_pointer_swipe_end_event*>(data);
 
@@ -232,6 +283,11 @@ static void gesture_swipe_end_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_hold_begin_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.hold_begin");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, gesture_hold_begin);
 	const auto* event = static_cast<wlr_pointer_hold_begin_event*>(data);
 
@@ -239,6 +295,11 @@ static void gesture_hold_begin_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_hold_end_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.hold_end");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, gesture_hold_end);
 	const auto* event = static_cast<wlr_pointer_hold_end_event*>(data);
 
@@ -246,6 +307,11 @@ static void gesture_hold_end_notify(wl_listener* listener, void* data) {
 }
 
 static void request_set_shape_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.set_shape");
+		return;
+	}
+
 	Cursor& cursor = magpie_container_of(listener, cursor, request_set_shape);
 	const auto* event = static_cast<wlr_cursor_shape_manager_v1_request_set_shape_event*>(data);
 

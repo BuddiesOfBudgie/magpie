@@ -12,6 +12,7 @@
 #include <wlr/backend/session.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_seat.h>
+#include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
 /* This event is raised by the keyboard base wlr_input_device to signal
@@ -61,11 +62,15 @@ static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_
 
 /* This event is raised when a key is pressed or released. */
 static void keyboard_handle_key(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_keyboard.events.key");
+		return;
+	}
+
 	const Keyboard& keyboard = magpie_container_of(listener, keyboard, key);
-
 	const auto* event = static_cast<wlr_keyboard_key_event*>(data);
-	wlr_seat* seat = keyboard.seat.wlr;
 
+	wlr_seat* seat = keyboard.seat.wlr;
 	wlr_idle_notifier_v1_notify_activity(keyboard.seat.server.idle_notifier, seat);
 
 	/* Translate libinput keycode -> xkbcommon */

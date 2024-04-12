@@ -12,6 +12,7 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_seat.h>
+#include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
 /* Called when the surface is mapped, or ready to display on-screen. */
@@ -53,6 +54,11 @@ static void xwayland_surface_destroy_notify(wl_listener* listener, void*) {
 }
 
 static void xwayland_surface_request_configure_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_xwayland_surface.events.request_configure");
+		return;
+	}
+
 	XWaylandView& view = magpie_container_of(listener, view, request_configure);
 	const auto& event = *static_cast<wlr_xwayland_surface_configure_event*>(data);
 
@@ -89,6 +95,11 @@ static void xwayland_surface_request_move_notify(wl_listener* listener, void*) {
  * provided serial against a list of button press serials sent to this
  * client, to prevent the client from requesting this whenever they want. */
 static void xwayland_surface_request_resize_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_xwayland_surface.events.request_resize");
+		return;
+	}
+
 	XWaylandView& view = magpie_container_of(listener, view, request_resize);
 	const auto* event = static_cast<wlr_xwayland_resize_event*>(data);
 

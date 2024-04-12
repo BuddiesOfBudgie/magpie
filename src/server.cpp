@@ -120,6 +120,11 @@ Surface* Server::surface_at(const double lx, const double ly, wlr_surface** wlr,
 /* This event is raised by the backend when a new output (aka a display or
  * monitor) becomes available. */
 static void new_output_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_backend.events.new_output");
+		return;
+	}
+
 	Server& server = magpie_container_of(listener, server, backend_new_output);
 	auto* new_output = static_cast<wlr_output*>(data);
 
@@ -164,6 +169,11 @@ static void new_output_notify(wl_listener* listener, void* data) {
 }
 
 static void output_power_manager_set_mode_notify(wl_listener*, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_output_power_manager.events.set_mode");
+		return;
+	}
+
 	const auto& event = *static_cast<wlr_output_power_v1_set_mode_event*>(data);
 
 	if (event.mode == ZWLR_OUTPUT_POWER_V1_MODE_ON) {
@@ -181,6 +191,11 @@ static void output_power_manager_set_mode_notify(wl_listener*, void* data) {
 /* This event is raised when wlr_xdg_shell receives a new xdg surface from a
  * client, either a toplevel (application window) or popup. */
 static void new_xdg_surface_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_shell.events.new_surface");
+		return;
+	}
+
 	Server& server = magpie_container_of(listener, server, xdg_shell_new_xdg_surface);
 	const auto& xdg_surface = *static_cast<wlr_xdg_surface*>(data);
 
@@ -193,6 +208,11 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 }
 
 static void new_layer_surface_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_layer_shell_v1.events.new_surface");
+		return;
+	}
+
 	Server& server = magpie_container_of(listener, server, layer_shell_new_layer_surface);
 	auto& layer_surface = *static_cast<wlr_layer_surface_v1*>(data);
 
@@ -209,6 +229,11 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 }
 
 static void request_activation_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_activation_v1.events.request_activation");
+		return;
+	}
+
 	Server& server = magpie_container_of(listener, server, activation_request_activation);
 	const auto* event = static_cast<wlr_xdg_activation_v1_request_activate_event*>(data);
 
@@ -223,7 +248,12 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 	}
 }
 
-static void drm_lease_notify(wl_listener* listener, void* data) {
+static void drm_lease_request_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_drm_lease_manager_v1.events.drm_lease_request");
+		return;
+	}
+
 	Server& server = magpie_container_of(listener, server, drm_lease_request);
 	auto* request = static_cast<wlr_drm_lease_request_v1*>(data);
 
@@ -269,6 +299,11 @@ void output_layout_change_notify(wl_listener* listener, void*) {
 }
 
 void output_manager_apply_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_output_manager_v1.events.apply");
+		return;
+	}
+
 	Server& server = magpie_container_of(listener, server, output_manager_apply);
 	auto& config = *static_cast<wlr_output_configuration_v1*>(data);
 
@@ -446,7 +481,7 @@ Server::Server() : listeners(*this) {
 
 	drm_manager = wlr_drm_lease_v1_manager_create(display, backend);
 	if (drm_manager != nullptr) {
-		listeners.drm_lease_request.notify = drm_lease_notify;
+		listeners.drm_lease_request.notify = drm_lease_request_notify;
 		wl_signal_add(&drm_manager->events.request, &listeners.drm_lease_request);
 	}
 

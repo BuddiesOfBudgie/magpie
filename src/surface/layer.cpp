@@ -95,6 +95,11 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void*) {
 }
 
 static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_layer_surface_v1.events.new_popup");
+		return;
+	}
+
 	Layer& layer = magpie_container_of(listener, layer, new_popup);
 	const auto* surface = static_cast<Surface*>(layer.layer_surface.surface->data);
 
@@ -102,6 +107,11 @@ static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* d
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_layer_surface_v1.events.new_subsurface");
+		return;
+	}
+
 	Layer& layer = magpie_container_of(listener, layer, new_subsurface);
 	auto& subsurface = *static_cast<wlr_subsurface*>(data);
 

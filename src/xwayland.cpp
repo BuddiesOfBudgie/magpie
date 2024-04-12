@@ -57,6 +57,11 @@ static void ready_notify(wl_listener* listener, void*) {
 }
 
 static void new_surface_notify(wl_listener* listener, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_xwayland.events.new_surface");
+		return;
+	}
+
 	XWayland& xwayland = magpie_container_of(listener, xwayland, new_surface);
 	auto& xwayland_surface = *static_cast<wlr_xwayland_surface*>(data);
 
