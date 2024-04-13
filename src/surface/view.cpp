@@ -11,10 +11,8 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_compositor.h>
-#include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_scene.h>
-#include <wlr/types/wlr_seat.h>
 #include <wlr/util/edges.h>
 #include "wlr-wrap-end.hpp"
 

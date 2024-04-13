@@ -5,7 +5,7 @@ static_assert(0 == 1, "wlroots include wrap started and not ended");
 #define WLROOTS_INCLUDE_WRAP_STARTED
 
 #include <pthread.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <wayland-server-core.h>
 
 #ifdef __clang__

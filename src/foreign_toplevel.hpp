@@ -29,7 +29,7 @@ class ForeignToplevelHandle {
 
   public:
 	View& view;
-	wlr_foreign_toplevel_handle_v1& handle;
+	wlr_foreign_toplevel_handle_v1& wlr;
 
 	explicit ForeignToplevelHandle(View& view) noexcept;
 	~ForeignToplevelHandle() noexcept;

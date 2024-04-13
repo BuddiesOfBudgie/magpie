@@ -42,7 +42,6 @@ class Seat {
 	std::optional<std::reference_wrapper<PointerConstraint>> current_constraint = {};
 
 	explicit Seat(Server& server) noexcept;
-	~Seat() noexcept;
 
 	void new_input_device(wlr_input_device* device);
 	void set_constraint(wlr_pointer_constraint_v1* wlr_constraint);

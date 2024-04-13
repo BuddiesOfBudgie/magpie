@@ -52,7 +52,7 @@ static void output_destroy_notify(wl_listener* listener, void*) {
 
 	output.server.outputs.erase(&output);
 	for (const auto* layer : std::as_const(output.layers)) {
-		wlr_layer_surface_v1_destroy(&layer->layer_surface);
+		wlr_layer_surface_v1_destroy(&layer->wlr);
 	}
 
 	delete &output;
@@ -106,6 +106,6 @@ void Output::update_layout() {
 	usable_area = full_area;
 
 	for (const auto* layer : std::as_const(layers)) {
-		wlr_scene_layer_surface_v1_configure(layer->scene_layer_surface, &full_area, &usable_area);
+		wlr_scene_layer_surface_v1_configure(layer->scene_surface, &full_area, &usable_area);
 	}
 }

@@ -88,9 +88,9 @@ class XdgView final : public View {
 
   public:
 	Server& server;
-	wlr_xdg_toplevel& xdg_toplevel;
+	wlr_xdg_toplevel& wlr;
 
-	XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept;
+	XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept;
 	~XdgView() noexcept override;
 
 	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
@@ -137,7 +137,7 @@ class XWaylandView final : public View {
 	} listeners;
 
 	Server& server;
-	wlr_xwayland_surface& xwayland_surface;
+	wlr_xwayland_surface& wlr;
 
 	XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept;
 	~XWaylandView() noexcept override;

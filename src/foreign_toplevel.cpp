@@ -73,25 +73,25 @@ static void foreign_toplevel_handle_set_rectangle_notify(wl_listener* listener, 
 }
 
 ForeignToplevelHandle::ForeignToplevelHandle(View& view) noexcept
-	: listeners(*this), view(view), handle(*wlr_foreign_toplevel_handle_v1_create(view.get_server().foreign_toplevel_manager)) {
-	handle.data = this;
+	: listeners(*this), view(view), wlr(*wlr_foreign_toplevel_handle_v1_create(view.get_server().foreign_toplevel_manager)) {
+	wlr.data = this;
 
 	listeners.request_maximize.notify = foreign_toplevel_handle_request_maximize_notify;
-	wl_signal_add(&handle.events.request_maximize, &listeners.request_maximize);
+	wl_signal_add(&wlr.events.request_maximize, &listeners.request_maximize);
 	listeners.request_minimize.notify = foreign_toplevel_handle_request_minimize_notify;
-	wl_signal_add(&handle.events.request_minimize, &listeners.request_minimize);
+	wl_signal_add(&wlr.events.request_minimize, &listeners.request_minimize);
 	listeners.request_activate.notify = foreign_toplevel_handle_request_activate_notify;
-	wl_signal_add(&handle.events.request_activate, &listeners.request_activate);
+	wl_signal_add(&wlr.events.request_activate, &listeners.request_activate);
 	listeners.request_fullscreen.notify = foreign_toplevel_handle_request_fullscreen_notify;
-	wl_signal_add(&handle.events.request_fullscreen, &listeners.request_fullscreen);
+	wl_signal_add(&wlr.events.request_fullscreen, &listeners.request_fullscreen);
 	listeners.request_close.notify = foreign_toplevel_handle_request_close_notify;
-	wl_signal_add(&handle.events.request_close, &listeners.request_close);
+	wl_signal_add(&wlr.events.request_close, &listeners.request_close);
 	listeners.set_rectangle.notify = foreign_toplevel_handle_set_rectangle_notify;
-	wl_signal_add(&handle.events.set_rectangle, &listeners.set_rectangle);
+	wl_signal_add(&wlr.events.set_rectangle, &listeners.set_rectangle);
 }
 
 ForeignToplevelHandle::~ForeignToplevelHandle() noexcept {
-	wlr_foreign_toplevel_handle_v1_destroy(&handle);
+	wlr_foreign_toplevel_handle_v1_destroy(&wlr);
 	wl_list_remove(&listeners.request_maximize.link);
 	wl_list_remove(&listeners.request_minimize.link);
 	wl_list_remove(&listeners.request_activate.link);
@@ -102,18 +102,18 @@ ForeignToplevelHandle::~ForeignToplevelHandle() noexcept {
 
 void ForeignToplevelHandle::set_title(const char* title) const {
 	if (title != nullptr) {
-		wlr_foreign_toplevel_handle_v1_set_title(&handle, title);
+		wlr_foreign_toplevel_handle_v1_set_title(&wlr, title);
 	}
 }
 
 void ForeignToplevelHandle::set_app_id(const char* app_id) const {
 	if (app_id != nullptr) {
-		wlr_foreign_toplevel_handle_v1_set_app_id(&handle, app_id);
+		wlr_foreign_toplevel_handle_v1_set_app_id(&wlr, app_id);
 	}
 }
 
 void ForeignToplevelHandle::set_parent(const std::optional<std::reference_wrapper<const ForeignToplevelHandle>> parent) const {
-	wlr_foreign_toplevel_handle_v1_set_parent(&handle, parent.has_value() ? nullptr : &parent->get().handle);
+	wlr_foreign_toplevel_handle_v1_set_parent(&wlr, parent.has_value() ? nullptr : &parent->get().wlr);
 }
 
 void ForeignToplevelHandle::set_placement(const ViewPlacement placement) const {
@@ -122,25 +122,25 @@ void ForeignToplevelHandle::set_placement(const ViewPlacement placement) const {
 }
 
 void ForeignToplevelHandle::set_maximized(const bool maximized) const {
-	wlr_foreign_toplevel_handle_v1_set_maximized(&handle, maximized);
+	wlr_foreign_toplevel_handle_v1_set_maximized(&wlr, maximized);
 }
 
 void ForeignToplevelHandle::set_minimized(const bool minimized) const {
-	wlr_foreign_toplevel_handle_v1_set_minimized(&handle, minimized);
+	wlr_foreign_toplevel_handle_v1_set_minimized(&wlr, minimized);
 }
 
 void ForeignToplevelHandle::set_activated(const bool activated) const {
-	wlr_foreign_toplevel_handle_v1_set_activated(&handle, activated);
+	wlr_foreign_toplevel_handle_v1_set_activated(&wlr, activated);
 }
 
 void ForeignToplevelHandle::set_fullscreen(const bool fullscreen) const {
-	wlr_foreign_toplevel_handle_v1_set_fullscreen(&handle, fullscreen);
+	wlr_foreign_toplevel_handle_v1_set_fullscreen(&wlr, fullscreen);
 }
 
 void ForeignToplevelHandle::output_enter(const Output& output) const {
-	wlr_foreign_toplevel_handle_v1_output_enter(&handle, &output.wlr);
+	wlr_foreign_toplevel_handle_v1_output_enter(&wlr, &output.wlr);
 }
 
 void ForeignToplevelHandle::output_leave(const Output& output) const {
-	wlr_foreign_toplevel_handle_v1_output_leave(&handle, &output.wlr);
+	wlr_foreign_toplevel_handle_v1_output_leave(&wlr, &output.wlr);
 }

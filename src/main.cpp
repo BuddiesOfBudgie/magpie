@@ -1,7 +1,6 @@
 #include "server.hpp"
 
 #include <argparse/argparse.hpp>
-#include <csignal>
 #include <cstdio>
 #include <future>
 #include <optional>

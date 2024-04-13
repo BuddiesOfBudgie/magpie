@@ -31,8 +31,8 @@ class Layer final : public Surface {
 	Server& server;
 	Output& output;
 
-	wlr_layer_surface_v1& layer_surface;
-	wlr_scene_layer_surface_v1* scene_layer_surface;
+	wlr_layer_surface_v1& wlr;
+	wlr_scene_layer_surface_v1* scene_surface;
 
 	std::set<LayerSubsurface*> subsurfaces;
 
@@ -58,7 +58,7 @@ class LayerSubsurface {
 
   public:
 	Layer& parent;
-	wlr_subsurface& subsurface;
+	wlr_subsurface& wlr;
 
 	LayerSubsurface(Layer& parent, wlr_subsurface& subsurface) noexcept;
 	~LayerSubsurface() noexcept;

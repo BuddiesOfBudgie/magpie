@@ -1,7 +1,6 @@
 #include "types.hpp"
 #include "view.hpp"
 
-#include "foreign_toplevel.hpp"
 #include "output.hpp"
 #include "server.hpp"
 #include "surface.hpp"
@@ -71,40 +70,40 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, request_maximize);
 
 	view.toggle_maximize();
-	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
+	wlr_xdg_surface_schedule_configure(view.wlr.base);
 }
 
 static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, request_fullscreen);
 
 	view.toggle_fullscreen();
-	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
+	wlr_xdg_surface_schedule_configure(view.wlr.base);
 }
 
 static void xdg_toplevel_request_minimize_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, request_minimize);
 
 	view.set_minimized(!view.is_minimized);
-	wlr_xdg_surface_schedule_configure(view.xdg_toplevel.base);
+	wlr_xdg_surface_schedule_configure(view.wlr.base);
 }
 
 static void xdg_toplevel_set_title_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, set_title);
 
-	view.toplevel_handle->set_title(view.xdg_toplevel.title);
+	view.toplevel_handle->set_title(view.wlr.title);
 }
 
 static void xdg_toplevel_set_app_id_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, set_app_id);
 
-	view.toplevel_handle->set_app_id(view.xdg_toplevel.app_id);
+	view.toplevel_handle->set_app_id(view.wlr.app_id);
 }
 
 static void xdg_toplevel_set_parent_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, set_parent);
 
-	if (view.xdg_toplevel.parent != nullptr) {
-		const auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(view.xdg_toplevel.parent->base->data));
+	if (view.wlr.parent != nullptr) {
+		const auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(view.wlr.parent->base->data));
 		if (m_view != nullptr) {
 			view.toplevel_handle->set_parent(m_view->toplevel_handle);
 			return;
@@ -114,11 +113,11 @@ static void xdg_toplevel_set_parent_notify(wl_listener* listener, void*) {
 	view.toplevel_handle->set_parent({});
 }
 
-XdgView::XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept : listeners(*this), server(server), xdg_toplevel(wlr) {
-	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, wlr.base);
+XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept : listeners(*this), server(server), wlr(xdg_toplevel) {
+	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, xdg_toplevel.base);
 	scene_node = &scene_tree->node;
 
-	wlr_xdg_toplevel_set_wm_capabilities(&wlr,
+	wlr_xdg_toplevel_set_wm_capabilities(&xdg_toplevel,
 		WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE |
 			WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
 
@@ -143,21 +142,21 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept : listeners(*th
 	listeners.destroy.notify = xdg_toplevel_destroy_notify;
 	wl_signal_add(&wlr.base->events.destroy, &listeners.destroy);
 	listeners.request_move.notify = xdg_toplevel_request_move_notify;
-	wl_signal_add(&xdg_toplevel.events.request_move, &listeners.request_move);
+	wl_signal_add(&wlr.events.request_move, &listeners.request_move);
 	listeners.request_resize.notify = xdg_toplevel_request_resize_notify;
-	wl_signal_add(&xdg_toplevel.events.request_resize, &listeners.request_resize);
+	wl_signal_add(&wlr.events.request_resize, &listeners.request_resize);
 	listeners.request_maximize.notify = xdg_toplevel_request_maximize_notify;
-	wl_signal_add(&xdg_toplevel.events.request_maximize, &listeners.request_maximize);
+	wl_signal_add(&wlr.events.request_maximize, &listeners.request_maximize);
 	listeners.request_minimize.notify = xdg_toplevel_request_minimize_notify;
-	wl_signal_add(&xdg_toplevel.events.request_minimize, &listeners.request_minimize);
+	wl_signal_add(&wlr.events.request_minimize, &listeners.request_minimize);
 	listeners.request_fullscreen.notify = xdg_toplevel_request_fullscreen_notify;
-	wl_signal_add(&xdg_toplevel.events.request_fullscreen, &listeners.request_fullscreen);
+	wl_signal_add(&wlr.events.request_fullscreen, &listeners.request_fullscreen);
 	listeners.set_title.notify = xdg_toplevel_set_title_notify;
-	wl_signal_add(&xdg_toplevel.events.set_title, &listeners.set_title);
+	wl_signal_add(&wlr.events.set_title, &listeners.set_title);
 	listeners.set_app_id.notify = xdg_toplevel_set_app_id_notify;
-	wl_signal_add(&xdg_toplevel.events.set_app_id, &listeners.set_app_id);
+	wl_signal_add(&wlr.events.set_app_id, &listeners.set_app_id);
 	listeners.set_parent.notify = xdg_toplevel_set_parent_notify;
-	wl_signal_add(&xdg_toplevel.events.set_parent, &listeners.set_parent);
+	wl_signal_add(&wlr.events.set_parent, &listeners.set_parent);
 
 	server.views.push_back(this);
 }
@@ -176,7 +175,7 @@ XdgView::~XdgView() noexcept {
 }
 
 constexpr wlr_surface* XdgView::get_wlr_surface() const {
-	return xdg_toplevel.base->surface;
+	return wlr.base->surface;
 }
 
 constexpr Server& XdgView::get_server() const {
@@ -185,24 +184,24 @@ constexpr Server& XdgView::get_server() const {
 
 wlr_box XdgView::get_geometry() const {
 	wlr_box box = {};
-	wlr_xdg_surface_get_geometry(xdg_toplevel.base, &box);
+	wlr_xdg_surface_get_geometry(wlr.base, &box);
 	return box;
 }
 
 constexpr wlr_box XdgView::get_min_size() const {
-	return {0, 0, xdg_toplevel.current.min_width, xdg_toplevel.current.min_height};
+	return {0, 0, wlr.current.min_width, wlr.current.min_height};
 }
 
 constexpr wlr_box XdgView::get_max_size() const {
-	const int32_t max_width = xdg_toplevel.current.max_width > 0 ? xdg_toplevel.current.max_width : INT32_MAX;
-	const int32_t max_height = xdg_toplevel.current.max_height > 0 ? xdg_toplevel.current.max_height : INT32_MAX;
+	const int32_t max_width = wlr.current.max_width > 0 ? wlr.current.max_width : INT32_MAX;
+	const int32_t max_height = wlr.current.max_height > 0 ? wlr.current.max_height : INT32_MAX;
 	return {0, 0, max_width, max_height};
 }
 
 void XdgView::map() {
 	if (pending_map) {
-		wlr_xdg_surface_get_geometry(xdg_toplevel.base, &previous);
-		wlr_xdg_surface_get_geometry(xdg_toplevel.base, &current);
+		wlr_xdg_surface_get_geometry(wlr.base, &previous);
+		wlr_xdg_surface_get_geometry(wlr.base, &current);
 
 		if (!server.outputs.empty()) {
 			const auto output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
@@ -216,9 +215,9 @@ void XdgView::map() {
 	}
 
 	wlr_scene_node_set_enabled(scene_node, true);
-	if (xdg_toplevel.current.fullscreen) {
+	if (wlr.current.fullscreen) {
 		set_placement(VIEW_PLACEMENT_FULLSCREEN);
-	} else if (xdg_toplevel.current.maximized) {
+	} else if (wlr.current.maximized) {
 		set_placement(VIEW_PLACEMENT_MAXIMIZED);
 	}
 
@@ -241,7 +240,7 @@ void XdgView::unmap() {
 }
 
 void XdgView::close() {
-	wlr_xdg_toplevel_send_close(&xdg_toplevel);
+	wlr_xdg_toplevel_send_close(&wlr);
 }
 
 void XdgView::impl_set_position(const int32_t x, const int32_t y) {
@@ -250,25 +249,25 @@ void XdgView::impl_set_position(const int32_t x, const int32_t y) {
 }
 
 void XdgView::impl_set_size(const int32_t width, const int32_t height) {
-	wlr_xdg_toplevel_set_size(&xdg_toplevel, width, height);
+	wlr_xdg_toplevel_set_size(&wlr, width, height);
 }
 
 void XdgView::impl_set_geometry(const int x, const int y, const int width, const int height) {
 	(void) x;
 	(void) y;
-	wlr_xdg_toplevel_set_size(&xdg_toplevel, width, height);
+	wlr_xdg_toplevel_set_size(&wlr, width, height);
 }
 
 void XdgView::impl_set_activated(const bool activated) {
-	wlr_xdg_toplevel_set_activated(&xdg_toplevel, activated);
+	wlr_xdg_toplevel_set_activated(&wlr, activated);
 }
 
 void XdgView::impl_set_fullscreen(const bool fullscreen) {
-	wlr_xdg_toplevel_set_fullscreen(&xdg_toplevel, fullscreen);
+	wlr_xdg_toplevel_set_fullscreen(&wlr, fullscreen);
 }
 
 void XdgView::impl_set_maximized(const bool maximized) {
-	wlr_xdg_toplevel_set_maximized(&xdg_toplevel, maximized);
+	wlr_xdg_toplevel_set_maximized(&wlr, maximized);
 }
 
 void XdgView::impl_set_minimized(const bool minimized) {

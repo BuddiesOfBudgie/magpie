@@ -31,7 +31,7 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(const zwlr_layer_shell_v
 static void subsurface_map_notify(wl_listener* listener, void*) {
 	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, map);
 
-	wlr_surface_send_enter(subsurface.subsurface.surface, &subsurface.parent.output.wlr);
+	wlr_surface_send_enter(subsurface.wlr.surface, &subsurface.parent.output.wlr);
 }
 
 static void subsurface_destroy_notify(wl_listener* listener, void*) {
@@ -42,7 +42,7 @@ static void subsurface_destroy_notify(wl_listener* listener, void*) {
 }
 
 LayerSubsurface::LayerSubsurface(Layer& parent, wlr_subsurface& subsurface) noexcept
-	: listeners(*this), parent(parent), subsurface(subsurface) {
+	: listeners(*this), parent(parent), wlr(subsurface) {
 	listeners.map.notify = subsurface_map_notify;
 	wl_signal_add(&subsurface.surface->events.map, &listeners.map);
 	listeners.destroy.notify = subsurface_destroy_notify;
@@ -81,7 +81,7 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void*) {
 	Layer& layer = magpie_container_of(listener, layer, commit);
 
 	const Server& server = layer.output.server;
-	const wlr_layer_surface_v1& surface = layer.layer_surface;
+	const wlr_layer_surface_v1& surface = layer.wlr;
 
 	const uint32_t committed = surface.current.committed;
 	if (committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) {
@@ -101,7 +101,7 @@ static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* d
 	}
 
 	Layer& layer = magpie_container_of(listener, layer, new_popup);
-	const auto* surface = static_cast<Surface*>(layer.layer_surface.surface->data);
+	const auto* surface = static_cast<Surface*>(layer.wlr.surface->data);
 
 	new Popup(*surface, *static_cast<wlr_xdg_popup*>(data));
 }
@@ -119,10 +119,10 @@ static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, vo
 }
 
 Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept
-	: listeners(*this), server(output.server), output(output), layer_surface(surface) {
+	: listeners(*this), server(output.server), output(output), wlr(surface) {
 	const magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface.current.layer);
-	scene_layer_surface = wlr_scene_layer_surface_v1_create(output.server.scene_layers[chosen_layer], &surface);
-	scene_node = &scene_layer_surface->tree->node;
+	scene_surface = wlr_scene_layer_surface_v1_create(output.server.scene_layers[chosen_layer], &surface);
+	scene_node = &scene_surface->tree->node;
 
 	scene_node->data = this;
 	surface.surface->data = this;
@@ -151,7 +151,7 @@ Layer::~Layer() noexcept {
 }
 
 constexpr wlr_surface* Layer::get_wlr_surface() const {
-	return layer_surface.surface;
+	return wlr.surface;
 }
 
 constexpr Server& Layer::get_server() const {
