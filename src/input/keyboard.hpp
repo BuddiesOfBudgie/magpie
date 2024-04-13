@@ -10,7 +10,7 @@
 #include <wlr/types/wlr_keyboard.h>
 #include "wlr-wrap-end.hpp"
 
-class Keyboard final : std::enable_shared_from_this<Keyboard> {
+class Keyboard final : public std::enable_shared_from_this<Keyboard> {
   public:
 	struct Listeners {
 		std::reference_wrapper<Keyboard> parent;

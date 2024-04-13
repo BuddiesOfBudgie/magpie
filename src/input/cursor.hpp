@@ -16,7 +16,7 @@
 
 enum CursorMode { MAGPIE_CURSOR_PASSTHROUGH, MAGPIE_CURSOR_MOVE, MAGPIE_CURSOR_RESIZE };
 
-class Cursor final : std::enable_shared_from_this<Cursor> {
+class Cursor final : public std::enable_shared_from_this<Cursor> {
   public:
 	struct Listeners {
 		std::reference_wrapper<Cursor> parent;

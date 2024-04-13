@@ -45,7 +45,7 @@ class Layer final : public Surface {
 	[[nodiscard]] bool is_view() const override;
 };
 
-class LayerSubsurface final : std::enable_shared_from_this<LayerSubsurface> {
+class LayerSubsurface final : public std::enable_shared_from_this<LayerSubsurface> {
   public:
 	struct Listeners {
 		std::reference_wrapper<LayerSubsurface> parent;

@@ -33,7 +33,7 @@ typedef enum {
 	MAGPIE_SCENE_LAYER_LOCK
 } magpie_scene_layer_t;
 
-class Server final : std::enable_shared_from_this<Server> {
+class Server final : public std::enable_shared_from_this<Server> {
   public:
 	struct Listeners {
 		std::reference_wrapper<Server> parent;

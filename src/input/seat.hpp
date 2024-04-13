@@ -14,7 +14,7 @@
 #include <wlr/types/wlr_virtual_pointer_v1.h>
 #include "wlr-wrap-end.hpp"
 
-class Seat final : std::enable_shared_from_this<Seat> {
+class Seat final : public std::enable_shared_from_this<Seat> {
   public:
 	struct Listeners {
 		std::reference_wrapper<Seat> parent;

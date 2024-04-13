@@ -27,7 +27,7 @@ enum atom_name {
 	ATOM_LAST,
 };
 
-class XWayland final : std::enable_shared_from_this<XWayland> {
+class XWayland final : public std::enable_shared_from_this<XWayland> {
   public:
 	struct Listeners {
 		std::reference_wrapper<XWayland> parent;
