@@ -25,10 +25,10 @@ class Popup final : public Surface {
 
   public:
 	Server& server;
-	const Surface& parent;
+	Surface& parent;
 	wlr_xdg_popup& wlr;
 
-	Popup(const Surface& parent, wlr_xdg_popup& wlr) noexcept;
+	Popup(Surface& parent, wlr_xdg_popup& wlr) noexcept;
 	~Popup() noexcept override;
 
 	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;

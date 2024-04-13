@@ -3,6 +3,8 @@
 
 #include "types.hpp"
 
+#include <set>
+
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_scene.h>
 #include "wlr-wrap-end.hpp"
@@ -11,6 +13,7 @@ enum SurfaceType { MAGPIE_SURFACE_TYPE_VIEW, MAGPIE_SURFACE_TYPE_LAYER, MAGPIE_S
 
 struct Surface {
 	wlr_scene_node* scene_node = nullptr;
+	std::set<Popup*> popups;
 
 	virtual ~Surface() noexcept = default;
 

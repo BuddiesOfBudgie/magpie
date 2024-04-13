@@ -79,6 +79,7 @@ class XdgView final : public View {
 		wl_listener set_title = {};
 		wl_listener set_app_id = {};
 		wl_listener set_parent = {};
+		wl_listener new_popup = {};
 		explicit Listeners(XdgView& parent) noexcept : parent(parent) {}
 	};
 

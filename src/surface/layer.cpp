@@ -101,9 +101,8 @@ static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* d
 	}
 
 	Layer& layer = magpie_container_of(listener, layer, new_popup);
-	const auto* surface = static_cast<Surface*>(layer.wlr.surface->data);
-
-	new Popup(*surface, *static_cast<wlr_xdg_popup*>(data));
+	auto* surface = static_cast<Surface*>(layer.wlr.surface->data);
+	surface->popups.emplace(new Popup(*surface, *static_cast<wlr_xdg_popup*>(data)));
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, void* data) {

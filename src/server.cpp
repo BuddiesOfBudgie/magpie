@@ -202,8 +202,8 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 	if (xdg_surface.role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
 		new XdgView(server, *xdg_surface.toplevel);
 	} else if (xdg_surface.role == WLR_XDG_SURFACE_ROLE_POPUP) {
-		const auto* surface = static_cast<Surface*>(xdg_surface.popup->parent->data);
-		new Popup(*surface, *xdg_surface.popup);
+		auto* surface = static_cast<Surface*>(xdg_surface.popup->parent->data);
+		surface->popups.emplace(new Popup(*surface, *xdg_surface.popup));
 	}
 }
 

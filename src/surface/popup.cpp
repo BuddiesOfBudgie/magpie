@@ -31,6 +31,7 @@ static void popup_map_notify(wl_listener* listener, void*) {
 static void popup_destroy_notify(wl_listener* listener, void*) {
 	Popup& popup = magpie_container_of(listener, popup, destroy);
 
+	popup.parent.popups.erase(&popup);
 	delete &popup;
 }
 
@@ -40,12 +41,11 @@ static void popup_new_popup_notify(wl_listener* listener, void* data) {
 		return;
 	}
 
-	const Popup& popup = magpie_container_of(listener, popup, new_popup);
-
-	new Popup(popup, *static_cast<wlr_xdg_popup*>(data));
+	Popup& popup = magpie_container_of(listener, popup, new_popup);
+	popup.popups.emplace(new Popup(popup, *static_cast<wlr_xdg_popup*>(data)));
 }
 
-Popup::Popup(const Surface& parent, wlr_xdg_popup& wlr) noexcept
+Popup::Popup(Surface& parent, wlr_xdg_popup& wlr) noexcept
 	: listeners(*this), server(parent.get_server()), parent(parent), wlr(wlr) {
 	this->wlr = wlr;
 	auto* scene_tree = wlr_scene_xdg_surface_create(parent.scene_node->parent, wlr.base);
