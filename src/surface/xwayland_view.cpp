@@ -192,19 +192,19 @@ XWaylandView::~XWaylandView() noexcept {
 	wl_list_remove(&listeners.set_parent.link);
 }
 
-constexpr wlr_surface* XWaylandView::get_wlr_surface() const {
+wlr_surface* XWaylandView::get_wlr_surface() const {
 	return wlr.surface;
 }
 
-constexpr Server& XWaylandView::get_server() const {
+Server& XWaylandView::get_server() const {
 	return server;
 }
 
-constexpr wlr_box XWaylandView::get_geometry() const {
+wlr_box XWaylandView::get_geometry() const {
 	return {wlr.x, wlr.y, wlr.width, wlr.height};
 }
 
-constexpr wlr_box XWaylandView::get_min_size() const {
+wlr_box XWaylandView::get_min_size() const {
 	wlr_box min = {0, 0, 0, 0};
 	if (wlr.size_hints != nullptr) {
 		const auto& hints = *wlr.size_hints;
@@ -214,7 +214,7 @@ constexpr wlr_box XWaylandView::get_min_size() const {
 	return min;
 }
 
-constexpr wlr_box XWaylandView::get_max_size() const {
+wlr_box XWaylandView::get_max_size() const {
 	wlr_box max = {0, 0, UINT16_MAX, UINT16_MAX};
 	if (wlr.size_hints != nullptr) {
 		const auto& hints = *wlr.size_hints;
@@ -286,7 +286,7 @@ void XWaylandView::close() {
 	wlr_xwayland_surface_close(&wlr);
 }
 
-static constexpr int16_t trunc(const int32_t int32) {
+static int16_t trunc(const int32_t int32) {
 	if (int32 > INT16_MAX) {
 		return INT16_MAX;
 	}

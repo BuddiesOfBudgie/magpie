@@ -188,11 +188,11 @@ XdgView::~XdgView() noexcept {
 	wl_list_remove(&listeners.new_popup.link);
 }
 
-constexpr wlr_surface* XdgView::get_wlr_surface() const {
+wlr_surface* XdgView::get_wlr_surface() const {
 	return wlr.base->surface;
 }
 
-constexpr Server& XdgView::get_server() const {
+Server& XdgView::get_server() const {
 	return server;
 }
 
@@ -202,11 +202,11 @@ wlr_box XdgView::get_geometry() const {
 	return box;
 }
 
-constexpr wlr_box XdgView::get_min_size() const {
+wlr_box XdgView::get_min_size() const {
 	return {0, 0, wlr.current.min_width, wlr.current.min_height};
 }
 
-constexpr wlr_box XdgView::get_max_size() const {
+wlr_box XdgView::get_max_size() const {
 	const int32_t max_width = wlr.current.max_width > 0 ? wlr.current.max_width : INT32_MAX;
 	const int32_t max_height = wlr.current.max_height > 0 ? wlr.current.max_height : INT32_MAX;
 	return {0, 0, max_width, max_height};

@@ -12,7 +12,7 @@
 #include <wlr/types/wlr_subcompositor.h>
 #include "wlr-wrap-end.hpp"
 
-class Layer final : public Surface, public std::enable_shared_from_this<Layer> {
+class Layer final : public Surface {
   public:
 	struct Listeners {
 		std::reference_wrapper<Layer> parent;
@@ -40,9 +40,9 @@ class Layer final : public Surface, public std::enable_shared_from_this<Layer> {
 	Layer(Output& output, wlr_layer_surface_v1& surface) noexcept;
 	~Layer() noexcept override;
 
-	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
-	[[nodiscard]] constexpr Server& get_server() const override;
-	[[nodiscard]] constexpr bool is_view() const override;
+	[[nodiscard]] wlr_surface* get_wlr_surface() const override;
+	[[nodiscard]] Server& get_server() const override;
+	[[nodiscard]] bool is_view() const override;
 };
 
 class LayerSubsurface final : std::enable_shared_from_this<LayerSubsurface> {

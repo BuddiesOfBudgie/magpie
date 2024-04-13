@@ -68,14 +68,14 @@ Popup::~Popup() noexcept {
 	wl_list_remove(&listeners.new_popup.link);
 }
 
-constexpr wlr_surface* Popup::get_wlr_surface() const {
+wlr_surface* Popup::get_wlr_surface() const {
 	return wlr.base->surface;
 }
 
-constexpr Server& Popup::get_server() const {
+Server& Popup::get_server() const {
 	return server;
 }
 
-constexpr bool Popup::is_view() const {
+bool Popup::is_view() const {
 	return false;
 }

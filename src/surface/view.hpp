@@ -14,7 +14,7 @@
 #include <wlr/xwayland.h>
 #include "wlr-wrap-end.hpp"
 
-struct View : public Surface, public std::enable_shared_from_this<View> {
+struct View : public Surface {
 	ViewPlacement prev_placement = VIEW_PLACEMENT_STACKING;
 	ViewPlacement curr_placement = VIEW_PLACEMENT_STACKING;
 	bool is_minimized = false;
@@ -32,7 +32,7 @@ struct View : public Surface, public std::enable_shared_from_this<View> {
 	virtual void unmap() = 0;
 	virtual void close() = 0;
 
-	[[nodiscard]] constexpr bool is_view() const override {
+	[[nodiscard]] bool is_view() const override {
 		return true;
 	}
 	void begin_interactive(CursorMode mode, uint32_t edges);
@@ -63,7 +63,7 @@ struct View : public Surface, public std::enable_shared_from_this<View> {
 	virtual void impl_set_minimized(bool minimized) = 0;
 };
 
-class XdgView final : public View, public std::enable_shared_from_this<XdgView> {
+class XdgView final : public View {
   public:
 	struct Listeners {
 		std::reference_wrapper<XdgView> parent;
@@ -94,12 +94,12 @@ class XdgView final : public View, public std::enable_shared_from_this<XdgView> 
 	XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept;
 	~XdgView() noexcept override;
 
-	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
-	[[nodiscard]] constexpr Server& get_server() const override;
+	[[nodiscard]] wlr_surface* get_wlr_surface() const override;
+	[[nodiscard]] Server& get_server() const override;
 
 	[[nodiscard]] wlr_box get_geometry() const override;
-	[[nodiscard]] constexpr wlr_box get_min_size() const override;
-	[[nodiscard]] constexpr wlr_box get_max_size() const override;
+	[[nodiscard]] wlr_box get_min_size() const override;
+	[[nodiscard]] wlr_box get_max_size() const override;
 
 	void map() override;
 	void unmap() override;
@@ -115,7 +115,7 @@ class XdgView final : public View, public std::enable_shared_from_this<XdgView> 
 	void impl_set_minimized(bool minimized) override;
 };
 
-class XWaylandView final : public View, public std::enable_shared_from_this<XWaylandView> {
+class XWaylandView final : public View {
   public:
 	struct Listeners {
 		std::reference_wrapper<XWaylandView> parent;
@@ -143,12 +143,12 @@ class XWaylandView final : public View, public std::enable_shared_from_this<XWay
 	XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept;
 	~XWaylandView() noexcept override;
 
-	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
-	[[nodiscard]] constexpr Server& get_server() const override;
+	[[nodiscard]] wlr_surface* get_wlr_surface() const override;
+	[[nodiscard]] Server& get_server() const override;
 
-	[[nodiscard]] constexpr wlr_box get_geometry() const override;
-	[[nodiscard]] constexpr wlr_box get_min_size() const override;
-	[[nodiscard]] constexpr wlr_box get_max_size() const override;
+	[[nodiscard]] wlr_box get_geometry() const override;
+	[[nodiscard]] wlr_box get_min_size() const override;
+	[[nodiscard]] wlr_box get_max_size() const override;
 
 	void map() override;
 	void unmap() override;

@@ -11,7 +11,7 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
-class Popup final : public Surface, public std::enable_shared_from_this<Popup> {
+class Popup final : public Surface {
   public:
 	struct Listeners {
 		std::reference_wrapper<Popup> parent;
@@ -32,9 +32,9 @@ class Popup final : public Surface, public std::enable_shared_from_this<Popup> {
 	Popup(Surface& parent, wlr_xdg_popup& wlr) noexcept;
 	~Popup() noexcept override;
 
-	[[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
-	[[nodiscard]] constexpr Server& get_server() const override;
-	[[nodiscard]] constexpr bool is_view() const override;
+	[[nodiscard]] wlr_surface* get_wlr_surface() const override;
+	[[nodiscard]] Server& get_server() const override;
+	[[nodiscard]] bool is_view() const override;
 };
 
 #endif
