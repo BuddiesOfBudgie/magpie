@@ -75,9 +75,9 @@ class Server final : public std::enable_shared_from_this<Server> {
 
 	std::shared_ptr<Seat> seat;
 
-	std::list<View*> views;
-	View* focused_view = nullptr;
-	View* grabbed_view = nullptr;
+	std::list<std::shared_ptr<View>> views;
+	std::weak_ptr<View> focused_view;
+	std::weak_ptr<View> grabbed_view;
 	double grab_x = 0.0, grab_y = 0.0;
 	wlr_box grab_geobox = {};
 	uint32_t resize_edges = 0;
@@ -85,7 +85,7 @@ class Server final : public std::enable_shared_from_this<Server> {
 	wlr_output_manager_v1* output_manager;
 	wlr_output_power_manager_v1* output_power_manager;
 	wlr_output_layout* output_layout;
-	std::set<Output*> outputs;
+	std::set<std::shared_ptr<Output>> outputs;
 	uint8_t num_pending_output_layout_changes = 0;
 
 	wlr_idle_notifier_v1* idle_notifier;
@@ -96,8 +96,8 @@ class Server final : public std::enable_shared_from_this<Server> {
 
 	Server();
 
-	Surface* surface_at(double lx, double ly, wlr_surface** wlr, double* sx, double* sy) const;
-	void focus_view(View* view, wlr_surface* surface = nullptr);
+	std::weak_ptr<Surface> surface_at(double lx, double ly, wlr_surface** wlr, double* sx, double* sy) const;
+	void focus_view(std::shared_ptr<View>&& view, wlr_surface* surface = nullptr);
 };
 
 #endif

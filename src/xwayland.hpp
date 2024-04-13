@@ -42,7 +42,7 @@ class XWayland final : public std::enable_shared_from_this<XWayland> {
   public:
 	Server& server;
 	wlr_xwayland* wlr;
-	std::list<View*> unmapped_views;
+	std::list<std::shared_ptr<View>> unmapped_views;
 	xcb_atom_t atoms[ATOM_LAST] = {};
 
 	explicit XWayland(Server& server) noexcept;

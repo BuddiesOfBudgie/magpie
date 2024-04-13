@@ -15,7 +15,7 @@ static void popup_map_notify(wl_listener* listener, void*) {
 	Popup& popup = magpie_container_of(listener, popup, map);
 
 	wlr_box current = {};
-	wlr_xdg_surface_get_geometry(popup.wlr.base, &current);
+	wlr_xdg_surface_get_geometry(popup.wlr->base, &current);
 
 	for (auto& output : std::as_const(popup.server.outputs)) {
 		wlr_box output_area = output->full_area;
@@ -23,7 +23,7 @@ static void popup_map_notify(wl_listener* listener, void*) {
 		wlr_box_intersection(&intersect, &current, &output_area);
 
 		if (!wlr_box_empty(&current)) {
-			wlr_surface_send_enter(popup.wlr.base->surface, &output->wlr);
+			wlr_surface_send_enter(popup.wlr->base->surface, &output->wlr);
 		}
 	}
 }
@@ -31,8 +31,8 @@ static void popup_map_notify(wl_listener* listener, void*) {
 static void popup_destroy_notify(wl_listener* listener, void*) {
 	Popup& popup = magpie_container_of(listener, popup, destroy);
 
-	popup.parent.popups.erase(&popup);
-	delete &popup;
+	popup.wlr = nullptr;
+	popup.parent.popups.erase(std::dynamic_pointer_cast<Popup>(popup.shared_from_this()));
 }
 
 static void popup_new_popup_notify(wl_listener* listener, void* data) {
@@ -42,12 +42,11 @@ static void popup_new_popup_notify(wl_listener* listener, void* data) {
 	}
 
 	Popup& popup = magpie_container_of(listener, popup, new_popup);
-	popup.popups.emplace(new Popup(popup, *static_cast<wlr_xdg_popup*>(data)));
+	popup.popups.emplace(std::make_shared<Popup>(popup, *static_cast<wlr_xdg_popup*>(data)));
 }
 
 Popup::Popup(Surface& parent, wlr_xdg_popup& wlr) noexcept
-	: listeners(*this), server(parent.get_server()), parent(parent), wlr(wlr) {
-	this->wlr = wlr;
+	: listeners(*this), server(parent.get_server()), parent(parent), wlr(&wlr) {
 	auto* scene_tree = wlr_scene_xdg_surface_create(parent.scene_node->parent, wlr.base);
 	scene_node = &scene_tree->node;
 
@@ -66,10 +65,13 @@ Popup::~Popup() noexcept {
 	wl_list_remove(&listeners.map.link);
 	wl_list_remove(&listeners.destroy.link);
 	wl_list_remove(&listeners.new_popup.link);
+	if (wlr != nullptr) {
+		wlr_xdg_popup_destroy(wlr);
+	}
 }
 
 wlr_surface* Popup::get_wlr_surface() const {
-	return wlr.base->surface;
+	return wlr->base->surface;
 }
 
 Server& Popup::get_server() const {

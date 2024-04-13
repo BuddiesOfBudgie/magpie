@@ -31,7 +31,7 @@ class Output final : public std::enable_shared_from_this<Output> {
 	wlr_output& wlr;
 	wlr_box full_area = {};
 	wlr_box usable_area = {};
-	std::set<Layer*> layers;
+	std::set<std::shared_ptr<Layer>> layers;
 	bool is_leased = false;
 
 	Output(Server& server, wlr_output& wlr) noexcept;

@@ -31,18 +31,17 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(const zwlr_layer_shell_v
 static void subsurface_map_notify(wl_listener* listener, void*) {
 	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, map);
 
-	wlr_surface_send_enter(subsurface.wlr.surface, &subsurface.parent.output.wlr);
+	wlr_surface_send_enter(subsurface.wlr->surface, &subsurface.parent.output.wlr);
 }
 
 static void subsurface_destroy_notify(wl_listener* listener, void*) {
 	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, destroy);
 
-	subsurface.parent.subsurfaces.erase(&subsurface);
-	delete &subsurface;
+	subsurface.parent.subsurfaces.erase(subsurface.shared_from_this());
 }
 
 LayerSubsurface::LayerSubsurface(Layer& parent, wlr_subsurface& subsurface) noexcept
-	: listeners(*this), parent(parent), wlr(subsurface) {
+	: listeners(*this), parent(parent), wlr(&subsurface) {
 	listeners.map.notify = subsurface_map_notify;
 	wl_signal_add(&subsurface.surface->events.map, &listeners.map);
 	listeners.destroy.notify = subsurface_destroy_notify;
@@ -73,8 +72,7 @@ static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, void*) {
 static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void*) {
 	Layer& layer = magpie_container_of(listener, layer, destroy);
 
-	layer.output.layers.erase(&layer);
-	delete &layer;
+	layer.output.layers.erase(std::dynamic_pointer_cast<Layer>(layer.shared_from_this()));
 }
 
 static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void*) {
@@ -102,7 +100,7 @@ static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* d
 
 	Layer& layer = magpie_container_of(listener, layer, new_popup);
 	auto* surface = static_cast<Surface*>(layer.wlr.surface->data);
-	surface->popups.emplace(new Popup(*surface, *static_cast<wlr_xdg_popup*>(data)));
+	surface->popups.emplace(std::make_shared<Popup>(*surface, *static_cast<wlr_xdg_popup*>(data)));
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, void* data) {
@@ -114,7 +112,7 @@ static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, vo
 	Layer& layer = magpie_container_of(listener, layer, new_subsurface);
 	auto& subsurface = *static_cast<wlr_subsurface*>(data);
 
-	layer.subsurfaces.emplace(new LayerSubsurface(layer, subsurface));
+	layer.subsurfaces.emplace(std::make_shared<LayerSubsurface>(layer, subsurface));
 }
 
 Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept

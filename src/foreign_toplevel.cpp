@@ -50,7 +50,7 @@ static void foreign_toplevel_handle_request_activate_notify(wl_listener* listene
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
 
 	handle.view.set_minimized(false);
-	handle.view.get_server().focus_view(&handle.view);
+	handle.view.get_server().focus_view(std::dynamic_pointer_cast<View>(handle.view.shared_from_this()));
 }
 
 static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, void*) {

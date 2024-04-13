@@ -27,7 +27,7 @@ class Popup final : public Surface {
   public:
 	Server& server;
 	Surface& parent;
-	wlr_xdg_popup& wlr;
+	wlr_xdg_popup* wlr;
 
 	Popup(Surface& parent, wlr_xdg_popup& wlr) noexcept;
 	~Popup() noexcept override;

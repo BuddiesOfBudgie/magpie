@@ -48,9 +48,9 @@ static void xwayland_surface_dissociate_notify(wl_listener* listener, void*) {
 static void xwayland_surface_destroy_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, destroy);
 
-	view.server.xwayland->unmapped_views.remove(&view);
-	view.server.views.remove(&view);
-	delete &view;
+	auto view_ptr = std::dynamic_pointer_cast<View>(view.shared_from_this());
+	view.server.xwayland->unmapped_views.remove(view_ptr);
+	view.server.views.remove(view_ptr);
 }
 
 static void xwayland_surface_request_configure_notify(wl_listener* listener, void* data) {
@@ -68,7 +68,7 @@ static void xwayland_surface_request_configure_notify(wl_listener* listener, voi
 static void xwayland_surface_set_geometry_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, set_geometry);
 
-	if (view.server.grabbed_view != &view) {
+	if (view.server.grabbed_view.lock()->get_wlr_surface() != view.get_wlr_surface()) {
 		const wlr_xwayland_surface& surface = view.wlr;
 		if (view.curr_placement == VIEW_PLACEMENT_STACKING) {
 			view.previous = view.current;
@@ -255,10 +255,11 @@ void XWaylandView::map() {
 		set_placement(VIEW_PLACEMENT_MAXIMIZED);
 	}
 
-	server.xwayland->unmapped_views.remove(this);
-	server.views.emplace_back(this);
+	auto view_ptr = std::dynamic_pointer_cast<View>(shared_from_this());
+	server.xwayland->unmapped_views.remove(view_ptr);
+	server.views.emplace_back(view_ptr);
 	update_outputs(true);
-	server.focus_view(this);
+	server.focus_view(std::dynamic_pointer_cast<View>(shared_from_this()));
 }
 
 void XWaylandView::unmap() {
@@ -268,20 +269,21 @@ void XWaylandView::unmap() {
 	Cursor& cursor = server.seat->cursor;
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
-	if (this == server.grabbed_view) {
+	if (this == server.grabbed_view.lock().get()) {
 		cursor.reset_mode();
 	}
 
-	if (this == server.focused_view) {
-		server.focused_view = nullptr;
+	if (this == server.focused_view.lock().get()) {
+		server.focused_view.reset();
 	}
 
 	if (server.seat->wlr->keyboard_state.focused_surface == wlr.surface) {
 		server.seat->wlr->keyboard_state.focused_surface = nullptr;
 	}
 
-	server.views.remove(this);
-	server.xwayland->unmapped_views.emplace_back(this);
+	auto view_ptr = std::dynamic_pointer_cast<View>(shared_from_this());
+	server.views.remove(view_ptr);
+	server.xwayland->unmapped_views.emplace_back(view_ptr);
 
 	toplevel_handle.reset();
 }

@@ -30,8 +30,7 @@ static void xdg_toplevel_unmap_notify(wl_listener* listener, void*) {
 static void xdg_toplevel_destroy_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, destroy);
 
-	view.server.views.remove(&view);
-	delete &view;
+	view.server.views.remove(std::dynamic_pointer_cast<View>(view.shared_from_this()));
 }
 
 /* This event is raised when a client would like to begin an interactive
@@ -121,7 +120,7 @@ static void xdg_surface_new_popup_notify(wl_listener* listener, void* data) {
 	}
 
 	XdgView& view = magpie_container_of(listener, view, new_popup);
-	view.popups.emplace(new Popup(view, *static_cast<wlr_xdg_popup*>(data)));
+	view.popups.emplace(std::make_shared<Popup>(view, *static_cast<wlr_xdg_popup*>(data)));
 }
 
 XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept : listeners(*this), server(server), wlr(xdg_toplevel) {
@@ -235,19 +234,19 @@ void XdgView::map() {
 
 	update_outputs(true);
 
-	server.focus_view(this);
+	server.focus_view(std::dynamic_pointer_cast<View>(shared_from_this()));
 }
 
 void XdgView::unmap() {
 	wlr_scene_node_set_enabled(scene_node, false);
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
-	if (this == server.grabbed_view) {
+	if (this == server.grabbed_view.lock().get()) {
 		server.seat->cursor.reset_mode();
 	}
 
-	if (this == server.focused_view) {
-		server.focused_view = nullptr;
+	if (this == server.focused_view.lock().get()) {
+		server.focused_view.reset();
 	}
 }
 

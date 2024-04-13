@@ -34,7 +34,7 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-void Server::focus_view(View* view, wlr_surface* surface) {
+void Server::focus_view(std::shared_ptr<View>&& view, wlr_surface* surface) {
 	const wlr_surface* prev_surface = seat->wlr->keyboard_state.focused_surface;
 	if (prev_surface == surface && surface != nullptr) {
 		/* Don't re-focus an already focused surface. */
@@ -63,7 +63,7 @@ void Server::focus_view(View* view, wlr_surface* surface) {
 	/* Move the view to the front */
 	wlr_scene_node_raise_to_top(view->scene_node);
 	std::ranges::remove(views, view);
-	for (auto* it : std::as_const(views)) {
+	for (const auto& it : views) {
 		it->set_activated(false);
 	}
 
@@ -88,18 +88,18 @@ void Server::focus_view(View* view, wlr_surface* surface) {
 	seat->set_constraint(constraint);
 }
 
-Surface* Server::surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy) const {
+std::weak_ptr<Surface> Server::surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy) const {
 	/* This returns the topmost node in the scene at the given layout coords.
 	 * we only care about surface nodes as we are specifically looking for a
 	 * surface in the surface tree of a magpie_view. */
 	wlr_scene_node* node = wlr_scene_node_at(&scene->tree.node, lx, ly, sx, sy);
 	if (node == nullptr || node->type != WLR_SCENE_NODE_BUFFER) {
-		return nullptr;
+		return {};
 	}
 	wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
 	const wlr_scene_surface* scene_surface = wlr_scene_surface_try_from_buffer(scene_buffer);
 	if (!scene_surface) {
-		return nullptr;
+		return {};
 	}
 
 	*wlr = scene_surface->surface;
@@ -111,10 +111,10 @@ Surface* Server::surface_at(const double lx, const double ly, wlr_surface** wlr,
 	}
 
 	if (tree != nullptr) {
-		return static_cast<Surface*>(tree->node.data);
+		return static_cast<Surface*>(tree->node.data)->weak_from_this();
 	}
 
-	return nullptr;
+	return {};
 }
 
 /* This event is raised by the backend when a new output (aka a display or
@@ -151,7 +151,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	}
 
 	/* Allocates and configures our state for this output */
-	auto* output = new Output(server, *new_output);
+	auto output = std::make_shared<Output>(server, *new_output);
 	server.outputs.emplace(output);
 
 	/* Adds this to the output layout. The add_auto function arranges outputs
@@ -200,10 +200,10 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 	const auto& xdg_surface = *static_cast<wlr_xdg_surface*>(data);
 
 	if (xdg_surface.role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-		server.views.emplace_back(new XdgView(server, *xdg_surface.toplevel));
+		server.views.emplace_back(std::make_shared<XdgView>(server, *xdg_surface.toplevel));
 	} else if (xdg_surface.role == WLR_XDG_SURFACE_ROLE_POPUP) {
 		auto* surface = static_cast<Surface*>(xdg_surface.popup->parent->data);
-		surface->popups.emplace(new Popup(*surface, *xdg_surface.popup));
+		surface->popups.emplace(std::make_shared<Popup>(*surface, *xdg_surface.popup));
 	}
 }
 
@@ -225,7 +225,7 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 		output = static_cast<Output*>(layer_surface.output->data);
 	}
 
-	output->layers.emplace(new Layer(*output, layer_surface));
+	output->layers.emplace(std::make_shared<Layer>(*output, layer_surface));
 }
 
 static void request_activation_notify(wl_listener* listener, void* data) {
@@ -244,7 +244,7 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 
 	auto* view = dynamic_cast<View*>(static_cast<Surface*>(xdg_surface->surface->data));
 	if (view != nullptr && xdg_surface->surface->mapped) {
-		server.focus_view(view, xdg_surface->surface);
+		server.focus_view(std::dynamic_pointer_cast<View>(view->shared_from_this()), xdg_surface->surface);
 	}
 }
 
@@ -284,7 +284,7 @@ void output_layout_change_notify(wl_listener* listener, void*) {
 
 	wlr_output_configuration_v1* config = wlr_output_configuration_v1_create();
 
-	for (const auto* output : std::as_const(server.outputs)) {
+	for (const auto& output : server.outputs) {
 		wlr_output_configuration_head_v1* head = wlr_output_configuration_head_v1_create(config, &output->wlr);
 
 		wlr_box box = {};
@@ -357,7 +357,7 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 	wlr_output_configuration_v1_send_succeeded(&config);
 	wlr_output_configuration_v1_destroy(&config);
 
-	for (auto* output : server.outputs) {
+	for (const auto& output : server.outputs) {
 		wlr_xcursor_manager_load(server.seat->cursor.cursor_mgr, output->wlr.scale);
 	}
 

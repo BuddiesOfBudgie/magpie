@@ -21,10 +21,8 @@
 static void keyboard_handle_destroy(wl_listener* listener, void*) {
 	Keyboard& keyboard = magpie_container_of(listener, keyboard, destroy);
 
-	std::vector<Keyboard*>& keyboards = keyboard.seat.keyboards;
-	(void) std::ranges::remove(keyboards, &keyboard).begin();
-
-	delete &keyboard;
+	auto& keyboards = keyboard.seat.keyboards;
+	(void) std::ranges::remove(keyboards, keyboard.shared_from_this());
 }
 
 static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_t modifiers, const xkb_keysym_t sym) {

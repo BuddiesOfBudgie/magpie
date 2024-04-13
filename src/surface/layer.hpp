@@ -35,7 +35,7 @@ class Layer final : public Surface {
 	wlr_layer_surface_v1& wlr;
 	wlr_scene_layer_surface_v1* scene_surface;
 
-	std::set<LayerSubsurface*> subsurfaces;
+	std::set<std::shared_ptr<LayerSubsurface>> subsurfaces;
 
 	Layer(Output& output, wlr_layer_surface_v1& surface) noexcept;
 	~Layer() noexcept override;
@@ -59,7 +59,7 @@ class LayerSubsurface final : public std::enable_shared_from_this<LayerSubsurfac
 
   public:
 	Layer& parent;
-	wlr_subsurface& wlr;
+	wlr_subsurface* wlr;
 
 	LayerSubsurface(Layer& parent, wlr_subsurface& subsurface) noexcept;
 	~LayerSubsurface() noexcept;

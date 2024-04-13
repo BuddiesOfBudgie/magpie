@@ -138,7 +138,7 @@ Seat::Seat(Server& server) noexcept : listeners(*this), server(server), cursor(*
 void Seat::new_input_device(wlr_input_device* device) {
 	switch (device->type) {
 		case WLR_INPUT_DEVICE_KEYBOARD:
-			keyboards.push_back(new Keyboard(*this, *wlr_keyboard_from_input_device(device)));
+			keyboards.push_back(std::make_shared<Keyboard>(*this, *wlr_keyboard_from_input_device(device)));
 			break;
 		case WLR_INPUT_DEVICE_POINTER:
 		case WLR_INPUT_DEVICE_TABLET_TOOL:
@@ -157,40 +157,43 @@ void Seat::new_input_device(wlr_input_device* device) {
 }
 
 void Seat::set_constraint(wlr_pointer_constraint_v1* wlr_constraint) {
-	if (current_constraint.has_value()) {
-		if (&current_constraint.value().get().wlr == wlr_constraint) {
+	if (current_constraint != nullptr) {
+		if (&current_constraint->wlr == wlr_constraint) {
 			// we already have this constraint marked as the current constraint
 			return;
 		}
 
-		cursor.warp_to_constraint(current_constraint.value());
+		cursor.warp_to_constraint(*current_constraint);
 		current_constraint.reset();
 	}
 
 	if (wlr_constraint != nullptr) {
-		current_constraint = *new PointerConstraint(*this, *wlr_constraint);
-		current_constraint.value().get().activate();
+		current_constraint = std::make_shared<PointerConstraint>(*this, *wlr_constraint);
+		current_constraint->activate();
 	}
 }
 
 void Seat::apply_constraint(const wlr_pointer* pointer, double* dx, double* dy) const {
-	if (!current_constraint.has_value() || pointer->base.type != WLR_INPUT_DEVICE_POINTER) {
+	if (current_constraint == nullptr || pointer->base.type != WLR_INPUT_DEVICE_POINTER) {
 		return;
 	}
 
-	if (server.focused_view == nullptr) {
+	auto focused_view = server.focused_view.lock();
+
+	if (focused_view == nullptr) {
+		wlr_log(WLR_DEBUG, "Attempted to apply a pointer constraint without a focused view");
 		return;
 	}
 
 	double x = cursor.wlr.x;
 	double y = cursor.wlr.y;
 
-	x -= server.focused_view->current.x;
-	y -= server.focused_view->current.y;
+	x -= focused_view->current.x;
+	y -= focused_view->current.y;
 
 	double confined_x = 0;
 	double confined_y = 0;
-	if (!wlr_region_confine(&current_constraint->get().wlr.region, x, y, x + *dx, y + *dy, &confined_x, &confined_y)) {
+	if (!wlr_region_confine(&current_constraint->wlr.region, x, y, x + *dx, y + *dy, &confined_x, &confined_y)) {
 		wlr_log(WLR_ERROR, "Couldn't confine\n");
 		return;
 	}
@@ -200,6 +203,6 @@ void Seat::apply_constraint(const wlr_pointer* pointer, double* dx, double* dy) 
 }
 
 bool Seat::is_pointer_locked(const wlr_pointer* pointer) const {
-	return current_constraint.has_value() && pointer->base.type == WLR_INPUT_DEVICE_POINTER &&
-		current_constraint->get().wlr.type == WLR_POINTER_CONSTRAINT_V1_LOCKED;
+	return current_constraint != nullptr && pointer->base.type == WLR_INPUT_DEVICE_POINTER &&
+		current_constraint->wlr.type == WLR_POINTER_CONSTRAINT_V1_LOCKED;
 }

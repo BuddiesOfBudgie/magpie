@@ -34,11 +34,11 @@ class Seat final : public std::enable_shared_from_this<Seat> {
 	Server& server;
 	wlr_seat* wlr;
 	Cursor cursor;
-	std::vector<Keyboard*> keyboards;
+	std::vector<std::shared_ptr<Keyboard>> keyboards;
 	wlr_virtual_pointer_manager_v1* virtual_pointer_mgr;
 	wlr_virtual_keyboard_manager_v1* virtual_keyboard_mgr;
 	wlr_pointer_constraints_v1* pointer_constraints;
-	std::optional<std::reference_wrapper<PointerConstraint>> current_constraint = {};
+	std::shared_ptr<PointerConstraint> current_constraint;
 
 	explicit Seat(Server& server) noexcept;
 

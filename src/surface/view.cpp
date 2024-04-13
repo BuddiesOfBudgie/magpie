@@ -24,10 +24,10 @@ std::optional<std::reference_wrapper<Output>> View::find_output_for_maximize() c
 	}
 
 	const Cursor& cursor = server.seat->cursor;
-	Output* best_output = nullptr;
+	std::shared_ptr<Output> best_output = nullptr;
 	int64_t best_area = 0;
 
-	for (auto* output : server.outputs) {
+	for (const auto& output : server.outputs) {
 		if (!wlr_output_layout_intersects(server.output_layout, &output->wlr, &previous)) {
 			continue;
 		}
@@ -44,9 +44,9 @@ std::optional<std::reference_wrapper<Output>> View::find_output_for_maximize() c
 		}
 	}
 
-	// if it's outside of all outputs, just use the pointer position
+	// if it's outside all outputs, just use the pointer position
 	if (best_output == nullptr) {
-		for (auto* output : server.outputs) {
+		for (const auto& output : server.outputs) {
 			const auto cx = static_cast<int32_t>(std::round(cursor.wlr.x));
 			const auto cy = static_cast<int32_t>(std::round(cursor.wlr.y));
 			if (wlr_output_layout_contains_point(server.output_layout, &output->wlr, cx, cy)) {
@@ -58,7 +58,7 @@ std::optional<std::reference_wrapper<Output>> View::find_output_for_maximize() c
 
 	// still nothing? use the first output in the list
 	if (best_output == nullptr) {
-		best_output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
+		best_output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data)->shared_from_this();
 	}
 
 	if (best_output == nullptr) {
@@ -81,7 +81,7 @@ int32_t View::find_min_y() const {
 
 	int32_t min_y = INT32_MAX;
 
-	for (auto* output : server.outputs) {
+	for (const auto& output : server.outputs) {
 		wlr_box output_box = {};
 		wlr_output_layout_get_box(server.output_layout, &output->wlr, &output_box);
 		wlr_box intersection = {};
@@ -106,7 +106,7 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 		return;
 	}
 
-	server.grabbed_view = this;
+	server.grabbed_view = std::dynamic_pointer_cast<View>(shared_from_this());
 	cursor.mode = mode;
 
 	if (mode == MAGPIE_CURSOR_MOVE) {

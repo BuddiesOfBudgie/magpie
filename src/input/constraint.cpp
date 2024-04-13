@@ -13,13 +13,11 @@ static void constraint_destroy_notify(wl_listener* listener, void*) {
 	PointerConstraint& constraint = magpie_container_of(listener, constraint, destroy);
 
 	auto& current_constraint = constraint.seat.current_constraint;
-	if (current_constraint.has_value() && &current_constraint.value().get().wlr == &constraint.wlr) {
-		constraint.seat.cursor.warp_to_constraint(current_constraint.value());
+	if (current_constraint != nullptr && &current_constraint->wlr == &constraint.wlr) {
+		constraint.seat.cursor.warp_to_constraint(*current_constraint);
 		constraint.deactivate();
 		current_constraint.reset();
 	}
-
-	delete &constraint;
 }
 
 PointerConstraint::PointerConstraint(Seat& seat, wlr_pointer_constraint_v1& wlr) noexcept

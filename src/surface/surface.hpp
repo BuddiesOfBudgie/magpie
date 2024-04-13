@@ -14,7 +14,7 @@ enum SurfaceType { MAGPIE_SURFACE_TYPE_VIEW, MAGPIE_SURFACE_TYPE_LAYER, MAGPIE_S
 
 struct Surface : public virtual std::enable_shared_from_this<Surface> {
 	wlr_scene_node* scene_node = nullptr;
-	std::set<Popup*> popups;
+	std::set<std::shared_ptr<Popup>> popups;
 
 	virtual ~Surface() noexcept = default;
 

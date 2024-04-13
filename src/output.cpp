@@ -50,12 +50,10 @@ static void output_frame_notify(wl_listener* listener, void*) {
 static void output_destroy_notify(wl_listener* listener, void*) {
 	Output& output = magpie_container_of(listener, output, destroy);
 
-	output.server.outputs.erase(&output);
-	for (const auto* layer : std::as_const(output.layers)) {
+	for (const auto& layer : output.layers) {
 		wlr_layer_surface_v1_destroy(&layer->wlr);
 	}
-
-	delete &output;
+	output.server.outputs.erase(output.shared_from_this());
 }
 
 Output::Output(Server& server, wlr_output& wlr) noexcept : listeners(*this), server(server), wlr(wlr) {
@@ -105,7 +103,7 @@ void Output::update_layout() {
 
 	usable_area = full_area;
 
-	for (const auto* layer : std::as_const(layers)) {
+	for (const auto& layer : layers) {
 		wlr_scene_layer_surface_v1_configure(layer->scene_surface, &full_area, &usable_area);
 	}
 }
