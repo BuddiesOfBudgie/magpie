@@ -65,7 +65,7 @@ static void new_surface_notify(wl_listener* listener, void* data) {
 	XWayland& xwayland = magpie_container_of(listener, xwayland, new_surface);
 	auto& xwayland_surface = *static_cast<wlr_xwayland_surface*>(data);
 
-	new XWaylandView(xwayland.server, xwayland_surface);
+	xwayland.unmapped_views.emplace_back(new XWaylandView(xwayland.server, xwayland_surface));
 }
 
 XWayland::XWayland(Server& server) noexcept : listeners(*this), server(server) {

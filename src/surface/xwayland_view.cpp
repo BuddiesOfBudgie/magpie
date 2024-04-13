@@ -5,6 +5,7 @@
 #include "server.hpp"
 #include "surface.hpp"
 #include "types.hpp"
+#include "xwayland.hpp"
 
 #include <cstdlib>
 #include <wayland-server-core.h>
@@ -47,6 +48,7 @@ static void xwayland_surface_dissociate_notify(wl_listener* listener, void*) {
 static void xwayland_surface_destroy_notify(wl_listener* listener, void*) {
 	XWaylandView& view = magpie_container_of(listener, view, destroy);
 
+	view.server.xwayland->unmapped_views.remove(&view);
 	view.server.views.remove(&view);
 	delete &view;
 }
@@ -253,7 +255,8 @@ void XWaylandView::map() {
 		set_placement(VIEW_PLACEMENT_MAXIMIZED);
 	}
 
-	server.views.insert(server.views.begin(), this);
+	server.xwayland->unmapped_views.remove(this);
+	server.views.emplace_back(this);
 	update_outputs(true);
 	server.focus_view(this);
 }
@@ -278,6 +281,7 @@ void XWaylandView::unmap() {
 	}
 
 	server.views.remove(this);
+	server.xwayland->unmapped_views.emplace_back(this);
 
 	toplevel_handle.reset();
 }

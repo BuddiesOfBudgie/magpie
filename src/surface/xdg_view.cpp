@@ -170,8 +170,6 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept : list
 	wl_signal_add(&wlr.events.set_parent, &listeners.set_parent);
 	listeners.new_popup.notify = xdg_surface_new_popup_notify;
 	wl_signal_add(&wlr.base->events.new_popup, &listeners.new_popup);
-
-	server.views.push_back(this);
 }
 
 XdgView::~XdgView() noexcept {
