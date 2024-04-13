@@ -5,12 +5,13 @@
 #include "types.hpp"
 
 #include <functional>
+#include <memory>
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
-class Popup final : public Surface {
+class Popup final : public Surface, public std::enable_shared_from_this<Popup> {
   public:
 	struct Listeners {
 		std::reference_wrapper<Popup> parent;

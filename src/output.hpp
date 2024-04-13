@@ -4,6 +4,7 @@
 #include "types.hpp"
 
 #include <functional>
+#include <memory>
 #include <set>
 
 #include "wlr-wrap-start.hpp"
@@ -12,7 +13,7 @@
 #include <wlr/util/box.h>
 #include "wlr-wrap-end.hpp"
 
-class Output {
+class Output final : public std::enable_shared_from_this<Output> {
   public:
 	struct Listeners {
 		std::reference_wrapper<Output> parent;

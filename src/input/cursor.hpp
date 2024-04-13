@@ -1,10 +1,10 @@
 #ifndef MAGPIE_CURSOR_HPP
 #define MAGPIE_CURSOR_HPP
 
-#include "input/constraint.hpp"
 #include "types.hpp"
 
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "wlr-wrap-start.hpp"
@@ -16,7 +16,7 @@
 
 enum CursorMode { MAGPIE_CURSOR_PASSTHROUGH, MAGPIE_CURSOR_MOVE, MAGPIE_CURSOR_RESIZE };
 
-class Cursor {
+class Cursor final : std::enable_shared_from_this<Cursor> {
   public:
 	struct Listeners {
 		std::reference_wrapper<Cursor> parent;

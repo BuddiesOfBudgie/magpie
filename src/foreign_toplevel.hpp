@@ -4,6 +4,7 @@
 #include "types.hpp"
 
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -11,7 +12,7 @@
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include "wlr-wrap-end.hpp"
 
-class ForeignToplevelHandle {
+class ForeignToplevelHandle final : public std::enable_shared_from_this<ForeignToplevelHandle> {
   public:
 	struct Listeners {
 		std::reference_wrapper<ForeignToplevelHandle> parent;

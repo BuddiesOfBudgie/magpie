@@ -4,6 +4,7 @@
 #include "types.hpp"
 
 #include <functional>
+#include <memory>
 #include <xcb/xproto.h>
 
 #include "wlr-wrap-start.hpp"
@@ -25,7 +26,7 @@ enum atom_name {
 	ATOM_LAST,
 };
 
-class XWayland {
+class XWayland final : std::enable_shared_from_this<XWayland> {
   public:
 	struct Listeners {
 		std::reference_wrapper<XWayland> parent;

@@ -5,6 +5,7 @@
 
 #include <functional>
 #include <list>
+#include <memory>
 #include <set>
 
 #include "wlr-wrap-start.hpp"
@@ -32,7 +33,7 @@ typedef enum {
 	MAGPIE_SCENE_LAYER_LOCK
 } magpie_scene_layer_t;
 
-class Server {
+class Server final : std::enable_shared_from_this<Server> {
   public:
 	struct Listeners {
 		std::reference_wrapper<Server> parent;

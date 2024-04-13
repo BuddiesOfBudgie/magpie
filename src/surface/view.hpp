@@ -14,7 +14,7 @@
 #include <wlr/xwayland.h>
 #include "wlr-wrap-end.hpp"
 
-struct View : Surface {
+struct View : public Surface, public std::enable_shared_from_this<View> {
 	ViewPlacement prev_placement = VIEW_PLACEMENT_STACKING;
 	ViewPlacement curr_placement = VIEW_PLACEMENT_STACKING;
 	bool is_minimized = false;
@@ -63,7 +63,7 @@ struct View : Surface {
 	virtual void impl_set_minimized(bool minimized) = 0;
 };
 
-class XdgView final : public View {
+class XdgView final : public View, public std::enable_shared_from_this<XdgView> {
   public:
 	struct Listeners {
 		std::reference_wrapper<XdgView> parent;
@@ -115,7 +115,7 @@ class XdgView final : public View {
 	void impl_set_minimized(bool minimized) override;
 };
 
-class XWaylandView final : public View {
+class XWaylandView final : public View, public std::enable_shared_from_this<XWaylandView> {
   public:
 	struct Listeners {
 		std::reference_wrapper<XWaylandView> parent;

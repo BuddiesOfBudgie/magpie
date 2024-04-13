@@ -4,13 +4,14 @@
 #include "types.hpp"
 
 #include <functional>
+#include <memory>
 #include <wayland-server-core.h>
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_pointer_constraints_v1.h>
 #include "wlr-wrap-end.hpp"
 
-class PointerConstraint {
+class PointerConstraint final : public std::enable_shared_from_this<PointerConstraint> {
   public:
 	struct Listeners {
 		std::reference_wrapper<PointerConstraint> parent;

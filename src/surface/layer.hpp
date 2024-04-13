@@ -5,13 +5,14 @@
 #include "types.hpp"
 
 #include <functional>
+#include <memory>
 #include <set>
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_subcompositor.h>
 #include "wlr-wrap-end.hpp"
 
-class Layer final : public Surface {
+class Layer final : public Surface, public std::enable_shared_from_this<Layer> {
   public:
 	struct Listeners {
 		std::reference_wrapper<Layer> parent;
@@ -44,7 +45,7 @@ class Layer final : public Surface {
 	[[nodiscard]] constexpr bool is_view() const override;
 };
 
-class LayerSubsurface {
+class LayerSubsurface final : std::enable_shared_from_this<LayerSubsurface> {
   public:
 	struct Listeners {
 		std::reference_wrapper<LayerSubsurface> parent;

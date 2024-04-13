@@ -1,6 +1,6 @@
 #include "seat.hpp"
 
-#include "cursor.hpp"
+#include "constraint.hpp"
 #include "keyboard.hpp"
 #include "server.hpp"
 #include "surface/view.hpp"

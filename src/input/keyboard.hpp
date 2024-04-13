@@ -4,12 +4,13 @@
 #include "types.hpp"
 
 #include <functional>
+#include <memory>
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_keyboard.h>
 #include "wlr-wrap-end.hpp"
 
-class Keyboard {
+class Keyboard final : std::enable_shared_from_this<Keyboard> {
   public:
 	struct Listeners {
 		std::reference_wrapper<Keyboard> parent;
