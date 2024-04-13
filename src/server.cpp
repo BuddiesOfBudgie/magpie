@@ -423,7 +423,7 @@ Server::Server() : listeners(*this) {
 	listeners.output_power_manager_set_mode.notify = output_power_manager_set_mode_notify;
 	wl_signal_add(&output_power_manager->events.set_mode, &listeners.output_power_manager_set_mode);
 
-	seat = new Seat(*this);
+	seat = std::make_shared<Seat>(*this);
 
 	/* Configure a listener to be notified when new outputs are available on the
 	 * backend. */
@@ -464,7 +464,7 @@ Server::Server() : listeners(*this) {
 	wlr_data_control_manager_v1_create(display);
 	foreign_toplevel_manager = wlr_foreign_toplevel_manager_v1_create(display);
 
-	xwayland = new XWayland(*this);
+	xwayland = std::make_shared<XWayland>(*this);
 
 	wlr_viewporter_create(display);
 	wlr_single_pixel_buffer_manager_v1_create(display);

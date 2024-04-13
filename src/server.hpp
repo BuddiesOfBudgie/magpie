@@ -59,7 +59,7 @@ class Server final : public std::enable_shared_from_this<Server> {
 	wlr_allocator* allocator;
 	wlr_compositor* compositor;
 
-	XWayland* xwayland;
+	std::shared_ptr<XWayland> xwayland;
 
 	wlr_scene* scene;
 	wlr_scene_output_layout* scene_layout;
@@ -73,7 +73,7 @@ class Server final : public std::enable_shared_from_this<Server> {
 
 	wlr_layer_shell_v1* layer_shell;
 
-	Seat* seat;
+	std::shared_ptr<Seat> seat;
 
 	std::list<View*> views;
 	View* focused_view = nullptr;
