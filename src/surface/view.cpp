@@ -138,7 +138,7 @@ void View::set_geometry(const int32_t x, const int32_t y, const int32_t width, c
 		previous = current;
 	}
 	current = {x, y, bounded_width, bounded_height};
-	current.y = find_min_y();
+	current.y = std::max(y, find_min_y());
 	if (scene_node != nullptr) {
 		wlr_scene_node_set_position(scene_node, current.x, current.y);
 	}
@@ -152,7 +152,7 @@ void View::set_position(const int32_t x, const int32_t y) {
 	}
 	current.x = x;
 	current.y = y;
-	current.y = find_min_y();
+	current.y = std::max(y, find_min_y());
 	if (scene_node != nullptr) {
 		wlr_scene_node_set_position(scene_node, current.x, current.y);
 	}
