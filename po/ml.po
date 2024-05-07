@@ -24,18 +24,6 @@ msgstr ""
 msgid "Navigation"
 msgstr ""
 
-#: ../src/50-mutter-navigation.xml.in.h:2
-msgid "Move window to workspace 1"
-msgstr "പണിയറ ജാലകം ഒന്നിലേക്ക് നീക്കുക"
-
-#: ../src/50-mutter-navigation.xml.in.h:3
-msgid "Move window to workspace 2"
-msgstr "പണിയറ ജാലകം 2ലേക്ക് നീക്കുക"
-
-#: ../src/50-mutter-navigation.xml.in.h:4
-msgid "Move window to workspace 3"
-msgstr "പണിയറ ജാലകം 3ലേക്ക് നീക്കുക"
-
 #: ../src/50-mutter-navigation.xml.in.h:5
 msgid "Move window to workspace 4"
 msgstr "പണിയറ ജാലകം 4ലേക്ക് നീക്കുക"
@@ -96,33 +84,9 @@ msgstr "പപണിയറകള് 1ലേക്ക് മാറ്റൂ"
 msgid "Switch to workspace 2"
 msgstr "പണിയറകള് 2ലേക്ക് മാറ്റൂ"
 
-#: ../src/50-mutter-navigation.xml.in.h:20
-msgid "Switch to workspace 3"
-msgstr "പണിയറകള് 3ലേക്ക് മാറ്റൂ"
 
-#: ../src/50-mutter-navigation.xml.in.h:21
-msgid "Switch to workspace 4"
-msgstr "പണിയറകള് 4ലേക്ക് മാറ്റൂ"
 
-#: ../src/50-mutter-navigation.xml.in.h:22
-#| msgid "Move to Workspace _Left"
-msgid "Move to workspace left"
-msgstr "ഇടത്തുളള പണിയറയിലേക്ക് നീങ്ങുക"
 
-#: ../src/50-mutter-navigation.xml.in.h:23
-#| msgid "Move to Workspace R_ight"
-msgid "Move to workspace right"
-msgstr "വലത്തുളള പണിയറയിലേക്ക് നീങ്ങുക"
-
-#: ../src/50-mutter-navigation.xml.in.h:24
-#| msgid "Move to Workspace _Left"
-msgid "Move to workspace above"
-msgstr "മുകളിലുള്ള പണിയറയിലേക്ക് നീങ്ങുക "
-
-#: ../src/50-mutter-navigation.xml.in.h:25
-#| msgid "Move to Workspace _Down"
-msgid "Move to workspace below"
-msgstr "താഴെയുളള പണിയറയിലേക്ക് നീങ്ങുക"
 
 #: ../src/50-mutter-system.xml.in.h:1
 msgid "System"
@@ -725,10 +689,6 @@ msgid "_Always on Visible Workspace"
 msgstr "എപ്പോഴും ദൃശ്യമായ പണിയറയില്‍ (_A)"
 
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:92
-msgid "_Only on This Workspace"
-msgstr "ഈ പണിയറയില്‍ മാത്രം (_O)"
-
 #. Translators: Translate this string the same way as you do in libwnck!
 #: ../src/ui/menu.c:94
 msgid "Move to Workspace _Left"

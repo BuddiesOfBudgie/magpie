@@ -1391,20 +1391,8 @@ msgid "_Only on This Workspace"
 msgstr "_Kan Wannan Filin Aiki Kawai"
 
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:95
-msgid "Move to Workspace _Left"
-msgstr "Motsa Zuwa Filin aiki _Hagu"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:97
-msgid "Move to Workspace R_ight"
-msgstr "Motsa Zuwa Filin aiki D_ama"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:99
-msgid "Move to Workspace _Up"
-msgstr "Motsa Zuwa Filin aiki _Sama"
-
 #. Translators: Translate this string the same way as you do in libwnck!
 #: ../src/ui/menu.c:101
 msgid "Move to Workspace _Down"

@@ -22,18 +22,6 @@ msgstr ""
 msgid "Navigation"
 msgstr "Паймоиш"
 
-#: ../src/50-mutter-navigation.xml.in.h:2
-msgid "Move window to workspace 1"
-msgstr "Интиқол додани равзана ба фазои кории 1"
-
-#: ../src/50-mutter-navigation.xml.in.h:3
-msgid "Move window to workspace 2"
-msgstr "Интиқол додани равзана ба фазои кории 2"
-
-#: ../src/50-mutter-navigation.xml.in.h:4
-msgid "Move window to workspace 3"
-msgstr "Интиқол додани равзана ба фазои кории 3"
-
 #: ../src/50-mutter-navigation.xml.in.h:5
 msgid "Move window to workspace 4"
 msgstr "Интиқол додани равзана ба фазои кории 4"
@@ -92,30 +80,6 @@ msgstr ""
 
 #: ../src/50-mutter-navigation.xml.in.h:19
 msgid "Switch to workspace 2"
-msgstr ""
-
-#: ../src/50-mutter-navigation.xml.in.h:20
-msgid "Switch to workspace 3"
-msgstr ""
-
-#: ../src/50-mutter-navigation.xml.in.h:21
-msgid "Switch to workspace 4"
-msgstr ""
-
-#: ../src/50-mutter-navigation.xml.in.h:22
-msgid "Move to workspace left"
-msgstr ""
-
-#: ../src/50-mutter-navigation.xml.in.h:23
-msgid "Move to workspace right"
-msgstr ""
-
-#: ../src/50-mutter-navigation.xml.in.h:24
-msgid "Move to workspace above"
-msgstr ""
-
-#: ../src/50-mutter-navigation.xml.in.h:25
-msgid "Move to workspace below"
 msgstr ""
 
 #: ../src/50-mutter-system.xml.in.h:1
@@ -701,10 +665,6 @@ msgid "_Always on Visible Workspace"
 msgstr ""
 
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:92
-msgid "_Only on This Workspace"
-msgstr ""
-
 #. Translators: Translate this string the same way as you do in libwnck!
 #: ../src/ui/menu.c:94
 msgid "Move to Workspace _Left"

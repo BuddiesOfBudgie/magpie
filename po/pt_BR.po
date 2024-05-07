@@ -41,162 +41,10 @@ msgstr ""
 "X-DL-Domain: po\n"
 "X-DL-State: Translating\n"
 
-#: data/50-mutter-navigation.xml:6
-msgid "Navigation"
-msgstr "Navegação"
-
-#: data/50-mutter-navigation.xml:9
-msgid "Move window to workspace 1"
-msgstr "Mover a janela para o espaço de trabalho 1"
-
-#: data/50-mutter-navigation.xml:12
-msgid "Move window to workspace 2"
-msgstr "Mover a janela para o espaço de trabalho 2"
-
-#: data/50-mutter-navigation.xml:15
-msgid "Move window to workspace 3"
-msgstr "Mover a janela para o espaço de trabalho 3"
-
-#: data/50-mutter-navigation.xml:18
-msgid "Move window to workspace 4"
-msgstr "Mover a janela para o espaço de trabalho 4"
-
-#: data/50-mutter-navigation.xml:21
-msgid "Move window to last workspace"
-msgstr "Mover a janela para o último espaço de trabalho"
-
-#: data/50-mutter-navigation.xml:24
-msgid "Move window one workspace to the left"
-msgstr "Mover a janela um espaço de trabalho à esquerda"
-
-#: data/50-mutter-navigation.xml:27
-msgid "Move window one workspace to the right"
-msgstr "Mover a janela um espaço de trabalho à direita"
-
-#: data/50-mutter-navigation.xml:31
-msgid "Move window one workspace up"
-msgstr "Mover a janela para um espaço de trabalho acima"
-
-#: data/50-mutter-navigation.xml:35
-msgid "Move window one workspace down"
-msgstr "Mover a janela para um espaço de trabalho abaixo"
-
 # Em conformidade com a tradução do gsettings-desktop-schemas --Enrico
-#: data/50-mutter-navigation.xml:38
-msgid "Move window one monitor to the left"
-msgstr "Mover a janela para o monitor da esquerda"
-
 # Em conformidade com a tradução do gsettings-desktop-schemas --Enrico
-#: data/50-mutter-navigation.xml:41
-msgid "Move window one monitor to the right"
-msgstr "Mover a janela para o monitor da direita"
-
 # Em conformidade com a tradução do gsettings-desktop-schemas --Enrico
-#: data/50-mutter-navigation.xml:44
-msgid "Move window one monitor up"
-msgstr "Mover a janela para o monitor acima"
-
 # Em conformidade com a tradução do gsettings-desktop-schemas --Enrico
-#: data/50-mutter-navigation.xml:47
-msgid "Move window one monitor down"
-msgstr "Mover a janela para o monitor abaixo"
-
-#: data/50-mutter-navigation.xml:51
-msgid "Switch applications"
-msgstr "Alternar entre aplicativos"
-
-#: data/50-mutter-navigation.xml:56
-msgid "Switch to previous application"
-msgstr "Alternar para o aplicativo anterior"
-
-#: data/50-mutter-navigation.xml:60
-msgid "Switch windows"
-msgstr "Alternar entre janelas"
-
-#: data/50-mutter-navigation.xml:65
-msgid "Switch to previous window"
-msgstr "Alternar para a janela anterior"
-
-#: data/50-mutter-navigation.xml:69
-msgid "Switch windows of an application"
-msgstr "Alternar as janelas de um aplicativo"
-
-#: data/50-mutter-navigation.xml:74
-msgid "Switch to previous window of an application"
-msgstr "Alternar para a janela anterior de um aplicativo"
-
-#: data/50-mutter-navigation.xml:78
-msgid "Switch system controls"
-msgstr "Alternar os controles do sistema"
-
-#: data/50-mutter-navigation.xml:83
-msgid "Switch to previous system control"
-msgstr "Alternar para o controle de sistema anterior"
-
-#: data/50-mutter-navigation.xml:87
-msgid "Switch windows directly"
-msgstr "Alternar as janelas diretamente"
-
-#: data/50-mutter-navigation.xml:92
-msgid "Switch directly to previous window"
-msgstr "Alternar diretamente para a janela anterior"
-
-#: data/50-mutter-navigation.xml:96
-msgid "Switch windows of an app directly"
-msgstr "Alternar as janelas de um aplicativo diretamente"
-
-#: data/50-mutter-navigation.xml:101
-msgid "Switch directly to previous window of an app"
-msgstr "Alternar diretamente para a janela anterior de um aplicativo"
-
-#: data/50-mutter-navigation.xml:105
-msgid "Switch system controls directly"
-msgstr "Alternar os controles de sistema diretamente"
-
-#: data/50-mutter-navigation.xml:110
-msgid "Switch directly to previous system control"
-msgstr "Alternar diretamente para o controle de sistema anterior"
-
-#: data/50-mutter-navigation.xml:113
-msgid "Hide all normal windows"
-msgstr "Ocultar todas as janelas normais"
-
-#: data/50-mutter-navigation.xml:116
-msgid "Switch to workspace 1"
-msgstr "Trocar para o espaço de trabalho 1"
-
-#: data/50-mutter-navigation.xml:119
-msgid "Switch to workspace 2"
-msgstr "Trocar para o espaço de trabalho 2"
-
-#: data/50-mutter-navigation.xml:122
-msgid "Switch to workspace 3"
-msgstr "Trocar para o espaço de trabalho 3"
-
-#: data/50-mutter-navigation.xml:125
-msgid "Switch to workspace 4"
-msgstr "Trocar para o espaço de trabalho 4"
-
-#: data/50-mutter-navigation.xml:128
-msgid "Switch to last workspace"
-msgstr "Trocar para o último espaço de trabalho"
-
-#: data/50-mutter-navigation.xml:131
-msgid "Move to workspace on the left"
-msgstr "Move para o espaço de trabalho à esquerda"
-
-#: data/50-mutter-navigation.xml:134
-msgid "Move to workspace on the right"
-msgstr "Move para o espaço de trabalho à direita"
-
-#: data/50-mutter-navigation.xml:138
-msgid "Move to workspace above"
-msgstr "Mover a visualização para o espaço de trabalho acima"
-
-#: data/50-mutter-navigation.xml:142
-msgid "Move to workspace below"
-msgstr "Mover a visualização para o espaço de trabalho abaixo"
-
 #: data/50-mutter-system.xml:6 data/50-mutter-wayland.xml:6
 msgid "System"
 msgstr "Sistema"
@@ -204,10 +52,6 @@ msgstr "Sistema"
 #: data/50-mutter-system.xml:8
 msgid "Show the run command prompt"
 msgstr "Mostrar o prompt de comando de execução"
-
-#: data/50-mutter-wayland.xml:8
-msgid "Restore the keyboard shortcuts"
-msgstr "Restaurar os atalhos de teclado"
 
 #: data/50-mutter-windows.xml:6
 msgid "Windows"

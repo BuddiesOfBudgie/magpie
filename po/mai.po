@@ -1287,20 +1287,8 @@ msgid "_Only on This Workspace"
 msgstr "केवल एहि कार्यस्थान पर (_O)"
 
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:95
-msgid "Move to Workspace _Left"
-msgstr "बामाँ कार्यस्थानमे लए जाउ (_L)"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:97
-msgid "Move to Workspace R_ight"
-msgstr "दहिन्ना कार्यस्थानमे लए जाउ (_R)"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:99
-msgid "Move to Workspace _Up"
-msgstr "उप्परी कार्यस्थानमे लए जाउ (_U)"
-
 #. Translators: Translate this string the same way as you do in libwnck!
 #: ../src/ui/menu.c:101
 msgid "Move to Workspace _Down"
