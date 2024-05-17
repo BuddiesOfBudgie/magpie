@@ -143,11 +143,17 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	 * would let the user configure it. */
 	if (!wl_list_empty(&new_output->modes)) {
 		wlr_output_mode* mode = wlr_output_preferred_mode(new_output);
-		wlr_output_set_mode(new_output, mode);
-		wlr_output_enable(new_output, true);
-		if (!wlr_output_commit(new_output)) {
+		wlr_output_state state = {};
+		wlr_output_state_init(&state);
+		wlr_output_state_set_mode(&state, mode);
+		wlr_output_state_set_enabled(&state, true);
+		if (!wlr_output_commit_state(new_output, &state)) {
+			wlr_log(WLR_ERROR, "Failed to commit mode to new output %s", new_output->name);
+			wlr_output_state_finish(&state);
 			return;
 		}
+
+		wlr_output_state_finish(&state);
 	}
 
 	/* Allocates and configures our state for this output */
@@ -176,16 +182,13 @@ static void output_power_manager_set_mode_notify(wl_listener*, void* data) {
 
 	const auto& event = *static_cast<wlr_output_power_v1_set_mode_event*>(data);
 
-	if (event.mode == ZWLR_OUTPUT_POWER_V1_MODE_ON) {
-		wlr_output_enable(event.output, true);
-		if (!wlr_output_test(event.output)) {
-			wlr_output_rollback(event.output);
-		}
-		wlr_output_commit(event.output);
-	} else {
-		wlr_output_enable(event.output, false);
-		wlr_output_commit(event.output);
+	wlr_output_state state = {};
+	wlr_output_state_init(&state);
+	wlr_output_state_set_enabled(&state, event.mode == ZWLR_OUTPUT_POWER_V1_MODE_ON);
+	if (!wlr_output_commit_state(event.output, &state)) {
+		wlr_log(WLR_ERROR, "Failed to set enabled state %d for output %s", state.enabled, event.output->name);
 	}
+	wlr_output_state_finish(&state);
 }
 
 /* This event is raised when wlr_xdg_shell receives a new xdg surface from a
@@ -268,8 +271,11 @@ static void drm_lease_request_notify(wl_listener* listener, void* data) {
 		if (output == nullptr)
 			continue;
 
-		wlr_output_enable(&output->wlr, false);
-		wlr_output_commit(&output->wlr);
+		wlr_output_state state = {};
+		wlr_output_state_init(&state);
+		wlr_output_state_set_enabled(&state, false);
+		wlr_output_commit_state(&output->wlr, &state);
+		wlr_output_state_finish(&state);
 		wlr_output_layout_remove(server.output_layout, &output->wlr);
 		output->is_leased = true;
 	}
@@ -316,25 +322,29 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 		const bool adding = enabled && !output.wlr.enabled;
 		const bool removing = !enabled && output.wlr.enabled;
 
-		wlr_output_enable(&output.wlr, enabled);
+		wlr_output_state state = {};
+		wlr_output_state_init(&state);
+		wlr_output_state_set_enabled(&state, enabled);
+
 		if (enabled) {
 			if (head->state.mode) {
-				wlr_output_set_mode(&output.wlr, head->state.mode);
+				wlr_output_state_set_mode(&state, head->state.mode);
 			} else {
 				const int32_t width = head->state.custom_mode.width;
 				const int32_t height = head->state.custom_mode.height;
 				const int32_t refresh = head->state.custom_mode.refresh;
-				wlr_output_set_custom_mode(&output.wlr, width, height, refresh);
+				wlr_output_state_set_custom_mode(&state, width, height, refresh);
 			}
 
-			wlr_output_set_scale(&output.wlr, head->state.scale);
-			wlr_output_set_transform(&output.wlr, head->state.transform);
+			wlr_output_state_set_scale(&state, head->state.scale);
+			wlr_output_state_set_transform(&state, head->state.transform);
 		}
 
-		if (!wlr_output_commit(&output.wlr)) {
+		if (!wlr_output_commit_state(&output.wlr, &state)) {
 			wlr_log(WLR_ERROR, "Output config commit failed");
 			continue;
 		}
+		wlr_output_state_finish(&state);
 
 		if (adding) {
 			wlr_output_layout_add_auto(server.output_layout, &output.wlr);
@@ -375,7 +385,7 @@ Server::Server() : listeners(*this) {
 	 * backend based on the current environment, such as opening an X11 window
 	 * if an X11 server is running. */
 	session = nullptr;
-	backend = wlr_backend_autocreate(display, &session);
+	backend = wlr_backend_autocreate(wl_display_get_event_loop(display), &session);
 	assert(backend);
 
 	/* Autocreates a renderer, either Pixman, GLES2 or Vulkan for us. The user
@@ -409,7 +419,7 @@ Server::Server() : listeners(*this) {
 
 	/* Creates an output layout, which a wlroots utility for working with an
 	 * arrangement of screens in a physical layout. */
-	output_layout = wlr_output_layout_create();
+	output_layout = wlr_output_layout_create(display);
 	listeners.output_layout_change.notify = output_layout_change_notify;
 	wl_signal_add(&output_layout->events.change, &listeners.output_layout_change);
 
@@ -447,7 +457,6 @@ Server::Server() : listeners(*this) {
 
 	auto* presentation = wlr_presentation_create(display, backend);
 	assert(presentation);
-	wlr_scene_set_presentation(scene, presentation);
 
 	xdg_shell = wlr_xdg_shell_create(display, 5);
 	listeners.xdg_shell_new_xdg_surface.notify = new_xdg_surface_notify;

@@ -18,7 +18,7 @@ dep_argparse = dependency('argparse', version: '>= 3.0', fallback: ['argparse'])
 dep_wayland_protocols = dependency('wayland-protocols', version: '>= 1.31')
 dep_wayland_scanner = dependency('wayland-scanner')
 dep_wayland_server = dependency('wayland-server')
-dep_wlroots = dependency('wlroots', version: ['>= 0.17', '< 0.18.0'], fallback: ['wlroots'], default_options: ['examples=false'])
+dep_wlroots = dependency('wlroots', version: ['>= 0.18', '< 0.19.0'], fallback: ['wlroots'], default_options: ['examples=false'])
 dep_xcb = dependency('xcb')
 dep_xkbcommon = dependency('xkbcommon')
 

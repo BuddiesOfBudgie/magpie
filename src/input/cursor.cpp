@@ -115,8 +115,8 @@ static void cursor_axis_notify(wl_listener* listener, void* data) {
 	const auto* event = static_cast<wlr_pointer_axis_event*>(data);
 
 	/* Notify the client with pointer focus of the axis event. */
-	wlr_seat_pointer_notify_axis(
-		cursor.seat.wlr, event->time_msec, event->orientation, event->delta, event->delta_discrete, event->source);
+	wlr_seat_pointer_notify_axis(cursor.seat.wlr, event->time_msec, event->orientation, event->delta, event->delta_discrete,
+		event->source, event->relative_direction);
 }
 
 /* This event is forwarded by the cursor when a pointer emits an frame
