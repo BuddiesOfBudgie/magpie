@@ -71,7 +71,7 @@ int32_t main(const int32_t argc, char** argv) {
 	const auto kiosk_cmd = argparser.present("--kiosk");
 	const auto startup_cmds = argparser.get<std::vector<std::string>>("--subprocess");
 
-	wlr_log_init(WLR_INFO, nullptr);
+	wlr_log_init(WLR_DEBUG, nullptr);
 
 	if (kiosk_cmd.has_value()) {
 		wlr_log(WLR_INFO, "Running in kiosk mode with command '%s'.", kiosk_cmd->c_str());

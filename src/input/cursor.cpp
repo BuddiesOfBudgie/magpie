@@ -182,7 +182,7 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 	wlr_surface* surface = nullptr;
 	auto magpie_surface = server.surface_at(cursor.wlr.x, cursor.wlr.y, &surface, &sx, &sy).lock();
 
-	if (event->state == WLR_BUTTON_RELEASED) {
+	if (event->state == WL_POINTER_BUTTON_STATE_RELEASED) {
 		/* If you released any buttons, we exit interactive move/resize mode. */
 		if (cursor.mode != MAGPIE_CURSOR_PASSTHROUGH) {
 			cursor.reset_mode();

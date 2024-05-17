@@ -191,23 +191,31 @@ static void output_power_manager_set_mode_notify(wl_listener*, void* data) {
 	wlr_output_state_finish(&state);
 }
 
-/* This event is raised when wlr_xdg_shell receives a new xdg surface from a
- * client, either a toplevel (application window) or popup. */
-static void new_xdg_surface_notify(wl_listener* listener, void* data) {
+static void new_xdg_toplevel_notify(wl_listener* listener, void* data) {
 	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_shell.events.new_surface");
+		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_shell.events.new_toplevel");
 		return;
 	}
 
-	Server& server = magpie_container_of(listener, server, xdg_shell_new_xdg_surface);
-	const auto& xdg_surface = *static_cast<wlr_xdg_surface*>(data);
+	Server& server = magpie_container_of(listener, server, xdg_shell_new_xdg_toplevel);
+	auto& xdg_toplevel = *static_cast<wlr_xdg_toplevel*>(data);
 
-	if (xdg_surface.role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-		server.views.emplace_back(std::make_shared<XdgView>(server, *xdg_surface.toplevel));
-	} else if (xdg_surface.role == WLR_XDG_SURFACE_ROLE_POPUP) {
-		auto* surface = static_cast<Surface*>(xdg_surface.popup->parent->data);
-		surface->popups.emplace(std::make_shared<Popup>(*surface, *xdg_surface.popup));
+	server.views.emplace_back(std::make_shared<XdgView>(server, xdg_toplevel));
+}
+
+static void new_xdg_popup_notify(wl_listener*, void* data) {
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_shell.events.new_popup");
+		return;
 	}
+
+	auto& xdg_popup = *static_cast<wlr_xdg_popup*>(data);
+
+	auto* parent = wlr_xdg_surface_try_from_wlr_surface(xdg_popup.parent);
+	assert(parent != nullptr);
+
+	auto& parent_surface = *static_cast<Surface*>(parent->data);
+	parent_surface.popups.emplace(std::make_shared<Popup>(parent_surface, xdg_popup));
 }
 
 static void new_layer_surface_notify(wl_listener* listener, void* data) {
@@ -459,8 +467,10 @@ Server::Server() : listeners(*this) {
 	assert(presentation);
 
 	xdg_shell = wlr_xdg_shell_create(display, 5);
-	listeners.xdg_shell_new_xdg_surface.notify = new_xdg_surface_notify;
-	wl_signal_add(&xdg_shell->events.new_surface, &listeners.xdg_shell_new_xdg_surface);
+	listeners.xdg_shell_new_xdg_toplevel.notify = new_xdg_toplevel_notify;
+	wl_signal_add(&xdg_shell->events.new_toplevel, &listeners.xdg_shell_new_xdg_toplevel);
+	listeners.xdg_shell_new_xdg_popup.notify = new_xdg_popup_notify;
+	wl_signal_add(&xdg_shell->events.new_popup, &listeners.xdg_shell_new_xdg_popup);
 
 	layer_shell = wlr_layer_shell_v1_create(display, 4);
 	listeners.layer_shell_new_layer_surface.notify = new_layer_surface_notify;
