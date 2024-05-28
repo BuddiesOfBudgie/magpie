@@ -11,13 +11,13 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-static void popup_map_notify(wl_listener* listener, void*) {
+static void popup_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	Popup& popup = magpie_container_of(listener, popup, map);
 
 	wlr_box current = {};
 	wlr_xdg_surface_get_geometry(popup.wlr->base, &current);
 
-	for (auto& output : std::as_const(popup.server.outputs)) {
+	for (const auto& output : std::as_const(popup.server.outputs)) {
 		wlr_box output_area = output->full_area;
 		wlr_box intersect = {};
 		wlr_box_intersection(&intersect, &current, &output_area);
@@ -28,7 +28,7 @@ static void popup_map_notify(wl_listener* listener, void*) {
 	}
 }
 
-static void popup_destroy_notify(wl_listener* listener, void*) {
+static void popup_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	Popup& popup = magpie_container_of(listener, popup, destroy);
 
 	popup.wlr = nullptr;

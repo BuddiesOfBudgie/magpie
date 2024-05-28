@@ -20,7 +20,7 @@ struct View : public Surface {
 	bool is_minimized = false;
 	wlr_box current = {};
 	wlr_box previous = {};
-	std::optional<ForeignToplevelHandle> toplevel_handle = {};
+	std::optional<ForeignToplevelHandle> toplevel_handle;
 
 	~View() noexcept override = default;
 

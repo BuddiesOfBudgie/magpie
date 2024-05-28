@@ -15,20 +15,20 @@
 #include "wlr-wrap-end.hpp"
 
 /* Called when the surface is mapped, or ready to display on-screen. */
-static void xwayland_surface_map_notify(wl_listener* listener, void*) {
+static void xwayland_surface_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, map);
 
 	view.map();
 }
 
 /* Called when the surface is unmapped, and should no longer be shown. */
-static void xwayland_surface_unmap_notify(wl_listener* listener, void*) {
+static void xwayland_surface_unmap_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, unmap);
 
 	view.unmap();
 }
 
-static void xwayland_surface_associate_notify(wl_listener* listener, void*) {
+static void xwayland_surface_associate_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, associate);
 
 	view.listeners.map.notify = xwayland_surface_map_notify;
@@ -37,7 +37,7 @@ static void xwayland_surface_associate_notify(wl_listener* listener, void*) {
 	wl_signal_add(&view.wlr.surface->events.unmap, &view.listeners.unmap);
 }
 
-static void xwayland_surface_dissociate_notify(wl_listener* listener, void*) {
+static void xwayland_surface_dissociate_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, dissociate);
 
 	wl_list_remove(&view.listeners.map.link);
@@ -45,7 +45,7 @@ static void xwayland_surface_dissociate_notify(wl_listener* listener, void*) {
 }
 
 /* Called when the surface is destroyed and should never be shown again. */
-static void xwayland_surface_destroy_notify(wl_listener* listener, void*) {
+static void xwayland_surface_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, destroy);
 
 	auto view_ptr = std::dynamic_pointer_cast<View>(view.shared_from_this());
@@ -65,7 +65,7 @@ static void xwayland_surface_request_configure_notify(wl_listener* listener, voi
 	view.set_geometry(event.x, event.y, event.width, event.height);
 }
 
-static void xwayland_surface_set_geometry_notify(wl_listener* listener, void*) {
+static void xwayland_surface_set_geometry_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, set_geometry);
 
 	if (view.server.grabbed_view.lock()->get_wlr_surface() != view.get_wlr_surface()) {
@@ -73,7 +73,7 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, void*) {
 		if (view.curr_placement == VIEW_PLACEMENT_STACKING) {
 			view.previous = view.current;
 		}
-		view.current = {surface.x, surface.y, surface.width, surface.height};
+		view.current = {.x = surface.x, .y = surface.y, .width = surface.width, .height = surface.height};
 	}
 }
 
@@ -82,7 +82,7 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, void*) {
  * decorations. Note that a more sophisticated compositor should check the
  * provided serial against a list of button press serials sent to this
  * client, to prevent the client from requesting this whenever they want. */
-static void xwayland_surface_request_move_notify(wl_listener* listener, void*) {
+static void xwayland_surface_request_move_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, request_move);
 
 	view.set_placement(VIEW_PLACEMENT_STACKING);
@@ -107,19 +107,19 @@ static void xwayland_surface_request_resize_notify(wl_listener* listener, void* 
 	view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
 }
 
-static void xwayland_surface_request_maximize_notify(wl_listener* listener, void*) {
+static void xwayland_surface_request_maximize_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, request_maximize);
 
 	view.toggle_maximize();
 }
 
-static void xwayland_surface_request_fullscreen_notify(wl_listener* listener, void*) {
+static void xwayland_surface_request_fullscreen_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, request_fullscreen);
 
 	view.toggle_fullscreen();
 }
 
-static void xwayland_surface_set_title_notify(wl_listener* listener, void*) {
+static void xwayland_surface_set_title_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, set_title);
 
 	if (view.toplevel_handle.has_value()) {
@@ -127,7 +127,7 @@ static void xwayland_surface_set_title_notify(wl_listener* listener, void*) {
 	}
 }
 
-static void xwayland_surface_set_class_notify(wl_listener* listener, void*) {
+static void xwayland_surface_set_class_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, set_class);
 
 	if (view.toplevel_handle.has_value()) {
@@ -135,7 +135,7 @@ static void xwayland_surface_set_class_notify(wl_listener* listener, void*) {
 	}
 }
 
-static void xwayland_surface_set_parent_notify(wl_listener* listener, void*) {
+static void xwayland_surface_set_parent_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, set_parent);
 
 	if (view.wlr.parent != nullptr) {
@@ -203,11 +203,11 @@ Server& XWaylandView::get_server() const {
 }
 
 wlr_box XWaylandView::get_geometry() const {
-	return {wlr.x, wlr.y, wlr.width, wlr.height};
+	return {.x = wlr.x, .y = wlr.y, .width = wlr.width, .height = wlr.height};
 }
 
 wlr_box XWaylandView::get_min_size() const {
-	wlr_box min = {0, 0, 0, 0};
+	wlr_box min = {.x = 0, .y = 0, .width = 0, .height = 0};
 	if (wlr.size_hints != nullptr) {
 		const auto& hints = *wlr.size_hints;
 		min.width = std::max(hints.min_width, hints.base_width);
@@ -217,7 +217,7 @@ wlr_box XWaylandView::get_min_size() const {
 }
 
 wlr_box XWaylandView::get_max_size() const {
-	wlr_box max = {0, 0, UINT16_MAX, UINT16_MAX};
+	wlr_box max = {.x = 0, .y = 0, .width = UINT16_MAX, .height = UINT16_MAX};
 	if (wlr.size_hints != nullptr) {
 		const auto& hints = *wlr.size_hints;
 		max.width = hints.max_width > 0 ? hints.max_width : UINT16_MAX;

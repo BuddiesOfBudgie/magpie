@@ -28,13 +28,13 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(const zwlr_layer_shell_v
 	}
 }
 
-static void subsurface_map_notify(wl_listener* listener, void*) {
+static void subsurface_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, map);
 
 	wlr_surface_send_enter(subsurface.wlr->surface, &subsurface.parent.output.wlr);
 }
 
-static void subsurface_destroy_notify(wl_listener* listener, void*) {
+static void subsurface_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, destroy);
 
 	subsurface.parent.subsurfaces.erase(subsurface.shared_from_this());
@@ -54,7 +54,7 @@ LayerSubsurface::~LayerSubsurface() noexcept {
 }
 
 /* Called when the surface is mapped, or ready to display on-screen. */
-static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void*) {
+static void wlr_layer_surface_v1_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	Layer& layer = magpie_container_of(listener, layer, map);
 
 	wlr_scene_node_set_enabled(layer.scene_node, true);
@@ -62,32 +62,32 @@ static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void*) {
 }
 
 /* Called when the surface is unmapped, and should no longer be shown. */
-static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, void*) {
+static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	Layer& layer = magpie_container_of(listener, layer, unmap);
 
 	wlr_scene_node_set_enabled(layer.scene_node, false);
 }
 
 /* Called when the surface is destroyed and should never be shown again. */
-static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void*) {
+static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	Layer& layer = magpie_container_of(listener, layer, destroy);
 
 	layer.output.layers.erase(std::dynamic_pointer_cast<Layer>(layer.shared_from_this()));
 }
 
-static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void*) {
+static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	Layer& layer = magpie_container_of(listener, layer, commit);
 
 	const Server& server = layer.output.server;
 	const wlr_layer_surface_v1& surface = layer.wlr;
 
 	const uint32_t committed = surface.current.committed;
-	if (committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) {
+	if ((committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) != 0) {
 		const magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface.current.layer);
 		wlr_scene_node_reparent(layer.scene_node, server.scene_layers[chosen_layer]);
 	}
 
-	if (committed) {
+	if (committed != 0) {
 		layer.output.update_layout();
 	}
 }

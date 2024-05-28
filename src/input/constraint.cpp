@@ -9,7 +9,7 @@
 #include <wlr/types/wlr_compositor.h>
 #include "wlr-wrap-end.hpp"
 
-static void constraint_destroy_notify(wl_listener* listener, void*) {
+static void constraint_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	PointerConstraint& constraint = magpie_container_of(listener, constraint, destroy);
 
 	auto& current_constraint = constraint.seat.current_constraint;

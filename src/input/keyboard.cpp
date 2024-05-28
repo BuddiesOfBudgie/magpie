@@ -18,7 +18,7 @@
 /* This event is raised by the keyboard base wlr_input_device to signal
  * the destruction of the wlr_keyboard. It will no longer receive events
  * and should be destroyed. */
-static void keyboard_handle_destroy(wl_listener* listener, void*) {
+static void keyboard_handle_destroy(wl_listener* listener, [[maybe_unused]] void* data) {
 	Keyboard& keyboard = magpie_container_of(listener, keyboard, destroy);
 
 	auto& keyboards = keyboard.seat.keyboards;
@@ -71,7 +71,7 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 	bool handled = false;
 	const uint32_t modifiers = wlr_keyboard_get_modifiers(&keyboard.wlr);
 	if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-		if (modifiers & WLR_MODIFIER_ALT) {
+		if ((modifiers & WLR_MODIFIER_ALT) != 0) {
 			/* If alt is held down and this button was _pressed_, we attempt to
 			 * process it as a compositor keybinding. */
 			for (int32_t i = 0; i < nsyms; i++) {
@@ -89,7 +89,7 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 
 /* This event is raised when a modifier key, such as shift or alt, is
  * pressed. We simply communicate this to the client. */
-static void keyboard_handle_modifiers(wl_listener* listener, void*) {
+static void keyboard_handle_modifiers(wl_listener* listener, [[maybe_unused]] void* data) {
 	Keyboard& keyboard = magpie_container_of(listener, keyboard, modifiers);
 
 	/*

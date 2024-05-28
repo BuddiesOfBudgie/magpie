@@ -10,8 +10,6 @@
 #include <wlr/types/wlr_scene.h>
 #include "wlr-wrap-end.hpp"
 
-enum SurfaceType { MAGPIE_SURFACE_TYPE_VIEW, MAGPIE_SURFACE_TYPE_LAYER, MAGPIE_SURFACE_TYPE_POPUP };
-
 struct Surface : public virtual std::enable_shared_from_this<Surface> {
 	wlr_scene_node* scene_node = nullptr;
 	std::set<std::shared_ptr<Popup>> popups;

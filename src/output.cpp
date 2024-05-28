@@ -4,7 +4,6 @@
 #include "surface/layer.hpp"
 #include "types.hpp"
 
-#include <set>
 #include <utility>
 
 #include <wlr-wrap-start.hpp>
@@ -30,7 +29,7 @@ static void output_request_state_notify(wl_listener* listener, void* data) {
 
 /* This function is called every time an output is ready to display a frame,
  * generally at the output's refresh rate (e.g. 60Hz). */
-static void output_frame_notify(wl_listener* listener, void*) {
+static void output_frame_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	Output& output = magpie_container_of(listener, output, frame);
 
 	wlr_scene_output* scene_output = wlr_scene_get_scene_output(output.server.scene, &output.wlr);
@@ -47,7 +46,7 @@ static void output_frame_notify(wl_listener* listener, void*) {
 	wlr_scene_output_send_frame_done(scene_output, &now);
 }
 
-static void output_destroy_notify(wl_listener* listener, void*) {
+static void output_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	Output& output = magpie_container_of(listener, output, destroy);
 
 	for (const auto& layer : output.layers) {

@@ -33,7 +33,7 @@ int32_t run_compositor(const std::vector<std::string>& startup_cmds, std::promis
 		return 1;
 	}
 
-	setenv("WAYLAND_DISPLAY", socket, true);
+	setenv("WAYLAND_DISPLAY", socket, 1);
 	wlr_log(WLR_INFO, "Running Wayland compositor on WAYLAND_DISPLAY=%s", socket);
 
 	for (const auto& cmd : std::as_const(startup_cmds)) {
@@ -68,8 +68,17 @@ int32_t main(const int32_t argc, char** argv) {
 		return 1;
 	}
 
-	const auto kiosk_cmd = argparser.present("--kiosk");
-	const auto startup_cmds = argparser.get<std::vector<std::string>>("--subprocess");
+	std::optional<std::string> kiosk_cmd;
+	std::vector<std::string> startup_cmds;
+
+	try {
+		kiosk_cmd = argparser.present("--kiosk");
+		startup_cmds = argparser.get<std::vector<std::string>>("--subprocess");
+	} catch (const std::exception& err) {
+		std::cerr << err.what() << std::endl;
+		std::cerr << argparser;
+		return 1;
+	}
 
 	wlr_log_init(WLR_INFO, nullptr);
 
@@ -79,7 +88,7 @@ int32_t main(const int32_t argc, char** argv) {
 		std::future<const char*> socket_future = socket_promise.get_future();
 		auto display_thread = std::thread(run_compositor, startup_cmds, std::move(socket_promise));
 		display_thread.detach();
-		setenv("WAYLAND_DISPLAY", socket_future.get(), true);
+		setenv("WAYLAND_DISPLAY", socket_future.get(), 1);
 		return system(kiosk_cmd.value().c_str());
 	}
 

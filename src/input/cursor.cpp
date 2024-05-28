@@ -50,23 +50,23 @@ void Cursor::process_resize(const uint32_t time) const {
 	int32_t new_top = seat.server.grab_geobox.y;
 	int32_t new_bottom = seat.server.grab_geobox.y + seat.server.grab_geobox.height;
 
-	if (seat.server.resize_edges & WLR_EDGE_TOP) {
+	if ((seat.server.resize_edges & WLR_EDGE_TOP) != 0) {
 		new_top = static_cast<int32_t>(std::round(border_y));
 		if (new_top >= new_bottom) {
 			new_top = new_bottom - 1;
 		}
-	} else if (seat.server.resize_edges & WLR_EDGE_BOTTOM) {
+	} else if ((seat.server.resize_edges & WLR_EDGE_BOTTOM) != 0) {
 		new_bottom = static_cast<int32_t>(std::round(border_y));
 		if (new_bottom <= new_top) {
 			new_bottom = new_top + 1;
 		}
 	}
-	if (seat.server.resize_edges & WLR_EDGE_LEFT) {
+	if ((seat.server.resize_edges & WLR_EDGE_LEFT) != 0) {
 		new_left = static_cast<int32_t>(std::round(border_x));
 		if (new_left >= new_right) {
 			new_left = new_right - 1;
 		}
-	} else if (seat.server.resize_edges & WLR_EDGE_RIGHT) {
+	} else if ((seat.server.resize_edges & WLR_EDGE_RIGHT) != 0) {
 		new_right = static_cast<int32_t>(std::round(border_x));
 		if (new_right <= new_left) {
 			new_right = new_left + 1;
@@ -123,7 +123,7 @@ static void cursor_axis_notify(wl_listener* listener, void* data) {
  * event. Frame events are sent after regular pointer events to group
  * multiple events together. For instance, two axis events may happen at the
  * same time, in which case a frame event won't be sent in between. */
-static void cursor_frame_notify(wl_listener* listener, void*) {
+static void cursor_frame_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	Cursor& cursor = magpie_container_of(listener, cursor, frame);
 
 	/* Notify the client with pointer focus of the frame event. */
@@ -145,7 +145,8 @@ static void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
 	Cursor& cursor = magpie_container_of(listener, cursor, motion_absolute);
 	const auto* event = static_cast<wlr_pointer_motion_absolute_event*>(data);
 
-	double lx, ly;
+	double lx;
+	double ly;
 	wlr_cursor_absolute_to_layout_coords(&cursor.wlr, &event->pointer->base, event->x, event->y, &lx, &ly);
 
 	double dx = lx - cursor.wlr.x;
@@ -177,7 +178,8 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 
 	/* Notify the client with pointer focus that a button press has occurred */
 	wlr_seat_pointer_notify_button(server.seat->wlr, event->time_msec, event->button, event->state);
-	double sx, sy;
+	double sx;
+	double sy;
 
 	wlr_surface* surface = nullptr;
 	auto magpie_surface = server.surface_at(cursor.wlr.x, cursor.wlr.y, &surface, &sx, &sy).lock();
@@ -412,7 +414,8 @@ void Cursor::process_motion(const uint32_t time) {
 	}
 
 	/* Otherwise, find the view under the pointer and send the event along. */
-	double sx, sy;
+	double sx;
+	double sy;
 	wlr_surface* surface = nullptr;
 	auto magpie_surface = seat.server.surface_at(wlr.x, wlr.y, &surface, &sx, &sy).lock();
 	if (magpie_surface == nullptr) {
@@ -464,7 +467,7 @@ void Cursor::warp_to_constraint(const PointerConstraint& constraint) const {
 		return;
 	}
 
-	if (constraint.wlr.current.committed & WLR_POINTER_CONSTRAINT_V1_STATE_CURSOR_HINT) {
+	if ((constraint.wlr.current.committed & WLR_POINTER_CONSTRAINT_V1_STATE_CURSOR_HINT) != 0) {
 		const double x = constraint.wlr.current.cursor_hint.x;
 		const double y = constraint.wlr.current.cursor_hint.y;
 

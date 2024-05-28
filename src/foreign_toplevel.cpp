@@ -46,14 +46,14 @@ static void foreign_toplevel_handle_request_minimize_notify(wl_listener* listene
 	handle.view.set_minimized(event.minimized);
 }
 
-static void foreign_toplevel_handle_request_activate_notify(wl_listener* listener, void*) {
+static void foreign_toplevel_handle_request_activate_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
 
 	handle.view.set_minimized(false);
 	handle.view.get_server().focus_view(std::dynamic_pointer_cast<View>(handle.view.shared_from_this()));
 }
 
-static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, void*) {
+static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_close);
 
 	handle.view.close();

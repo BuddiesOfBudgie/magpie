@@ -24,14 +24,14 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
-typedef enum {
+using magpie_scene_layer_t = enum {
 	MAGPIE_SCENE_LAYER_BACKGROUND = 0,
 	MAGPIE_SCENE_LAYER_BOTTOM,
 	MAGPIE_SCENE_LAYER_NORMAL,
 	MAGPIE_SCENE_LAYER_TOP,
 	MAGPIE_SCENE_LAYER_OVERLAY,
 	MAGPIE_SCENE_LAYER_LOCK
-} magpie_scene_layer_t;
+};
 
 class Server final : public std::enable_shared_from_this<Server> {
   public:
@@ -63,7 +63,7 @@ class Server final : public std::enable_shared_from_this<Server> {
 
 	wlr_scene* scene;
 	wlr_scene_output_layout* scene_layout;
-	wlr_scene_tree* scene_layers[MAGPIE_SCENE_LAYER_LOCK + 1] = {};
+	std::array<wlr_scene_tree*, MAGPIE_SCENE_LAYER_LOCK + 1> scene_layers = {};
 
 	wlr_xdg_shell* xdg_shell;
 

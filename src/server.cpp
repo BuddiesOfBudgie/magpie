@@ -41,7 +41,7 @@ void Server::focus_view(std::shared_ptr<View>&& view, wlr_surface* surface) {
 		return;
 	}
 
-	if (prev_surface) {
+	if (prev_surface != nullptr) {
 		wlr_surface* previous = seat->wlr->keyboard_state.focused_surface;
 
 		if (const auto* xdg_previous = wlr_xdg_surface_try_from_wlr_surface(previous)) {
@@ -98,7 +98,7 @@ std::weak_ptr<Surface> Server::surface_at(const double lx, const double ly, wlr_
 	}
 	wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
 	const wlr_scene_surface* scene_surface = wlr_scene_surface_try_from_buffer(scene_buffer);
-	if (!scene_surface) {
+	if (scene_surface == nullptr) {
 		return {};
 	}
 
@@ -141,7 +141,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	 * refresh rate), and each monitor supports only a specific set of modes. We
 	 * just pick the monitor's preferred mode, a more sophisticated compositor
 	 * would let the user configure it. */
-	if (!wl_list_empty(&new_output->modes)) {
+	if (wl_list_empty(&new_output->modes) == 0) {
 		wlr_output_mode* mode = wlr_output_preferred_mode(new_output);
 		wlr_output_set_mode(new_output, mode);
 		wlr_output_enable(new_output, true);
@@ -168,7 +168,7 @@ static void new_output_notify(wl_listener* listener, void* data) {
 	output->update_layout();
 }
 
-static void output_power_manager_set_mode_notify(wl_listener*, void* data) {
+static void output_power_manager_set_mode_notify([[maybe_unused]] wl_listener* listener, void* data) {
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_output_power_manager.events.set_mode");
 		return;
@@ -265,8 +265,9 @@ static void drm_lease_request_notify(wl_listener* listener, void* data) {
 
 	for (size_t i = 0; i < request->n_connectors; i++) {
 		auto* output = static_cast<Output*>(request->connectors[i]->output->data);
-		if (output == nullptr)
+		if (output == nullptr) {
 			continue;
+		}
 
 		wlr_output_enable(&output->wlr, false);
 		wlr_output_commit(&output->wlr);
@@ -275,7 +276,7 @@ static void drm_lease_request_notify(wl_listener* listener, void* data) {
 	}
 }
 
-void output_layout_change_notify(wl_listener* listener, void*) {
+void output_layout_change_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	Server& server = magpie_container_of(listener, server, output_layout_change);
 
 	if (server.num_pending_output_layout_changes > 0) {
@@ -318,7 +319,7 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 
 		wlr_output_enable(&output.wlr, enabled);
 		if (enabled) {
-			if (head->state.mode) {
+			if (head->state.mode != nullptr) {
 				wlr_output_set_mode(&output.wlr, head->state.mode);
 			} else {
 				const int32_t width = head->state.custom_mode.width;

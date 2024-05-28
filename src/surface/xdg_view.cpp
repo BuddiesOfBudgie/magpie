@@ -13,21 +13,21 @@
 #include "wlr-wrap-end.hpp"
 
 /* Called when the surface is mapped, or ready to display on-screen. */
-static void xdg_toplevel_map_notify(wl_listener* listener, void*) {
+static void xdg_toplevel_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XdgView& view = magpie_container_of(listener, view, map);
 
 	view.map();
 }
 
 /* Called when the surface is unmapped, and should no longer be shown. */
-static void xdg_toplevel_unmap_notify(wl_listener* listener, void*) {
+static void xdg_toplevel_unmap_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XdgView& view = magpie_container_of(listener, view, unmap);
 
 	view.unmap();
 }
 
 /* Called when the surface is destroyed and should never be shown again. */
-static void xdg_toplevel_destroy_notify(wl_listener* listener, void*) {
+static void xdg_toplevel_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XdgView& view = magpie_container_of(listener, view, destroy);
 
 	view.server.views.remove(std::dynamic_pointer_cast<View>(view.shared_from_this()));
@@ -38,7 +38,7 @@ static void xdg_toplevel_destroy_notify(wl_listener* listener, void*) {
  * decorations. Note that a more sophisticated compositor should check the
  * provided serial against a list of button press serials sent to this
  * client, to prevent the client from requesting this whenever they want. */
-static void xdg_toplevel_request_move_notify(wl_listener* listener, void*) {
+static void xdg_toplevel_request_move_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XdgView& view = magpie_container_of(listener, view, request_move);
 
 	view.set_placement(VIEW_PLACEMENT_STACKING);
@@ -66,40 +66,40 @@ static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data
 /* This event is raised when a client would like to maximize itself,
  * typically because the user clicked on the maximize button on
  * client-side decorations. */
-static void xdg_toplevel_request_maximize_notify(wl_listener* listener, void*) {
+static void xdg_toplevel_request_maximize_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XdgView& view = magpie_container_of(listener, view, request_maximize);
 
 	view.toggle_maximize();
 	wlr_xdg_surface_schedule_configure(view.wlr.base);
 }
 
-static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, void*) {
+static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XdgView& view = magpie_container_of(listener, view, request_fullscreen);
 
 	view.toggle_fullscreen();
 	wlr_xdg_surface_schedule_configure(view.wlr.base);
 }
 
-static void xdg_toplevel_request_minimize_notify(wl_listener* listener, void*) {
+static void xdg_toplevel_request_minimize_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XdgView& view = magpie_container_of(listener, view, request_minimize);
 
 	view.set_minimized(!view.is_minimized);
 	wlr_xdg_surface_schedule_configure(view.wlr.base);
 }
 
-static void xdg_toplevel_set_title_notify(wl_listener* listener, void*) {
+static void xdg_toplevel_set_title_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XdgView& view = magpie_container_of(listener, view, set_title);
 
 	view.toplevel_handle->set_title(view.wlr.title);
 }
 
-static void xdg_toplevel_set_app_id_notify(wl_listener* listener, void*) {
+static void xdg_toplevel_set_app_id_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XdgView& view = magpie_container_of(listener, view, set_app_id);
 
 	view.toplevel_handle->set_app_id(view.wlr.app_id);
 }
 
-static void xdg_toplevel_set_parent_notify(wl_listener* listener, void*) {
+static void xdg_toplevel_set_parent_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XdgView& view = magpie_container_of(listener, view, set_parent);
 
 	if (view.wlr.parent != nullptr) {
@@ -123,7 +123,8 @@ static void xdg_surface_new_popup_notify(wl_listener* listener, void* data) {
 	view.popups.emplace(std::make_shared<Popup>(view, *static_cast<wlr_xdg_popup*>(data)));
 }
 
-XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept : listeners(*this), server(server), wlr(xdg_toplevel) {
+XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept
+	: listeners(*this), server(server), wlr(xdg_toplevel) {
 	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, xdg_toplevel.base);
 	scene_node = &scene_tree->node;
 
@@ -200,13 +201,13 @@ wlr_box XdgView::get_geometry() const {
 }
 
 wlr_box XdgView::get_min_size() const {
-	return {0, 0, wlr.current.min_width, wlr.current.min_height};
+	return {.x = 0, .y = 0, .width = wlr.current.min_width, .height = wlr.current.min_height};
 }
 
 wlr_box XdgView::get_max_size() const {
 	const int32_t max_width = wlr.current.max_width > 0 ? wlr.current.max_width : INT32_MAX;
 	const int32_t max_height = wlr.current.max_height > 0 ? wlr.current.max_height : INT32_MAX;
-	return {0, 0, max_width, max_height};
+	return {.x = 0, .y = 0, .width = max_width, .height = max_height};
 }
 
 void XdgView::map() {
@@ -215,11 +216,11 @@ void XdgView::map() {
 		wlr_xdg_surface_get_geometry(wlr.base, &current);
 
 		if (!server.outputs.empty()) {
-			const auto output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
+			auto* const output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
 			const auto usable_area = output->usable_area;
-			const auto center_x = usable_area.x + usable_area.width / 2;
-			const auto center_y = usable_area.y + usable_area.height / 2;
-			set_position(center_x - current.width / 2, center_y - current.height / 2);
+			const auto center_x = usable_area.x + (usable_area.width / 2);
+			const auto center_y = usable_area.y + (usable_area.height / 2);
+			set_position(center_x - (current.width / 2), center_y - (current.height / 2));
 		}
 
 		pending_map = false;
@@ -263,7 +264,7 @@ void XdgView::impl_set_size(const int32_t width, const int32_t height) {
 	wlr_xdg_toplevel_set_size(&wlr, width, height);
 }
 
-void XdgView::impl_set_geometry(const int x, const int y, const int width, const int height) {
+void XdgView::impl_set_geometry(const int32_t x, const int32_t y, const int32_t width, const int32_t height) {
 	(void) x;
 	(void) y;
 	wlr_xdg_toplevel_set_size(&wlr, width, height);
