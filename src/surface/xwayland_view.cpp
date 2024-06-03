@@ -68,7 +68,8 @@ static void xwayland_surface_request_configure_notify(wl_listener* listener, voi
 static void xwayland_surface_set_geometry_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	XWaylandView& view = magpie_container_of(listener, view, set_geometry);
 
-	if (view.server.grabbed_view.lock()->get_wlr_surface() != view.get_wlr_surface()) {
+	auto grabbed_view = view.server.grabbed_view.lock();
+	if (grabbed_view != nullptr && grabbed_view->get_wlr_surface() != view.get_wlr_surface()) {
 		const wlr_xwayland_surface& surface = view.wlr;
 		if (view.curr_placement == VIEW_PLACEMENT_STACKING) {
 			view.previous = view.current;
