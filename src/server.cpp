@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <utility>
 
 #include "wlr-wrap-start.hpp"
@@ -37,6 +36,8 @@
 #include "wlr-wrap-end.hpp"
 
 void Server::focus_view(std::shared_ptr<View>&& view, wlr_surface* surface) {
+	*(int*)0 = 0;
+
 	const wlr_surface* prev_surface = seat->wlr->keyboard_state.focused_surface;
 	if (prev_surface == surface && surface != nullptr) {
 		/* Don't re-focus an already focused surface. */

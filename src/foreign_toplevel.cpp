@@ -1,8 +1,9 @@
 #include "foreign_toplevel.hpp"
 #include "output.hpp"
-
 #include "server.hpp"
 #include "surface/view.hpp"
+
+#include <iostream>
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/util/log.h>
@@ -50,7 +51,14 @@ static void foreign_toplevel_handle_request_activate_notify(wl_listener* listene
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
 
 	handle.view.set_minimized(false);
-	handle.view.get_server().focus_view(std::dynamic_pointer_cast<View>(handle.view.shared_from_this()));
+	try
+	{
+		handle.view.get_server().focus_view(std::dynamic_pointer_cast<View>(handle.view.shared_from_this()));
+	}
+	catch (std::exception& e)
+	{
+		std::cerr << "Exception caught : " << e.what() << std::endl;
+	}
 }
 
 static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, [[maybe_unused]] void* data) {

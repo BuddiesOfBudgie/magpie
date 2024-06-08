@@ -191,7 +191,14 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 		}
 	} else if (magpie_surface != nullptr && magpie_surface->is_view()) {
 		/* Focus that client if the button was _pressed_ */
-		server.focus_view(std::dynamic_pointer_cast<View>(magpie_surface), surface);
+		try
+		{
+			server.focus_view(std::dynamic_pointer_cast<View>(magpie_surface), surface);
+		}
+		catch (std::exception& e)
+		{
+			std::cerr << "Exception caught : " << e.what() << std::endl;
+		}
 	} else {
 		server.focus_view(nullptr);
 	}
