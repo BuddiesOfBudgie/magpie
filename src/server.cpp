@@ -8,9 +8,11 @@
 #include "surface/view.hpp"
 #include "types.hpp"
 #include "xwayland.hpp"
+#include "segvcatch.h"
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 #include <utility>
 
 #include "wlr-wrap-start.hpp"
@@ -366,6 +368,8 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 }
 
 Server::Server() : listeners(*this) {
+	segvcatch::init_segv();
+
 	/* The Wayland display is managed by libwayland. It handles accepting
 	 * clients from the Unix socket, manging Wayland globals, and so on. */
 	display = wl_display_create();

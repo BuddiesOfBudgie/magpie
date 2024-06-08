@@ -3,6 +3,7 @@ magpie_sources = [
     'foreign_toplevel.cpp',
     'output.cpp',
     'server.cpp',
+    'segvcatch.cpp',
     'xwayland.cpp',
     'input/constraint.cpp',
     'input/cursor.cpp',
