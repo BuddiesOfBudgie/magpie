@@ -384,7 +384,10 @@ Server::Server() : listeners(*this) {
 	 * The renderer is responsible for defining the various pixel formats it
 	 * supports for shared memory, this configures that for clients. */
 	renderer = wlr_renderer_autocreate(backend);
-	assert(renderer);
+	if (renderer == nullptr) {
+		wlr_log(WLR_ERROR, "Failed to create a wlr_renderer for the Wayland display");
+		std::exit(2);
+	}
 	wlr_renderer_init_wl_display(renderer, display);
 
 	/* Autocreates an allocator for us.
