@@ -35,19 +35,17 @@
 #include "wlr-wrap-end.hpp"
 
 void Server::focus_view(std::shared_ptr<View>&& view, wlr_surface* surface) {
-	const wlr_surface* prev_surface = seat->wlr->keyboard_state.focused_surface;
+	wlr_surface* prev_surface = seat->wlr->keyboard_state.focused_surface;
 	if (prev_surface == surface && surface != nullptr) {
 		/* Don't re-focus an already focused surface. */
 		return;
 	}
 
 	if (prev_surface != nullptr) {
-		wlr_surface* previous = seat->wlr->keyboard_state.focused_surface;
-
-		if (const auto* xdg_previous = wlr_xdg_surface_try_from_wlr_surface(previous)) {
+		if (const auto* xdg_previous = wlr_xdg_surface_try_from_wlr_surface(prev_surface)) {
 			assert(xdg_previous->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 			wlr_xdg_toplevel_set_activated(xdg_previous->toplevel, false);
-		} else if (auto* xwayland_previous = wlr_xwayland_surface_try_from_wlr_surface(previous)) {
+		} else if (auto* xwayland_previous = wlr_xwayland_surface_try_from_wlr_surface(prev_surface)) {
 			wlr_xwayland_surface_activate(xwayland_previous, false);
 		}
 	}
