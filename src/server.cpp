@@ -9,7 +9,6 @@
 #include "types.hpp"
 #include "xwayland.hpp"
 
-#include <algorithm>
 #include <cassert>
 #include <utility>
 
@@ -60,7 +59,7 @@ void Server::focus_view(std::shared_ptr<View>&& view, wlr_surface* surface) {
 
 	/* Move the view to the front */
 	wlr_scene_node_raise_to_top(view->scene_node);
-	std::ranges::remove(views, view);
+	views.remove(view);
 	for (const auto& it : views) {
 		it->set_activated(false);
 	}
