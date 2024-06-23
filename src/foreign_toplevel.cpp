@@ -14,7 +14,7 @@ static void foreign_toplevel_handle_request_maximize_notify(wl_listener* listene
 		return;
 	}
 
-	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
+	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_maximize);
 	const auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
 
 	const auto placement = event.maximized ? VIEW_PLACEMENT_MAXIMIZED : VIEW_PLACEMENT_STACKING;
@@ -27,7 +27,7 @@ static void foreign_toplevel_handle_request_fullscreen_notify(wl_listener* liste
 		return;
 	}
 
-	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
+	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_fullscreen);
 	const auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
 
 	const auto placement = event.maximized ? VIEW_PLACEMENT_FULLSCREEN : VIEW_PLACEMENT_STACKING;
@@ -40,7 +40,7 @@ static void foreign_toplevel_handle_request_minimize_notify(wl_listener* listene
 		return;
 	}
 
-	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
+	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_minimize);
 	const auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_minimized_event*>(data);
 
 	handle.view.set_minimized(event.minimized);
