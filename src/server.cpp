@@ -9,11 +9,9 @@
 #include "types.hpp"
 #include "xwayland.hpp"
 
-#include <cassert>
 #include <utility>
 
 #include "wlr-wrap-start.hpp"
-#include <wlr/backend/session.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_data_device.h>
@@ -42,8 +40,9 @@ void Server::focus_view(std::shared_ptr<View>&& view, wlr_surface* surface) {
 
 	if (prev_surface != nullptr) {
 		if (const auto* xdg_previous = wlr_xdg_surface_try_from_wlr_surface(prev_surface)) {
-			assert(xdg_previous->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
-			wlr_xdg_toplevel_set_activated(xdg_previous->toplevel, false);
+			if (xdg_previous->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
+				wlr_xdg_toplevel_set_activated(xdg_previous->toplevel, false);
+			}
 		} else if (auto* xwayland_previous = wlr_xwayland_surface_try_from_wlr_surface(prev_surface)) {
 			wlr_xwayland_surface_activate(xwayland_previous, false);
 		}
@@ -362,11 +361,21 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 	server.seat->cursor.reload_image();
 }
 
+void early_exit(wl_display* display, const std::string& err) {
+	wlr_log(WLR_ERROR, "%s", err.c_str());
+	wl_display_destroy_clients(display);
+	wl_display_destroy(display);
+	std::exit(2);
+}
+
 Server::Server() : listeners(*this) {
 	/* The Wayland display is managed by libwayland. It handles accepting
 	 * clients from the Unix socket, manging Wayland globals, and so on. */
 	display = wl_display_create();
-	assert(display);
+	if (display == nullptr) {
+		wlr_log(WLR_ERROR, "Failed to create a wl_display");
+		std::exit(2);
+	}
 
 	/* The backend is a wlroots feature which abstracts the underlying input and
 	 * output hardware. The autocreate option will choose the most suitable
@@ -374,7 +383,9 @@ Server::Server() : listeners(*this) {
 	 * if an X11 server is running. */
 	session = nullptr;
 	backend = wlr_backend_autocreate(display, &session);
-	assert(backend);
+	if (backend == nullptr) {
+		early_exit(display, "Failed to create a wlr_backend for the Wayland display");
+	}
 
 	/* Autocreates a renderer, either Pixman, GLES2 or Vulkan for us. The user
 	 * can also specify a renderer using the WLR_RENDERER env var.
@@ -382,8 +393,7 @@ Server::Server() : listeners(*this) {
 	 * supports for shared memory, this configures that for clients. */
 	renderer = wlr_renderer_autocreate(backend);
 	if (renderer == nullptr) {
-		wlr_log(WLR_ERROR, "Failed to create a wlr_renderer for the Wayland display");
-		std::exit(2);
+		early_exit(display, "Failed to create a wlr_renderer for the Wayland display");
 	}
 	wlr_renderer_init_wl_display(renderer, display);
 
@@ -392,7 +402,9 @@ Server::Server() : listeners(*this) {
 	 * handles the buffer creation, allowing wlroots to render onto the
 	 * screen */
 	allocator = wlr_allocator_autocreate(backend, renderer);
-	assert(allocator);
+	if (allocator == nullptr) {
+		early_exit(display, "Failed to create a wlr_allocator for the Wayland display");
+	}
 
 	/* This creates some hands-off wlroots interfaces. The compositor is
 	 * necessary for clients to allocate surfaces, the subcompositor allows to
@@ -438,7 +450,10 @@ Server::Server() : listeners(*this) {
 	 * necessary.
 	 */
 	scene = wlr_scene_create();
-	assert(scene);
+	if (scene == nullptr) {
+		early_exit(display, "Failed to create a wlr_scene for the Wayland display");
+	}
+
 	for (int32_t idx = 0; idx <= MAGPIE_SCENE_LAYER_LOCK; idx++) {
 		scene_layers[idx] = wlr_scene_tree_create(&scene->tree);
 		wlr_scene_node_raise_to_top(&scene_layers[idx]->node);
@@ -447,7 +462,9 @@ Server::Server() : listeners(*this) {
 	scene_layout = wlr_scene_attach_output_layout(scene, output_layout);
 
 	auto* presentation = wlr_presentation_create(display, backend);
-	assert(presentation);
+	if (presentation == nullptr) {
+		early_exit(display, "Failed to create a wlr_presentation for the wlr_scene");
+	}
 	wlr_scene_set_presentation(scene, presentation);
 
 	xdg_shell = wlr_xdg_shell_create(display, 5);
