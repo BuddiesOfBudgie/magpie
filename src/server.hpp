@@ -12,7 +12,10 @@
 #include <wlr/backend/session.h>
 #include <wlr/render/allocator.h>
 #include <wlr/types/wlr_content_type_v1.h>
+#include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_drm_lease_v1.h>
+#include <wlr/types/wlr_export_dmabuf_v1.h>
+#include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_idle_inhibit_v1.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
@@ -20,6 +23,8 @@
 #include <wlr/types/wlr_output_management_v1.h>
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_scene.h>
+#include <wlr/types/wlr_screencopy_v1.h>
+#include <wlr/types/wlr_security_context_v1.h>
 #include <wlr/types/wlr_xdg_activation_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
@@ -93,11 +98,17 @@ class Server final : public std::enable_shared_from_this<Server> {
 
 	wlr_drm_lease_v1_manager* drm_manager;
 	wlr_content_type_manager_v1* content_type_manager;
+	wlr_data_control_manager_v1* data_control_manager;
+	wlr_security_context_manager_v1* security_context_manager;
+	wlr_export_dmabuf_manager_v1* export_dmabuf_manager;
+	wlr_gamma_control_manager_v1* gamma_control_manager;
+	wlr_screencopy_manager_v1* screencopy_manager;
 
 	Server();
 
 	std::weak_ptr<Surface> surface_at(double lx, double ly, wlr_surface** wlr, double* sx, double* sy) const;
 	void focus_view(std::shared_ptr<View>&& view, wlr_surface* surface = nullptr);
+	bool is_restricted(const wl_global* global) const;
 };
 
 #endif

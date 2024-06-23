@@ -20,6 +20,7 @@
 #include <wlr/types/wlr_presentation_time.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_screencopy_v1.h>
+#include <wlr/types/wlr_security_context_v1.h>
 #include <wlr/types/wlr_single_pixel_buffer_v1.h>
 #include <wlr/types/wlr_viewporter.h>
 #include <wlr/types/wlr_xcursor_manager.h>
@@ -29,6 +30,7 @@
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/util/box.h>
 #include <wlr/util/log.h>
+#include <wlr/xwayland/shell.h>
 #include "wlr-wrap-end.hpp"
 
 void Server::focus_view(std::shared_ptr<View>&& view, wlr_surface* surface) {
@@ -361,6 +363,23 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 	server.seat->cursor.reload_image();
 }
 
+bool filter_globals(const struct wl_client* client, const struct wl_global* global, void* data) {
+	const auto& server = *static_cast<Server*>(data);
+	const auto* wlr_xwayland = server.xwayland->wlr;
+
+	if (global == wlr_xwayland->shell_v1->global) {
+		return wlr_xwayland->server != nullptr && client == wlr_xwayland->server->client;
+	}
+
+	const auto* security_context =
+		wlr_security_context_manager_v1_lookup_client(server.security_context_manager, (wl_client*) client);
+	if (server.is_restricted(global)) {
+		return security_context == nullptr;
+	}
+
+	return true;
+}
+
 void early_exit(wl_display* display, const std::string& err) {
 	wlr_log(WLR_ERROR, "%s", err.c_str());
 	wl_display_destroy_clients(display);
@@ -416,6 +435,9 @@ Server::Server() : listeners(*this) {
 	compositor = wlr_compositor_create(display, 6, renderer);
 	wlr_subcompositor_create(display);
 	wlr_data_device_manager_create(display);
+
+	security_context_manager = wlr_security_context_manager_v1_create(display);
+	wl_display_set_global_filter(display, filter_globals, nullptr);
 
 	// https://wayfire.org/2020/08/04/Wayfire-0-5.html
 	wlr_primary_selection_v1_device_manager_create(display);
@@ -479,16 +501,16 @@ Server::Server() : listeners(*this) {
 	listeners.activation_request_activation.notify = request_activation_notify;
 	wl_signal_add(&xdg_activation->events.request_activate, &listeners.activation_request_activation);
 
-	wlr_data_control_manager_v1_create(display);
+	data_control_manager = wlr_data_control_manager_v1_create(display);
 	foreign_toplevel_manager = wlr_foreign_toplevel_manager_v1_create(display);
 
 	xwayland = std::make_shared<XWayland>(*this);
 
 	wlr_viewporter_create(display);
 	wlr_single_pixel_buffer_manager_v1_create(display);
-	wlr_screencopy_manager_v1_create(display);
-	wlr_export_dmabuf_manager_v1_create(display);
-	wlr_gamma_control_manager_v1_create(display);
+	screencopy_manager = wlr_screencopy_manager_v1_create(display);
+	export_dmabuf_manager = wlr_export_dmabuf_manager_v1_create(display);
+	gamma_control_manager = wlr_gamma_control_manager_v1_create(display);
 
 	wlr_xdg_foreign_registry* foreign_registry = wlr_xdg_foreign_registry_create(display);
 	wlr_xdg_foreign_v1_create(display, foreign_registry);
@@ -504,4 +526,30 @@ Server::Server() : listeners(*this) {
 	}
 
 	content_type_manager = wlr_content_type_manager_v1_create(display, 1);
+}
+
+bool Server::is_restricted(const wl_global* global) const {
+	if (drm_manager != nullptr) {
+		wlr_drm_lease_device_v1* drm_lease_dev;
+		wl_list_for_each(drm_lease_dev, &drm_manager->devices, link) {
+			if (global == drm_lease_dev->global) {
+				return true;
+			}
+		}
+	}
+
+	// clang-format off
+	return
+		global == data_control_manager->global ||
+		global == foreign_toplevel_manager->global ||
+		global == export_dmabuf_manager->global ||
+		global == gamma_control_manager->global ||
+		global == layer_shell->global ||
+		global == output_manager->global ||
+		global == output_power_manager->global ||
+		global == seat->virtual_keyboard_mgr->global ||
+		global == seat->virtual_pointer_mgr->global ||
+		global == screencopy_manager->global ||
+		global == security_context_manager->global;
+	// clang-format on
 }
