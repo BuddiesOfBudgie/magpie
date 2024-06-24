@@ -365,10 +365,13 @@ void output_manager_apply_notify(wl_listener* listener, void* data) {
 
 bool filter_globals(const struct wl_client* client, const struct wl_global* global, void* data) {
 	const auto& server = *static_cast<Server*>(data);
-	const auto* wlr_xwayland = server.xwayland->wlr;
 
-	if (global == wlr_xwayland->shell_v1->global) {
-		return wlr_xwayland->server != nullptr && client == wlr_xwayland->server->client;
+	if (server.xwayland != nullptr) {
+		const auto* wlr_xwayland = server.xwayland->wlr;
+
+		if (global == wlr_xwayland->shell_v1->global) {
+			return wlr_xwayland->server != nullptr && client == wlr_xwayland->server->client;
+		}
 	}
 
 	const auto* security_context =
@@ -437,7 +440,7 @@ Server::Server() : listeners(*this) {
 	wlr_data_device_manager_create(display);
 
 	security_context_manager = wlr_security_context_manager_v1_create(display);
-	wl_display_set_global_filter(display, filter_globals, nullptr);
+	wl_display_set_global_filter(display, filter_globals, this);
 
 	// https://wayfire.org/2020/08/04/Wayfire-0-5.html
 	wlr_primary_selection_v1_device_manager_create(display);
