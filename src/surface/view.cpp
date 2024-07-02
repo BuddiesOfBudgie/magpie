@@ -11,6 +11,7 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_compositor.h>
+#include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/util/edges.h>
@@ -178,6 +179,9 @@ void View::set_size(const int32_t width, const int32_t height) {
 }
 
 void View::update_outputs(const bool ignore_previous) const {
+	wlr_box largest_intersection = {};
+	auto target_buffer_scale = 1.0;
+
 	for (const auto& output : std::as_const(get_server().outputs)) {
 		wlr_box output_area = output->full_area;
 
@@ -186,6 +190,11 @@ void View::update_outputs(const bool ignore_previous) const {
 
 		wlr_box curr_intersect = {};
 		wlr_box_intersection(&curr_intersect, &current, &output_area);
+
+		if (curr_intersect.width * curr_intersect.height > largest_intersection.width * largest_intersection.height) {
+			largest_intersection = curr_intersect;
+			target_buffer_scale = output->wlr.scale;
+		}
 
 		if (ignore_previous) {
 			if (!wlr_box_empty(&curr_intersect)) {
@@ -200,6 +209,9 @@ void View::update_outputs(const bool ignore_previous) const {
 			toplevel_handle->output_leave(*output);
 		}
 	}
+
+	wlr_fractional_scale_v1_notify_scale(get_wlr_surface(), target_buffer_scale);
+	wlr_surface_set_preferred_buffer_scale(get_wlr_surface(), std::ceil(target_buffer_scale));
 }
 
 void View::set_activated(const bool activated) {

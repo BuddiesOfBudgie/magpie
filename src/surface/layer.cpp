@@ -7,6 +7,7 @@
 #include "types.hpp"
 
 #include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_scene.h>
@@ -123,6 +124,9 @@ Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept
 
 	scene_node->data = this;
 	surface.surface->data = this;
+
+	wlr_fractional_scale_v1_notify_scale(surface.surface, surface.output->scale);
+	wlr_surface_set_preferred_buffer_scale(surface.surface, std::ceil(surface.output->scale));
 
 	listeners.map.notify = wlr_layer_surface_v1_map_notify;
 	wl_signal_add(&surface.surface->events.map, &listeners.map);

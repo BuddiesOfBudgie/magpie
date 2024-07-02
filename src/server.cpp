@@ -16,6 +16,7 @@
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
+#include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_presentation_time.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
@@ -506,6 +507,7 @@ Server::Server() : listeners(*this) {
 
 	data_control_manager = wlr_data_control_manager_v1_create(display);
 	foreign_toplevel_manager = wlr_foreign_toplevel_manager_v1_create(display);
+	wlr_fractional_scale_manager_v1_create(display, 1);
 
 	xwayland = std::make_shared<XWayland>(*this);
 
