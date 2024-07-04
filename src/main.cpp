@@ -52,6 +52,10 @@ int32_t run_compositor(const std::vector<std::string>& startup_cmds, std::promis
 int32_t main(const int32_t argc, char** argv) {
 	auto argparser = argparse::ArgumentParser(argv[0], PROJECT_VERSION);
 
+	auto& logging_group = argparser.add_mutually_exclusive_group();
+	logging_group.add_argument("-d", "--debug").help("enable full logging").nargs(0);
+	logging_group.add_argument("-q", "--quiet").help("suppress informational messages").nargs(0);
+
 	auto& subprocess_group = argparser.add_mutually_exclusive_group();
 	subprocess_group.add_argument("-k", "--kiosk")
 		.help("specify a single executable whose lifecycle will be adopted, such as a login manager")
@@ -80,7 +84,13 @@ int32_t main(const int32_t argc, char** argv) {
 		return 1;
 	}
 
-	wlr_log_init(WLR_INFO, nullptr);
+	if (argparser.is_used("--debug")) {
+		wlr_log_init(WLR_DEBUG, nullptr);
+	} else if (argparser.is_used("--quiet")) {
+		wlr_log_init(WLR_ERROR, nullptr);
+	} else {
+		wlr_log_init(WLR_INFO, nullptr);
+	}
 
 	if (kiosk_cmd.has_value()) {
 		wlr_log(WLR_INFO, "Running in kiosk mode with command '%s'.", kiosk_cmd->c_str());
