@@ -220,6 +220,10 @@ void View::set_activated(const bool activated) {
 	if (toplevel_handle.has_value()) {
 		toplevel_handle->set_activated(activated);
 	}
+
+	if (activated) {
+		wlr_scene_node_raise_to_top(scene_node);
+	}
 }
 
 void View::set_placement(const ViewPlacement new_placement, const bool force) {
