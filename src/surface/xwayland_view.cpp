@@ -7,6 +7,7 @@
 #include "types.hpp"
 #include "xwayland.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <wayland-server-core.h>
 
@@ -294,15 +295,7 @@ void XWaylandView::close() {
 }
 
 static int16_t trunc(const int32_t int32) {
-	if (int32 > INT16_MAX) {
-		return INT16_MAX;
-	}
-
-	if (int32 < INT16_MIN) {
-		return INT16_MIN;
-	}
-
-	return static_cast<int16_t>(int32);
+	return static_cast<int16_t>(std::clamp(int32, INT16_MIN, INT16_MAX));
 }
 
 void XWaylandView::impl_set_position(const int32_t x, const int32_t y) {
