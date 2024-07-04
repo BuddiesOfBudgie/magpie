@@ -26,6 +26,8 @@ static void popup_map_notify(wl_listener* listener, [[maybe_unused]] void* data)
 			wlr_surface_send_enter(popup.wlr->base->surface, &output->wlr);
 		}
 	}
+
+	wlr_scene_node_raise_to_top(popup.scene_node);
 }
 
 static void popup_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
@@ -47,7 +49,7 @@ static void popup_new_popup_notify(wl_listener* listener, void* data) {
 
 Popup::Popup(Surface& parent, wlr_xdg_popup& wlr) noexcept
 	: listeners(*this), server(parent.get_server()), parent(parent), wlr(&wlr) {
-	auto* scene_tree = wlr_scene_xdg_surface_create(parent.scene_node->parent, wlr.base);
+	auto* scene_tree = wlr_scene_xdg_surface_create(wlr_scene_tree_from_node(parent.scene_node), wlr.base);
 	scene_node = &scene_tree->node;
 
 	scene_node->data = this;
