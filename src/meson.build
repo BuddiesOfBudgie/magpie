@@ -28,3 +28,13 @@ exe = executable(
     cpp_args: '-DPROJECT_VERSION="' + meson.project_version() + '"',
     install: true
 )
+
+glxgears = find_program('glxgears', required: false)
+if glxgears.found()
+    test('glxgears', exe, args: ['-k', 'sh -c "timeout 5 glxgears"'])
+endif
+
+vkgears = find_program('vkgears', required: false)
+if vkgears.found()
+    test('vkgears', exe, args: ['-k', 'sh -c "timeout 5 vkgears"'])
+endif
