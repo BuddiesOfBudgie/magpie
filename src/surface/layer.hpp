@@ -1,6 +1,7 @@
 #ifndef MAGPIE_LAYER_HPP
 #define MAGPIE_LAYER_HPP
 
+#include "server.hpp"
 #include "surface.hpp"
 #include "types.hpp"
 
@@ -34,6 +35,7 @@ class Layer final : public Surface {
 
 	wlr_layer_surface_v1& wlr;
 	wlr_scene_layer_surface_v1* scene_surface;
+	magpie_scene_layer_t scene_layer = MAGPIE_SCENE_LAYER_NORMAL;
 
 	std::set<std::shared_ptr<LayerSubsurface>> subsurfaces;
 

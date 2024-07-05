@@ -84,8 +84,8 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, [[maybe_un
 
 	const uint32_t committed = surface.current.committed;
 	if ((committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) != 0) {
-		const magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface.current.layer);
-		wlr_scene_node_reparent(layer.scene_node, server.scene_layers[chosen_layer]);
+		layer.scene_layer = magpie_layer_from_wlr_layer(surface.current.layer);
+		wlr_scene_node_reparent(layer.scene_node, server.scene_layers[layer.scene_layer]);
 	}
 
 	if (committed != 0) {
