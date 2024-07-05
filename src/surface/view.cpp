@@ -221,8 +221,27 @@ void View::set_activated(const bool activated) {
 		toplevel_handle->set_activated(activated);
 	}
 
+	const auto seat = get_server().seat;
 	if (activated) {
 		wlr_scene_node_raise_to_top(scene_node);
+
+		/*
+		 * Tell the seat to have the keyboard enter this surface. wlroots will keep
+		 * track of this and automatically send key events to the appropriate
+		 * clients without additional work on your part.
+		 */
+		const auto* keyboard = wlr_seat_get_keyboard(seat->wlr);
+		if (keyboard != nullptr) {
+			wlr_seat_keyboard_notify_enter(
+				seat->wlr, get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
+		}
+
+		wlr_pointer_constraint_v1* constraint =
+			wlr_pointer_constraints_v1_constraint_for_surface(seat->pointer_constraints, get_wlr_surface(), seat->wlr);
+		seat->set_constraint(constraint);
+	} else {
+		wlr_seat_keyboard_notify_clear_focus(seat->wlr);
+		seat->set_constraint(nullptr);
 	}
 }
 

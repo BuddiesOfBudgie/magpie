@@ -55,21 +55,6 @@ void Server::focus_view(std::shared_ptr<View>&& view) {
 	views.insert(views.begin(), view);
 	focused_view = view;
 	view->set_activated(true);
-
-	/*
-	 * Tell the seat to have the keyboard enter this surface. wlroots will keep
-	 * track of this and automatically send key events to the appropriate
-	 * clients without additional work on your part.
-	 */
-	const wlr_keyboard* keyboard = wlr_seat_get_keyboard(seat->wlr);
-	if (keyboard != nullptr) {
-		wlr_seat_keyboard_notify_enter(
-			seat->wlr, view->get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
-	}
-
-	wlr_pointer_constraint_v1* constraint =
-		wlr_pointer_constraints_v1_constraint_for_surface(seat->pointer_constraints, view->get_wlr_surface(), seat->wlr);
-	seat->set_constraint(constraint);
 }
 
 std::weak_ptr<Surface> Server::surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy) const {
