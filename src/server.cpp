@@ -68,6 +68,48 @@ void Server::focus_view(std::shared_ptr<View>&& view) {
 	view->set_activated(true);
 }
 
+void Server::try_focus_next_exclusive_layer() {
+	std::shared_ptr<Layer> topmost_exclusive_layer = nullptr;
+
+	// find the topmost layer in exclusive focus mode. if there are multiple within a single scene layer, the spec defines that
+	// focus order within that scene layer is implementation defined, so it doesn't matter which is chosen
+	for (const auto& output : outputs) {
+		for (const auto& layer : output->layers) {
+			if (layer->wlr.current.keyboard_interactive == ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_EXCLUSIVE &&
+				(topmost_exclusive_layer == nullptr || layer->scene_layer > topmost_exclusive_layer->scene_layer)) {
+				topmost_exclusive_layer = layer;
+			}
+		}
+	}
+
+	focus_layer(topmost_exclusive_layer);
+}
+
+void Server::focus_layer(std::shared_ptr<Layer> layer) {
+	if (layer == nullptr) {
+		focused_layer.reset();
+		if (focused_view.lock() != nullptr) {
+			focused_view.lock()->set_activated(true);
+		}
+	}
+
+	// if there's already an exclusive focused shell layer with an equal or higher scene layer, just return
+	auto focused_layer_locked = focused_layer.lock();
+	if (focused_layer_locked != nullptr &&
+		focused_layer_locked->wlr.current.keyboard_interactive == ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_EXCLUSIVE &&
+		focused_layer_locked->scene_layer >= layer->scene_layer) {
+		return;
+	}
+
+	focused_layer = layer;
+
+	const auto* keyboard = wlr_seat_get_keyboard(seat->wlr);
+	if (keyboard != nullptr) {
+		wlr_seat_keyboard_notify_enter(
+			seat->wlr, layer->get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
+	}
+}
+
 std::weak_ptr<Surface> Server::surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy) const {
 	/* This returns the topmost node in the scene at the given layout coords.
 	 * we only care about surface nodes as we are specifically looking for a

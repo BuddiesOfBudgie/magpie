@@ -79,13 +79,25 @@ static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, [[maybe_u
 static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	Layer& layer = magpie_container_of(listener, layer, commit);
 
-	const Server& server = layer.output.server;
+	Server& server = layer.output.server;
 	const wlr_layer_surface_v1& surface = layer.wlr;
 
 	const uint32_t committed = surface.current.committed;
 	if ((committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) != 0) {
 		layer.scene_layer = magpie_layer_from_wlr_layer(surface.current.layer);
 		wlr_scene_node_reparent(layer.scene_node, server.scene_layers[layer.scene_layer]);
+	}
+
+	if ((committed & WLR_LAYER_SURFACE_V1_STATE_KEYBOARD_INTERACTIVITY) != 0) {
+		switch (layer.wlr.current.keyboard_interactive) {
+			case ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_NONE:
+				server.try_focus_next_exclusive_layer();
+				break;
+			case ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_ON_DEMAND:
+			case ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_EXCLUSIVE:
+				server.focus_layer(std::dynamic_pointer_cast<Layer>(layer.shared_from_this()));
+				break;
+		}
 	}
 
 	if (committed != 0) {
