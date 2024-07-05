@@ -91,6 +91,7 @@ void Server::focus_layer(std::shared_ptr<Layer> layer) {
 		if (focused_view.lock() != nullptr) {
 			focused_view.lock()->set_activated(true);
 		}
+		return;
 	}
 
 	// if there's already an exclusive focused shell layer with an equal or higher scene layer, just return
