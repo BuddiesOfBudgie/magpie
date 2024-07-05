@@ -29,7 +29,7 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
-using magpie_scene_layer_t = enum {
+using magpie_scene_layer_t = enum magpie_scene_layer {
 	MAGPIE_SCENE_LAYER_BACKGROUND = 0,
 	MAGPIE_SCENE_LAYER_BOTTOM,
 	MAGPIE_SCENE_LAYER_NORMAL,
