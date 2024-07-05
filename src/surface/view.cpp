@@ -199,14 +199,20 @@ void View::update_outputs(const bool ignore_previous) const {
 		if (ignore_previous) {
 			if (!wlr_box_empty(&curr_intersect)) {
 				wlr_surface_send_enter(get_wlr_surface(), &output->wlr);
-				toplevel_handle->output_enter(*output);
+				if (toplevel_handle.has_value()) {
+					toplevel_handle->output_enter(*output);
+				}
 			}
 		} else if (wlr_box_empty(&prev_intersect) && !wlr_box_empty(&curr_intersect)) {
 			wlr_surface_send_enter(get_wlr_surface(), &output->wlr);
-			toplevel_handle->output_enter(*output);
+			if (toplevel_handle.has_value()) {
+				toplevel_handle->output_enter(*output);
+			}
 		} else if (!wlr_box_empty(&prev_intersect) && wlr_box_empty(&curr_intersect)) {
 			wlr_surface_send_leave(get_wlr_surface(), &output->wlr);
-			toplevel_handle->output_leave(*output);
+			if (toplevel_handle.has_value()) {
+				toplevel_handle->output_leave(*output);
+			}
 		}
 	}
 
