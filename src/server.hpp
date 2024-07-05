@@ -107,7 +107,7 @@ class Server final : public std::enable_shared_from_this<Server> {
 	Server();
 
 	std::weak_ptr<Surface> surface_at(double lx, double ly, wlr_surface** wlr, double* sx, double* sy) const;
-	void focus_view(std::shared_ptr<View>&& view, wlr_surface* surface = nullptr);
+	void focus_view(std::shared_ptr<View>&& view);
 	bool is_restricted(const wl_global* global) const;
 };
 

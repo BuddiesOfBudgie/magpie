@@ -34,41 +34,27 @@
 #include <wlr/xwayland/shell.h>
 #include "wlr-wrap-end.hpp"
 
-void Server::focus_view(std::shared_ptr<View>&& view, wlr_surface* surface) {
-	wlr_surface* prev_surface = seat->wlr->keyboard_state.focused_surface;
-	if (prev_surface == surface && surface != nullptr) {
-		/* Don't re-focus an already focused surface. */
+void Server::focus_view(std::shared_ptr<View>&& view) {
+	std::shared_ptr<View> prev_view = focused_view.lock();
+	if (view == prev_view) {
+		// Don't re-focus an already focused view, or clear focus if we already don't have it.
 		return;
 	}
 
-	if (prev_surface != nullptr) {
-		if (const auto* xdg_previous = wlr_xdg_surface_try_from_wlr_surface(prev_surface)) {
-			if (xdg_previous->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-				wlr_xdg_toplevel_set_activated(xdg_previous->toplevel, false);
-			}
-		} else if (auto* xwayland_previous = wlr_xwayland_surface_try_from_wlr_surface(prev_surface)) {
-			wlr_xwayland_surface_activate(xwayland_previous, false);
-		}
+	if (prev_view != nullptr) {
+		prev_view->set_activated(false);
 	}
 
+	// if we're just clearing focus, we're done!
 	if (view == nullptr) {
 		return;
 	}
 
-	if (surface == nullptr) {
-		surface = view->get_wlr_surface();
-	}
-
-	/* Move the view to the front */
+	// Move the view to the front
 	views.remove(view);
-	for (const auto& it : views) {
-		it->set_activated(false);
-	}
-
-	/* Activate the new surface */
 	views.insert(views.begin(), view);
-	view->set_activated(true);
 	focused_view = view;
+	view->set_activated(true);
 
 	/*
 	 * Tell the seat to have the keyboard enter this surface. wlroots will keep
@@ -82,7 +68,7 @@ void Server::focus_view(std::shared_ptr<View>&& view, wlr_surface* surface) {
 	}
 
 	wlr_pointer_constraint_v1* constraint =
-		wlr_pointer_constraints_v1_constraint_for_surface(seat->pointer_constraints, surface, seat->wlr);
+		wlr_pointer_constraints_v1_constraint_for_surface(seat->pointer_constraints, view->get_wlr_surface(), seat->wlr);
 	seat->set_constraint(constraint);
 }
 
@@ -242,7 +228,7 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 
 	auto* view = dynamic_cast<View*>(static_cast<Surface*>(xdg_surface->surface->data));
 	if (view != nullptr && xdg_surface->surface->mapped) {
-		server.focus_view(std::dynamic_pointer_cast<View>(view->shared_from_this()), xdg_surface->surface);
+		server.focus_view(std::dynamic_pointer_cast<View>(view->shared_from_this()));
 	}
 }
 
