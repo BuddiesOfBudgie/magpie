@@ -77,6 +77,7 @@ class Server final : public std::enable_shared_from_this<Server> {
 	wlr_foreign_toplevel_manager_v1* foreign_toplevel_manager;
 
 	wlr_layer_shell_v1* layer_shell;
+	std::weak_ptr<Layer> focused_layer;
 
 	std::shared_ptr<Seat> seat;
 

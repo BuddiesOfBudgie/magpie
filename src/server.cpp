@@ -35,6 +35,17 @@
 #include "wlr-wrap-end.hpp"
 
 void Server::focus_view(std::shared_ptr<View>&& view) {
+	auto layer = this->focused_layer.lock();
+	if (layer != nullptr) {
+		if (layer->wlr.current.keyboard_interactive != ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_EXCLUSIVE) {
+			// if we have a focused layer and it's not exclusive, give focus to the view instead
+			focused_layer.reset();
+		} else {
+			// we shouldn't apply constraints or keyboard focus, we're focused on an exclusive layer
+			return;
+		}
+	}
+
 	std::shared_ptr<View> prev_view = focused_view.lock();
 	if (view == prev_view) {
 		// Don't re-focus an already focused view, or clear focus if we already don't have it.
