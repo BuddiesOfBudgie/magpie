@@ -68,6 +68,7 @@ void Server::focus_view(std::shared_ptr<View>&& view) {
 	}
 
 	if (prev_view != nullptr) {
+		focused_view.reset();
 		prev_view->set_activated(false);
 	}
 
