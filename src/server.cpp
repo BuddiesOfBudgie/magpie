@@ -117,6 +117,11 @@ void Server::focus_layer(std::shared_ptr<Layer> layer) {
 		return;
 	}
 
+	// same if this layer can't gain focus
+	if (layer->wlr.current.keyboard_interactive == ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_NONE) {
+		return;
+	}
+
 	focused_layer = layer;
 
 	const auto* keyboard = wlr_seat_get_keyboard(seat->wlr);
