@@ -26,7 +26,6 @@ Subsurface::Subsurface(Surface& parent, wlr_subsurface& subsurface) noexcept
 }
 
 Subsurface::~Subsurface() noexcept {
-	wl_list_remove(&listeners.map.link);
 	wl_list_remove(&listeners.destroy.link);
 }
 

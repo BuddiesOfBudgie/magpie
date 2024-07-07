@@ -17,7 +17,6 @@ class Subsurface final : public Surface {
   public:
 	struct Listeners {
 		std::reference_wrapper<Subsurface> parent;
-		wl_listener map = {};
 		wl_listener destroy = {};
 		explicit Listeners(Subsurface& parent) noexcept : parent(parent) {}
 	};
