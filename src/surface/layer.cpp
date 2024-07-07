@@ -4,6 +4,7 @@
 #include "popup.hpp"
 #include "server.hpp"
 #include "surface.hpp"
+#include "subsurface.hpp"
 #include "types.hpp"
 
 #include "wlr-wrap-start.hpp"
@@ -27,35 +28,6 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(const zwlr_layer_shell_v
 		default:
 			return MAGPIE_SCENE_LAYER_OVERLAY;
 	}
-}
-
-static void subsurface_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
-	wlr_log(WLR_DEBUG, "wlr_subsurface.events.map(listener=%p, data=%p)", (void*) listener, data);
-
-	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, map);
-
-	wlr_surface_send_enter(subsurface.wlr->surface, &subsurface.parent.output.wlr);
-}
-
-static void subsurface_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
-	wlr_log(WLR_DEBUG, "wlr_subsurface.events.destroy(listener=%p, data=%p)", (void*) listener, data);
-
-	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, destroy);
-
-	subsurface.parent.subsurfaces.erase(subsurface.shared_from_this());
-}
-
-LayerSubsurface::LayerSubsurface(Layer& parent, wlr_subsurface& subsurface) noexcept
-	: listeners(*this), parent(parent), wlr(&subsurface) {
-	listeners.map.notify = subsurface_map_notify;
-	wl_signal_add(&subsurface.surface->events.map, &listeners.map);
-	listeners.destroy.notify = subsurface_destroy_notify;
-	wl_signal_add(&subsurface.events.destroy, &listeners.destroy);
-}
-
-LayerSubsurface::~LayerSubsurface() noexcept {
-	wl_list_remove(&listeners.map.link);
-	wl_list_remove(&listeners.destroy.link);
 }
 
 /* Called when the surface is mapped, or ready to display on-screen. */
@@ -141,7 +113,7 @@ static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, vo
 	Layer& layer = magpie_container_of(listener, layer, new_subsurface);
 	auto& subsurface = *static_cast<wlr_subsurface*>(data);
 
-	layer.subsurfaces.emplace(std::make_shared<LayerSubsurface>(layer, subsurface));
+	layer.subsurfaces.emplace(std::make_shared<Subsurface>(layer, subsurface));
 }
 
 Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept

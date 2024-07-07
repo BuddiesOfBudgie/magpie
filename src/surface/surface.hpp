@@ -13,6 +13,7 @@
 struct Surface : public virtual std::enable_shared_from_this<Surface> {
 	wlr_scene_node* scene_node = nullptr;
 	std::set<std::shared_ptr<Popup>> popups;
+	std::set<std::shared_ptr<Subsurface>> subsurfaces;
 
 	virtual ~Surface() noexcept = default;
 

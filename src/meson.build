@@ -10,6 +10,7 @@ magpie_sources = [
     'input/seat.cpp',
     'surface/layer.cpp',
     'surface/popup.cpp',
+    'surface/subsurface.cpp',
     'surface/view.cpp',
     'surface/xdg_view.cpp',
     'surface/xwayland_view.cpp',

@@ -15,7 +15,7 @@ struct View;
 class XdgView;
 class XWaylandView;
 class Layer;
-class LayerSubsurface;
+class Subsurface;
 class Popup;
 
 class ForeignToplevelHandle;

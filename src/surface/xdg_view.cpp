@@ -4,6 +4,7 @@
 #include "output.hpp"
 #include "popup.hpp"
 #include "server.hpp"
+#include "subsurface.hpp"
 #include "surface.hpp"
 #include "input/seat.hpp"
 
@@ -147,6 +148,18 @@ static void xdg_surface_new_popup_notify(wl_listener* listener, void* data) {
 	view.popups.emplace(std::make_shared<Popup>(view, *static_cast<wlr_xdg_popup*>(data)));
 }
 
+static void xdg_surface_new_subsurface_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.new_subsurface(listener=%p, data=%p)", (void*) listener, data);
+
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_surface.events.new_subsurface");
+		return;
+	}
+
+	XdgView& view = magpie_container_of(listener, view, new_subsurface);
+	view.subsurfaces.emplace(std::make_shared<Subsurface>(view, *static_cast<wlr_subsurface*>(data)));
+}
+
 XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept
 	: listeners(*this), server(server), wlr(xdg_toplevel) {
 	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, xdg_toplevel.base);
@@ -194,6 +207,8 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept
 	wl_signal_add(&wlr.events.set_parent, &listeners.set_parent);
 	listeners.new_popup.notify = xdg_surface_new_popup_notify;
 	wl_signal_add(&wlr.base->events.new_popup, &listeners.new_popup);
+	listeners.new_subsurface.notify = xdg_surface_new_subsurface_notify;
+	wl_signal_add(&wlr.base->surface->events.new_subsurface, &listeners.new_subsurface);
 }
 
 XdgView::~XdgView() noexcept {
@@ -208,6 +223,7 @@ XdgView::~XdgView() noexcept {
 	wl_list_remove(&listeners.set_app_id.link);
 	wl_list_remove(&listeners.set_parent.link);
 	wl_list_remove(&listeners.new_popup.link);
+	wl_list_remove(&listeners.new_subsurface.link);
 }
 
 wlr_surface* XdgView::get_wlr_surface() const {

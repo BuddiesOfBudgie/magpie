@@ -80,6 +80,7 @@ class XdgView final : public View {
 		wl_listener set_app_id = {};
 		wl_listener set_parent = {};
 		wl_listener new_popup = {};
+		wl_listener new_subsurface = {};
 		explicit Listeners(XdgView& parent) noexcept : parent(parent) {}
 	};
 
