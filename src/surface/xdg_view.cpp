@@ -14,6 +14,8 @@
 
 /* Called when the surface is mapped, or ready to display on-screen. */
 static void xdg_toplevel_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.map(listener=%p, data=%p)", (void*) listener, data);
+
 	XdgView& view = magpie_container_of(listener, view, map);
 
 	view.map();
@@ -21,6 +23,8 @@ static void xdg_toplevel_map_notify(wl_listener* listener, [[maybe_unused]] void
 
 /* Called when the surface is unmapped, and should no longer be shown. */
 static void xdg_toplevel_unmap_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.unmap(listener=%p, data=%p)", (void*) listener, data);
+
 	XdgView& view = magpie_container_of(listener, view, unmap);
 
 	view.unmap();
@@ -28,6 +32,8 @@ static void xdg_toplevel_unmap_notify(wl_listener* listener, [[maybe_unused]] vo
 
 /* Called when the surface is destroyed and should never be shown again. */
 static void xdg_toplevel_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.destroy(listener=%p, data=%p)", (void*) listener, data);
+
 	XdgView& view = magpie_container_of(listener, view, destroy);
 
 	view.server.views.remove(std::dynamic_pointer_cast<View>(view.shared_from_this()));
@@ -39,6 +45,8 @@ static void xdg_toplevel_destroy_notify(wl_listener* listener, [[maybe_unused]] 
  * provided serial against a list of button press serials sent to this
  * client, to prevent the client from requesting this whenever they want. */
 static void xdg_toplevel_request_move_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.request_move(listener=%p, data=%p)", (void*) listener, data);
+
 	XdgView& view = magpie_container_of(listener, view, request_move);
 
 	view.set_placement(VIEW_PLACEMENT_STACKING);
@@ -51,6 +59,8 @@ static void xdg_toplevel_request_move_notify(wl_listener* listener, [[maybe_unus
  * provided serial against a list of button press serials sent to this
  * client, to prevent the client from requesting this whenever they want. */
 static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.request_resize(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_toplevel.events.request_resize");
 		return;
@@ -67,6 +77,8 @@ static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data
  * typically because the user clicked on the maximize button on
  * client-side decorations. */
 static void xdg_toplevel_request_maximize_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.request_maximize(listener=%p, data=%p)", (void*) listener, data);
+
 	XdgView& view = magpie_container_of(listener, view, request_maximize);
 
 	view.toggle_maximize();
@@ -74,6 +86,8 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, [[maybe_
 }
 
 static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.request_fullscreen(listener=%p, data=%p)", (void*) listener, data);
+
 	XdgView& view = magpie_container_of(listener, view, request_fullscreen);
 
 	view.toggle_fullscreen();
@@ -81,6 +95,8 @@ static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, [[mayb
 }
 
 static void xdg_toplevel_request_minimize_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.request_minimize(listener=%p, data=%p)", (void*) listener, data);
+
 	XdgView& view = magpie_container_of(listener, view, request_minimize);
 
 	view.set_minimized(!view.is_minimized);
@@ -88,18 +104,24 @@ static void xdg_toplevel_request_minimize_notify(wl_listener* listener, [[maybe_
 }
 
 static void xdg_toplevel_set_title_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.set_title(listener=%p, data=%p)", (void*) listener, data);
+
 	XdgView& view = magpie_container_of(listener, view, set_title);
 
 	view.toplevel_handle->set_title(view.wlr.title);
 }
 
 static void xdg_toplevel_set_app_id_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.set_app_id(listener=%p, data=%p)", (void*) listener, data);
+
 	XdgView& view = magpie_container_of(listener, view, set_app_id);
 
 	view.toplevel_handle->set_app_id(view.wlr.app_id);
 }
 
 static void xdg_toplevel_set_parent_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.set_parent(listener=%p, data=%p)", (void*) listener, data);
+
 	XdgView& view = magpie_container_of(listener, view, set_parent);
 
 	if (view.wlr.parent != nullptr) {
@@ -114,6 +136,8 @@ static void xdg_toplevel_set_parent_notify(wl_listener* listener, [[maybe_unused
 }
 
 static void xdg_surface_new_popup_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.new_popup(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_surface.events.new_popup");
 		return;

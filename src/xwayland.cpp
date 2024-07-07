@@ -10,6 +10,8 @@
 #include "wlr-wrap-end.hpp"
 
 static void ready_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland.events.ready(listener=%p, data=%p)", (void*) listener, data);
+
 	const std::array<std::string, ATOM_LAST> atom_map = {
 		"_NET_WM_WINDOW_TYPE_NORMAL",
 		"_NET_WM_WINDOW_TYPE_DIALOG",
@@ -57,6 +59,8 @@ static void ready_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 }
 
 static void new_surface_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland.events.new_surface(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_xwayland.events.new_surface");
 		return;

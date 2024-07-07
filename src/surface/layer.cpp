@@ -30,12 +30,16 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(const zwlr_layer_shell_v
 }
 
 static void subsurface_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_subsurface.events.map(listener=%p, data=%p)", (void*) listener, data);
+
 	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, map);
 
 	wlr_surface_send_enter(subsurface.wlr->surface, &subsurface.parent.output.wlr);
 }
 
 static void subsurface_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_subsurface.events.destroy(listener=%p, data=%p)", (void*) listener, data);
+
 	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, destroy);
 
 	subsurface.parent.subsurfaces.erase(subsurface.shared_from_this());
@@ -56,6 +60,8 @@ LayerSubsurface::~LayerSubsurface() noexcept {
 
 /* Called when the surface is mapped, or ready to display on-screen. */
 static void wlr_layer_surface_v1_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.map(listener=%p, data=%p)", (void*) listener, data);
+
 	Layer& layer = magpie_container_of(listener, layer, map);
 
 	wlr_scene_node_set_enabled(layer.scene_node, true);
@@ -64,6 +70,8 @@ static void wlr_layer_surface_v1_map_notify(wl_listener* listener, [[maybe_unuse
 
 /* Called when the surface is unmapped, and should no longer be shown. */
 static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.unmap(listener=%p, data=%p)", (void*) listener, data);
+
 	Layer& layer = magpie_container_of(listener, layer, unmap);
 
 	wlr_scene_node_set_enabled(layer.scene_node, false);
@@ -71,12 +79,16 @@ static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, [[maybe_unu
 
 /* Called when the surface is destroyed and should never be shown again. */
 static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.destroy(listener=%p, data=%p)", (void*) listener, data);
+
 	Layer& layer = magpie_container_of(listener, layer, destroy);
 
 	layer.output.layers.erase(std::dynamic_pointer_cast<Layer>(layer.shared_from_this()));
 }
 
 static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.commit(listener=%p, data=%p)", (void*) listener, data);
+
 	Layer& layer = magpie_container_of(listener, layer, commit);
 
 	Server& server = layer.output.server;
@@ -106,6 +118,8 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, [[maybe_un
 }
 
 static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.new_popup(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_layer_surface_v1.events.new_popup");
 		return;
@@ -117,6 +131,8 @@ static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* d
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.new_subsurface(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_layer_surface_v1.events.new_subsurface");
 		return;

@@ -19,6 +19,8 @@
 #include "wlr-wrap-end.hpp"
 
 static void new_input_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_seat.events.new_input(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.new_input");
 		return;
@@ -31,6 +33,8 @@ static void new_input_notify(wl_listener* listener, void* data) {
 }
 
 static void new_virtual_pointer_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_seat.events.new_virtual_pointer(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.new_virtual_pointer");
 		return;
@@ -43,6 +47,8 @@ static void new_virtual_pointer_notify(wl_listener* listener, void* data) {
 }
 
 static void new_virtual_keyboard_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_seat.events.new_virtual_keyboard(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.new_virtual_keyboard");
 		return;
@@ -55,6 +61,8 @@ static void new_virtual_keyboard_notify(wl_listener* listener, void* data) {
 }
 
 static void new_pointer_constraint_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_seat.events.new_pointer_constraint(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.new_pointer_constraint");
 		return;
@@ -71,6 +79,8 @@ static void new_pointer_constraint_notify(wl_listener* listener, void* data) {
 }
 
 static void request_cursor_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_seat.events.request_cursor(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.request_cursor");
 		return;
@@ -95,6 +105,8 @@ static void request_cursor_notify(wl_listener* listener, void* data) {
  * ignore such requests if they so choose, but in magpie we always honor
  */
 static void request_set_selection_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_seat.events.set_selection(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_seat.events.request_set_selection");
 		return;

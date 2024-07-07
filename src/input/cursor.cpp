@@ -106,8 +106,10 @@ void Cursor::process_move(const uint32_t time) {
 /* This event is forwarded by the cursor when a pointer emits an axis event,
  * for example when you move the scroll wheel. */
 static void cursor_axis_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_cursor.events.axis(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.cursor_axis");
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.axis");
 		return;
 	}
 
@@ -166,6 +168,8 @@ static void cursor_motion_absolute_notify(wl_listener* listener, void* data) {
 
 /* This event is forwarded by the cursor when a pointer emits a button event. */
 static void cursor_button_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_cursor.events.button(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.button");
 		return;
@@ -224,8 +228,10 @@ static void cursor_motion_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_pinch_begin_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_cursor.events.gesture_pinch_begin(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.pinch_begin");
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.gesture_pinch_begin");
 		return;
 	}
 
@@ -237,7 +243,7 @@ static void gesture_pinch_begin_notify(wl_listener* listener, void* data) {
 
 static void gesture_pinch_update_notify(wl_listener* listener, void* data) {
 	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.pinch_update");
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.gesture_pinch_update");
 		return;
 	}
 
@@ -249,8 +255,10 @@ static void gesture_pinch_update_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_pinch_end_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_cursor.events.gesture_pinch_end(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.pinch_end");
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.gesture_pinch_end");
 		return;
 	}
 
@@ -261,8 +269,10 @@ static void gesture_pinch_end_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_swipe_begin_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_cursor.events.gesture_swipe_begin(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.swipe_begin");
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.gesture_swipe_begin");
 		return;
 	}
 
@@ -274,7 +284,7 @@ static void gesture_swipe_begin_notify(wl_listener* listener, void* data) {
 
 static void gesture_swipe_update_notify(wl_listener* listener, void* data) {
 	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.swipe_update");
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.gesture_swipe_update");
 		return;
 	}
 
@@ -285,8 +295,10 @@ static void gesture_swipe_update_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_swipe_end_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_cursor.events.gesture_swipe_end(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.swipe_end");
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.gesture_swipe_end");
 		return;
 	}
 
@@ -297,8 +309,10 @@ static void gesture_swipe_end_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_hold_begin_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_cursor.events.gesture_hold_begin(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.hold_begin");
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.gesture_hold_begin");
 		return;
 	}
 
@@ -309,8 +323,10 @@ static void gesture_hold_begin_notify(wl_listener* listener, void* data) {
 }
 
 static void gesture_hold_end_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_cursor.events.gesture_hold_end(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.hold_end");
+		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.gesture_hold_end");
 		return;
 	}
 
@@ -321,6 +337,8 @@ static void gesture_hold_end_notify(wl_listener* listener, void* data) {
 }
 
 static void request_set_shape_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_cursor.events.set_shape(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_cursor.events.set_shape");
 		return;

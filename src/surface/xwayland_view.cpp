@@ -17,6 +17,8 @@
 
 /* Called when the surface is mapped, or ready to display on-screen. */
 static void xwayland_surface_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.map(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, map);
 
 	view.map();
@@ -24,12 +26,16 @@ static void xwayland_surface_map_notify(wl_listener* listener, [[maybe_unused]] 
 
 /* Called when the surface is unmapped, and should no longer be shown. */
 static void xwayland_surface_unmap_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.unmap(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, unmap);
 
 	view.unmap();
 }
 
 static void xwayland_surface_associate_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.associate(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, associate);
 
 	view.listeners.map.notify = xwayland_surface_map_notify;
@@ -39,6 +45,8 @@ static void xwayland_surface_associate_notify(wl_listener* listener, [[maybe_unu
 }
 
 static void xwayland_surface_dissociate_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.dissociate(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, dissociate);
 
 	wl_list_remove(&view.listeners.map.link);
@@ -47,6 +55,8 @@ static void xwayland_surface_dissociate_notify(wl_listener* listener, [[maybe_un
 
 /* Called when the surface is destroyed and should never be shown again. */
 static void xwayland_surface_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.destroy(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, destroy);
 
 	auto view_ptr = std::dynamic_pointer_cast<View>(view.shared_from_this());
@@ -55,6 +65,8 @@ static void xwayland_surface_destroy_notify(wl_listener* listener, [[maybe_unuse
 }
 
 static void xwayland_surface_request_configure_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.request_configure(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_xwayland_surface.events.request_configure");
 		return;
@@ -67,6 +79,8 @@ static void xwayland_surface_request_configure_notify(wl_listener* listener, voi
 }
 
 static void xwayland_surface_set_geometry_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.set_geometry(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, set_geometry);
 
 	auto grabbed_view = view.server.grabbed_view.lock();
@@ -85,6 +99,8 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, [[maybe_
  * provided serial against a list of button press serials sent to this
  * client, to prevent the client from requesting this whenever they want. */
 static void xwayland_surface_request_move_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.request_move(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, request_move);
 
 	view.set_placement(VIEW_PLACEMENT_STACKING);
@@ -97,6 +113,8 @@ static void xwayland_surface_request_move_notify(wl_listener* listener, [[maybe_
  * provided serial against a list of button press serials sent to this
  * client, to prevent the client from requesting this whenever they want. */
 static void xwayland_surface_request_resize_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.request_resize(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_xwayland_surface.events.request_resize");
 		return;
@@ -110,18 +128,24 @@ static void xwayland_surface_request_resize_notify(wl_listener* listener, void* 
 }
 
 static void xwayland_surface_request_maximize_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.request_maximize(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, request_maximize);
 
 	view.toggle_maximize();
 }
 
 static void xwayland_surface_request_fullscreen_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.request_fullscreen(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, request_fullscreen);
 
 	view.toggle_fullscreen();
 }
 
 static void xwayland_surface_set_title_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.set_title(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, set_title);
 
 	if (view.toplevel_handle.has_value()) {
@@ -130,6 +154,8 @@ static void xwayland_surface_set_title_notify(wl_listener* listener, [[maybe_unu
 }
 
 static void xwayland_surface_set_class_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.set_class(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, set_class);
 
 	if (view.toplevel_handle.has_value()) {
@@ -138,6 +164,8 @@ static void xwayland_surface_set_class_notify(wl_listener* listener, [[maybe_unu
 }
 
 static void xwayland_surface_set_parent_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland_surface.events.set_parent(listener=%p, data=%p)", (void*) listener, data);
+
 	XWaylandView& view = magpie_container_of(listener, view, set_parent);
 
 	if (view.wlr.parent != nullptr) {

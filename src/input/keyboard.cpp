@@ -19,6 +19,8 @@
  * the destruction of the wlr_keyboard. It will no longer receive events
  * and should be destroyed. */
 static void keyboard_handle_destroy(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_keyboard.events.destroy(listener=%p, data=%p)", (void*) listener, data);
+
 	Keyboard& keyboard = magpie_container_of(listener, keyboard, destroy);
 
 	auto& keyboards = keyboard.seat.keyboards;
@@ -51,6 +53,8 @@ static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_
 
 /* This event is raised when a key is pressed or released. */
 static void keyboard_handle_key(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_keyboard.events.key(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_keyboard.events.key");
 		return;

@@ -12,6 +12,8 @@
 #include "wlr-wrap-end.hpp"
 
 static void popup_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_popup.events.map(listener=%p, data=%p)", (void*) listener, data);
+
 	Popup& popup = magpie_container_of(listener, popup, map);
 
 	wlr_box current = {};
@@ -31,6 +33,8 @@ static void popup_map_notify(wl_listener* listener, [[maybe_unused]] void* data)
 }
 
 static void popup_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_popup.events.destroy(listener=%p, data=%p)", (void*) listener, data);
+
 	Popup& popup = magpie_container_of(listener, popup, destroy);
 
 	popup.wlr = nullptr;
@@ -38,8 +42,10 @@ static void popup_destroy_notify(wl_listener* listener, [[maybe_unused]] void* d
 }
 
 static void popup_new_popup_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_popup.events.new_popup(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_layer_surface_v1.events.new_popup");
+		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_popup.events.new_popup");
 		return;
 	}
 

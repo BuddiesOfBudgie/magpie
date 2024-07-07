@@ -163,6 +163,8 @@ std::weak_ptr<Surface> Server::surface_at(const double lx, const double ly, wlr_
 /* This event is raised by the backend when a new output (aka a display or
  * monitor) becomes available. */
 static void new_output_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_backend.events.new_output(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_backend.events.new_output");
 		return;
@@ -212,6 +214,8 @@ static void new_output_notify(wl_listener* listener, void* data) {
 }
 
 static void output_power_manager_set_mode_notify([[maybe_unused]] wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_output_power_manager.events.set_mode(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_output_power_manager.events.set_mode");
 		return;
@@ -234,6 +238,8 @@ static void output_power_manager_set_mode_notify([[maybe_unused]] wl_listener* l
 /* This event is raised when wlr_xdg_shell receives a new xdg surface from a
  * client, either a toplevel (application window) or popup. */
 static void new_xdg_surface_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_shell.events.new_surface(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_shell.events.new_surface");
 		return;
@@ -251,6 +257,8 @@ static void new_xdg_surface_notify(wl_listener* listener, void* data) {
 }
 
 static void new_layer_surface_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_shell_v1.events.new_surface(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_layer_shell_v1.events.new_surface");
 		return;
@@ -272,6 +280,8 @@ static void new_layer_surface_notify(wl_listener* listener, void* data) {
 }
 
 static void request_activation_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_activation_v1.events.request_activation(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_activation_v1.events.request_activation");
 		return;
@@ -311,6 +321,8 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 }
 
 static void drm_lease_request_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_drm_lease_manager_v1.events.drm_lease_request(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_drm_lease_manager_v1.events.drm_lease_request");
 		return;
@@ -339,6 +351,8 @@ static void drm_lease_request_notify(wl_listener* listener, void* data) {
 }
 
 void output_layout_change_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_output_manager.events.change(listener=%p, data=%p)", (void*) listener, data);
+
 	Server& server = magpie_container_of(listener, server, output_layout_change);
 
 	if (server.num_pending_output_layout_changes > 0) {
@@ -362,6 +376,8 @@ void output_layout_change_notify(wl_listener* listener, [[maybe_unused]] void* d
 }
 
 void output_manager_apply_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_output_manager_v1.events.apply(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_output_manager_v1.events.apply");
 		return;
