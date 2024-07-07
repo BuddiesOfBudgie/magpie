@@ -34,6 +34,21 @@
 #include <wlr/xwayland/shell.h>
 #include "wlr-wrap-end.hpp"
 
+static wlr_layer_surface_v1* find_subsurface_parent_layer(const wlr_subsurface* subsurface) {
+	wlr_surface* parent = subsurface->parent;
+	wlr_subsurface* parent_as_subsurface = wlr_subsurface_try_from_wlr_surface(parent);
+	wlr_layer_surface_v1* parent_as_layer_surface = wlr_layer_surface_v1_try_from_wlr_surface(parent);
+
+	// traverse up the tree to find the root parent surface
+	while (parent_as_subsurface != nullptr) {
+		parent = parent_as_subsurface->parent;
+		parent_as_subsurface = wlr_subsurface_try_from_wlr_surface(parent);
+		parent_as_layer_surface = wlr_layer_surface_v1_try_from_wlr_surface(parent);
+	}
+
+	return parent_as_layer_surface;
+}
+
 void Server::focus_view(std::shared_ptr<View>&& view) {
 	auto layer = this->focused_layer.lock();
 	if (layer != nullptr) {
@@ -261,13 +276,32 @@ static void request_activation_notify(wl_listener* listener, void* data) {
 	const auto* event = static_cast<wlr_xdg_activation_v1_request_activate_event*>(data);
 
 	const auto* xdg_surface = wlr_xdg_surface_try_from_wlr_surface(event->surface);
-	if (xdg_surface == nullptr) {
+	if (xdg_surface != nullptr) {
+		auto* view = dynamic_cast<View*>(static_cast<Surface*>(xdg_surface->surface->data));
+		if (view != nullptr && xdg_surface->surface->mapped) {
+			server.focus_view(std::dynamic_pointer_cast<View>(view->shared_from_this()));
+		}
 		return;
 	}
 
-	auto* view = dynamic_cast<View*>(static_cast<Surface*>(xdg_surface->surface->data));
-	if (view != nullptr && xdg_surface->surface->mapped) {
-		server.focus_view(std::dynamic_pointer_cast<View>(view->shared_from_this()));
+	const auto* layer_surface = wlr_layer_surface_v1_try_from_wlr_surface(event->surface);
+	if (layer_surface != nullptr) {
+		auto* layer = dynamic_cast<Layer*>(static_cast<Surface*>(layer_surface->surface->data));
+		if (layer != nullptr && layer_surface->surface->mapped) {
+			server.focus_layer(std::dynamic_pointer_cast<Layer>(layer->shared_from_this()));
+		}
+		return;
+	}
+
+	const auto* subsurface = wlr_subsurface_try_from_wlr_surface(event->surface);
+	if (subsurface != nullptr) {
+		wlr_layer_surface_v1* parent_as_layer_surface = find_subsurface_parent_layer(subsurface);
+		if (parent_as_layer_surface != nullptr) {
+			auto* layer = dynamic_cast<Layer*>(static_cast<Surface*>(layer_surface->surface->data));
+			if (layer != nullptr && parent_as_layer_surface->surface->mapped) {
+				server.focus_layer(std::dynamic_pointer_cast<Layer>(layer->shared_from_this()));
+			}
+		}
 	}
 }
 
