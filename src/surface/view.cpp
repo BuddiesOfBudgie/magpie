@@ -105,7 +105,7 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	Cursor& cursor = server.seat->cursor;
 	wlr_surface* focused_surface = server.seat->wlr->pointer_state.focused_surface;
 
-	if (get_wlr_surface() != wlr_surface_get_root_surface(focused_surface)) {
+	if (focused_surface == nullptr || get_wlr_surface() != wlr_surface_get_root_surface(focused_surface)) {
 		/* Deny move/resize requests from unfocused clients. */
 		return;
 	}
