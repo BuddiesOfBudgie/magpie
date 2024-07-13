@@ -37,7 +37,7 @@ class ForeignToplevelHandle final : public std::enable_shared_from_this<ForeignT
 
 	void set_title(const char* title) const;
 	void set_app_id(const char* app_id) const;
-	void set_parent(std::optional<std::reference_wrapper<const ForeignToplevelHandle>> parent) const;
+	void set_parent(const std::optional<ForeignToplevelHandle>& parent) const;
 	void set_placement(ViewPlacement placement) const;
 	void set_maximized(bool maximized) const;
 	void set_fullscreen(bool fullscreen) const;

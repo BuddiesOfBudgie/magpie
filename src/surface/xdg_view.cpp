@@ -35,6 +35,9 @@ static void xdg_toplevel_commit_notify(wl_listener* listener, void*) {
 	XdgView& view = magpie_container_of(listener, view, commit);
 
 	if (view.wlr.base->initial_commit) {
+		wlr_xdg_toplevel_set_wm_capabilities(&view.wlr,
+			WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE |
+				WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
 		wlr_xdg_toplevel_set_size(&view.wlr, 0, 0);
 	}
 }
@@ -183,10 +186,6 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept
 	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, xdg_toplevel.base);
 	scene_node = &scene_tree->node;
 
-	wlr_xdg_toplevel_set_wm_capabilities(&xdg_toplevel,
-		WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE |
-			WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
-
 	scene_node->data = this;
 	wlr.base->surface->data = this;
 
@@ -197,7 +196,7 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept
 	if (xdg_toplevel.parent != nullptr) {
 		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(xdg_toplevel.parent->base->data));
 		if (m_view != nullptr) {
-			toplevel_handle->set_parent(m_view->toplevel_handle.value());
+			toplevel_handle->set_parent(m_view->toplevel_handle);
 		}
 	}
 

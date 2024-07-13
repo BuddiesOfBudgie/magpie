@@ -125,8 +125,8 @@ void ForeignToplevelHandle::set_app_id(const char* app_id) const {
 	}
 }
 
-void ForeignToplevelHandle::set_parent(const std::optional<std::reference_wrapper<const ForeignToplevelHandle>> parent) const {
-	wlr_foreign_toplevel_handle_v1_set_parent(&wlr, parent.has_value() ? nullptr : &parent->get().wlr);
+void ForeignToplevelHandle::set_parent(const std::optional<ForeignToplevelHandle>& parent) const {
+	wlr_foreign_toplevel_handle_v1_set_parent(&wlr, parent.has_value() ? &parent.value().wlr : nullptr);
 }
 
 void ForeignToplevelHandle::set_placement(const ViewPlacement placement) const {
