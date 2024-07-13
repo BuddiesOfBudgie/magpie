@@ -260,8 +260,16 @@ static void new_xdg_popup_notify(wl_listener*, void* data) {
 	}
 
 	auto& xdg_popup = *static_cast<wlr_xdg_popup*>(data);
+	if (!xdg_popup.parent) {
+		wlr_log(WLR_ERROR, "XDG popup %p created without a parent surface", (void*) &xdg_popup);
+		return;
+	}
 
 	auto* parent = wlr_xdg_surface_try_from_wlr_surface(xdg_popup.parent);
+	if (!parent) {
+		wlr_log(WLR_ERROR, "XDG popup %p created with a non-xdg parent surface", (void*) &xdg_popup);
+		return;
+	}
 
 	auto& parent_surface = *static_cast<Surface*>(parent->data);
 	parent_surface.popups.emplace(std::make_shared<Popup>(parent_surface, xdg_popup));
