@@ -74,6 +74,9 @@ Popup::Popup(Surface& parent, wlr_xdg_popup& wlr) noexcept
 	scene_node->data = this;
 	wlr.base->surface->data = this;
 
+	// just in case the popup hasn't been configured already (2024-07-13)
+	wlr_xdg_surface_schedule_configure(wlr.base);
+
 	listeners.map.notify = popup_map_notify;
 	wl_signal_add(&wlr.base->surface->events.map, &listeners.map);
 	listeners.destroy.notify = popup_destroy_notify;
