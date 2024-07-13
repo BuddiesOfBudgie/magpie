@@ -10,6 +10,7 @@ magpie_sources = [
     'input/seat.cpp',
     'surface/layer.cpp',
     'surface/popup.cpp',
+    'surface/subsurface.cpp',
     'surface/view.cpp',
     'surface/xdg_view.cpp',
     'surface/xwayland_view.cpp',
@@ -28,3 +29,13 @@ exe = executable(
     cpp_args: '-DPROJECT_VERSION="' + meson.project_version() + '"',
     install: true
 )
+
+glxgears = find_program('glxgears', required: false)
+if glxgears.found()
+    test('glxgears', exe, args: ['--debug', '--kiosk', 'sh -c "timeout 5 glxgears"'])
+endif
+
+vkgears = find_program('vkgears', required: false)
+if vkgears.found()
+    test('vkgears', exe, args: ['--debug', '--kiosk', 'sh -c "timeout 5 vkgears"'])
+endif

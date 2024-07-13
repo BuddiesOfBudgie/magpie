@@ -11,6 +11,7 @@
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_compositor.h>
+#include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/util/edges.h>
@@ -36,9 +37,12 @@ std::optional<std::reference_wrapper<Output>> View::find_output_for_maximize() c
 		wlr_output_layout_get_box(server.output_layout, &output->wlr, &output_box);
 		wlr_box intersection = {};
 		wlr_box_intersection(&intersection, &previous, &output_box);
-		const int64_t intersection_area = intersection.width * intersection.height;
 
-		if (intersection.width * intersection.height > best_area) {
+		auto intersection_width = static_cast<int64_t>(intersection.width);
+		auto intersection_height = static_cast<int64_t>(intersection.height);
+		const auto intersection_area = intersection_width * intersection_height;
+
+		if (intersection_area > best_area) {
 			best_area = intersection_area;
 			best_output = output;
 		}
@@ -75,7 +79,7 @@ int32_t View::find_min_y() const {
 		return 0;
 	}
 
-	wlr_box current_copy = {current.x, 0, current.width, current.height + current.y};
+	wlr_box current_copy = {.x = current.x, .y = 0, .width = current.width, .height = current.height + current.y};
 	current_copy.height += current_copy.y;
 	current_copy.y = 0;
 
@@ -115,8 +119,8 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	} else {
 		const wlr_box geo_box = get_geometry();
 
-		const double border_x = current.x + geo_box.x + (edges & WLR_EDGE_RIGHT ? geo_box.width : 0);
-		const double border_y = current.y + geo_box.y + (edges & WLR_EDGE_BOTTOM ? geo_box.height : 0);
+		const double border_x = current.x + geo_box.x + (((edges & WLR_EDGE_RIGHT) != 0) ? geo_box.width : 0);
+		const double border_y = current.y + geo_box.y + (((edges & WLR_EDGE_BOTTOM) != 0) ? geo_box.height : 0);
 		server.grab_x = cursor.wlr.x - border_x;
 		server.grab_y = cursor.wlr.y - border_y;
 
@@ -137,7 +141,7 @@ void View::set_geometry(const int32_t x, const int32_t y, const int32_t width, c
 	if (curr_placement == VIEW_PLACEMENT_STACKING) {
 		previous = current;
 	}
-	current = {x, y, bounded_width, bounded_height};
+	current = {.x = x, .y = y, .width = bounded_width, .height = bounded_height};
 	current.y = std::max(y, find_min_y());
 	if (scene_node != nullptr) {
 		wlr_scene_node_set_position(scene_node, current.x, current.y);
@@ -175,25 +179,45 @@ void View::set_size(const int32_t width, const int32_t height) {
 }
 
 void View::update_outputs(const bool ignore_previous) const {
-	for (auto& output : std::as_const(get_server().outputs)) {
+	wlr_box largest_intersection = {};
+	auto target_buffer_scale = 1.0;
+
+	for (const auto& output : std::as_const(get_server().outputs)) {
 		wlr_box output_area = output->full_area;
-		wlr_box prev_intersect = {}, curr_intersect = {};
+
+		wlr_box prev_intersect = {};
 		wlr_box_intersection(&prev_intersect, &previous, &output_area);
+
+		wlr_box curr_intersect = {};
 		wlr_box_intersection(&curr_intersect, &current, &output_area);
+
+		if (curr_intersect.width * curr_intersect.height > largest_intersection.width * largest_intersection.height) {
+			largest_intersection = curr_intersect;
+			target_buffer_scale = output->wlr.scale;
+		}
 
 		if (ignore_previous) {
 			if (!wlr_box_empty(&curr_intersect)) {
 				wlr_surface_send_enter(get_wlr_surface(), &output->wlr);
-				toplevel_handle->output_enter(*output);
+				if (toplevel_handle.has_value()) {
+					toplevel_handle->output_enter(*output);
+				}
 			}
 		} else if (wlr_box_empty(&prev_intersect) && !wlr_box_empty(&curr_intersect)) {
 			wlr_surface_send_enter(get_wlr_surface(), &output->wlr);
-			toplevel_handle->output_enter(*output);
+			if (toplevel_handle.has_value()) {
+				toplevel_handle->output_enter(*output);
+			}
 		} else if (!wlr_box_empty(&prev_intersect) && wlr_box_empty(&curr_intersect)) {
 			wlr_surface_send_leave(get_wlr_surface(), &output->wlr);
-			toplevel_handle->output_leave(*output);
+			if (toplevel_handle.has_value()) {
+				toplevel_handle->output_leave(*output);
+			}
 		}
 	}
+
+	wlr_fractional_scale_v1_notify_scale(get_wlr_surface(), target_buffer_scale);
+	wlr_surface_set_preferred_buffer_scale(get_wlr_surface(), std::ceil(target_buffer_scale));
 }
 
 void View::set_activated(const bool activated) {
@@ -201,6 +225,29 @@ void View::set_activated(const bool activated) {
 
 	if (toplevel_handle.has_value()) {
 		toplevel_handle->set_activated(activated);
+	}
+
+	const auto seat = get_server().seat;
+	if (activated) {
+		wlr_scene_node_raise_to_top(scene_node);
+
+		/*
+		 * Tell the seat to have the keyboard enter this surface. wlroots will keep
+		 * track of this and automatically send key events to the appropriate
+		 * clients without additional work on your part.
+		 */
+		const auto* keyboard = wlr_seat_get_keyboard(seat->wlr);
+		if (keyboard != nullptr) {
+			wlr_seat_keyboard_notify_enter(
+				seat->wlr, get_wlr_surface(), keyboard->keycodes, keyboard->num_keycodes, &keyboard->modifiers);
+		}
+
+		wlr_pointer_constraint_v1* constraint =
+			wlr_pointer_constraints_v1_constraint_for_surface(seat->pointer_constraints, get_wlr_surface(), seat->wlr);
+		seat->set_constraint(constraint);
+	} else {
+		wlr_seat_keyboard_notify_clear_focus(seat->wlr);
+		seat->set_constraint(nullptr);
 	}
 }
 

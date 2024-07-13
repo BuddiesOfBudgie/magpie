@@ -1,6 +1,7 @@
 #ifndef MAGPIE_LAYER_HPP
 #define MAGPIE_LAYER_HPP
 
+#include "server.hpp"
 #include "surface.hpp"
 #include "types.hpp"
 
@@ -34,8 +35,7 @@ class Layer final : public Surface {
 
 	wlr_layer_surface_v1& wlr;
 	wlr_scene_layer_surface_v1* scene_surface;
-
-	std::set<std::shared_ptr<LayerSubsurface>> subsurfaces;
+	magpie_scene_layer_t scene_layer = MAGPIE_SCENE_LAYER_NORMAL;
 
 	Layer(Output& output, wlr_layer_surface_v1& surface) noexcept;
 	~Layer() noexcept override;
@@ -43,26 +43,6 @@ class Layer final : public Surface {
 	[[nodiscard]] wlr_surface* get_wlr_surface() const override;
 	[[nodiscard]] Server& get_server() const override;
 	[[nodiscard]] bool is_view() const override;
-};
-
-class LayerSubsurface final : public std::enable_shared_from_this<LayerSubsurface> {
-  public:
-	struct Listeners {
-		std::reference_wrapper<LayerSubsurface> parent;
-		wl_listener map = {};
-		wl_listener destroy = {};
-		explicit Listeners(LayerSubsurface& parent) noexcept : parent(parent) {}
-	};
-
-  private:
-	Listeners listeners;
-
-  public:
-	Layer& parent;
-	wlr_subsurface* wlr;
-
-	LayerSubsurface(Layer& parent, wlr_subsurface& subsurface) noexcept;
-	~LayerSubsurface() noexcept;
 };
 
 #endif

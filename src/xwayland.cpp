@@ -9,21 +9,23 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-static const std::string atom_map[ATOM_LAST] = {
-	"_NET_WM_WINDOW_TYPE_NORMAL",
-	"_NET_WM_WINDOW_TYPE_DIALOG",
-	"_NET_WM_WINDOW_TYPE_UTILITY",
-	"_NET_WM_WINDOW_TYPE_TOOLBAR",
-	"_NET_WM_WINDOW_TYPE_SPLASH",
-	"_NET_WM_WINDOW_TYPE_MENU",
-	"_NET_WM_WINDOW_TYPE_DROPDOWN_MENU",
-	"_NET_WM_WINDOW_TYPE_POPUP_MENU",
-	"_NET_WM_WINDOW_TYPE_TOOLTIP",
-	"_NET_WM_WINDOW_TYPE_NOTIFICATION",
-	"_NET_WM_STATE_MODAL",
-};
+static void ready_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland.events.ready(listener=%p, data=%p)", (void*) listener, data);
 
-static void ready_notify(wl_listener* listener, void*) {
+	const std::array<std::string, ATOM_LAST> atom_map = {
+		"_NET_WM_WINDOW_TYPE_NORMAL",
+		"_NET_WM_WINDOW_TYPE_DIALOG",
+		"_NET_WM_WINDOW_TYPE_UTILITY",
+		"_NET_WM_WINDOW_TYPE_TOOLBAR",
+		"_NET_WM_WINDOW_TYPE_SPLASH",
+		"_NET_WM_WINDOW_TYPE_MENU",
+		"_NET_WM_WINDOW_TYPE_DROPDOWN_MENU",
+		"_NET_WM_WINDOW_TYPE_POPUP_MENU",
+		"_NET_WM_WINDOW_TYPE_TOOLTIP",
+		"_NET_WM_WINDOW_TYPE_NOTIFICATION",
+		"_NET_WM_STATE_MODAL",
+	};
+
 	XWayland& xwayland = magpie_container_of(listener, xwayland, ready);
 
 	wlr_xwayland_set_seat(xwayland.wlr, xwayland.server.seat->wlr);
@@ -34,7 +36,7 @@ static void ready_notify(wl_listener* listener, void*) {
 		return;
 	}
 
-	xcb_intern_atom_cookie_t cookies[ATOM_LAST];
+	std::array<xcb_intern_atom_cookie_t, ATOM_LAST> cookies = {};
 	for (size_t i = 0; i < ATOM_LAST; i++) {
 		cookies[i] = xcb_intern_atom(xcb_conn, 0, atom_map[i].length(), atom_map[i].c_str());
 	}
@@ -57,6 +59,8 @@ static void ready_notify(wl_listener* listener, void*) {
 }
 
 static void new_surface_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xwayland.events.new_surface(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_xwayland.events.new_surface");
 		return;
@@ -76,5 +80,5 @@ XWayland::XWayland(Server& server) noexcept : listeners(*this), server(server) {
 	listeners.new_surface.notify = new_surface_notify;
 	wl_signal_add(&wlr->events.new_surface, &listeners.new_surface);
 
-	setenv("DISPLAY", wlr->display_name, true);
+	setenv("DISPLAY", wlr->display_name, 1);
 }

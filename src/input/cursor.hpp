@@ -25,7 +25,6 @@ class Cursor final : public std::enable_shared_from_this<Cursor> {
 		wl_listener button = {};
 		wl_listener axis = {};
 		wl_listener frame = {};
-		wl_listener new_constraint = {};
 		wl_listener gesture_pinch_begin = {};
 		wl_listener gesture_pinch_update = {};
 		wl_listener gesture_pinch_end = {};

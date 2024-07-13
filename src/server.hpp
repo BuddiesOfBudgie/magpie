@@ -12,7 +12,10 @@
 #include <wlr/backend/session.h>
 #include <wlr/render/allocator.h>
 #include <wlr/types/wlr_content_type_v1.h>
+#include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_drm_lease_v1.h>
+#include <wlr/types/wlr_export_dmabuf_v1.h>
+#include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
 #include <wlr/types/wlr_idle_inhibit_v1.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
@@ -20,18 +23,20 @@
 #include <wlr/types/wlr_output_management_v1.h>
 #include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_scene.h>
+#include <wlr/types/wlr_screencopy_v1.h>
+#include <wlr/types/wlr_security_context_v1.h>
 #include <wlr/types/wlr_xdg_activation_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
-typedef enum {
+using magpie_scene_layer_t = enum magpie_scene_layer {
 	MAGPIE_SCENE_LAYER_BACKGROUND = 0,
 	MAGPIE_SCENE_LAYER_BOTTOM,
 	MAGPIE_SCENE_LAYER_NORMAL,
 	MAGPIE_SCENE_LAYER_TOP,
 	MAGPIE_SCENE_LAYER_OVERLAY,
 	MAGPIE_SCENE_LAYER_LOCK
-} magpie_scene_layer_t;
+};
 
 class Server final : public std::enable_shared_from_this<Server> {
   public:
@@ -64,7 +69,7 @@ class Server final : public std::enable_shared_from_this<Server> {
 
 	wlr_scene* scene;
 	wlr_scene_output_layout* scene_layout;
-	wlr_scene_tree* scene_layers[MAGPIE_SCENE_LAYER_LOCK + 1] = {};
+	std::array<wlr_scene_tree*, MAGPIE_SCENE_LAYER_LOCK + 1> scene_layers = {};
 
 	wlr_xdg_shell* xdg_shell;
 
@@ -73,6 +78,7 @@ class Server final : public std::enable_shared_from_this<Server> {
 	wlr_foreign_toplevel_manager_v1* foreign_toplevel_manager;
 
 	wlr_layer_shell_v1* layer_shell;
+	std::weak_ptr<Layer> focused_layer;
 
 	std::shared_ptr<Seat> seat;
 
@@ -94,11 +100,19 @@ class Server final : public std::enable_shared_from_this<Server> {
 
 	wlr_drm_lease_v1_manager* drm_manager;
 	wlr_content_type_manager_v1* content_type_manager;
+	wlr_data_control_manager_v1* data_control_manager;
+	wlr_security_context_manager_v1* security_context_manager;
+	wlr_export_dmabuf_manager_v1* export_dmabuf_manager;
+	wlr_gamma_control_manager_v1* gamma_control_manager;
+	wlr_screencopy_manager_v1* screencopy_manager;
 
 	Server();
 
 	std::weak_ptr<Surface> surface_at(double lx, double ly, wlr_surface** wlr, double* sx, double* sy) const;
-	void focus_view(std::shared_ptr<View>&& view, wlr_surface* surface = nullptr);
+	void focus_view(std::shared_ptr<View>&& view);
+	void focus_layer(std::shared_ptr<Layer> layer);
+	void try_focus_next_exclusive_layer();
+	bool is_restricted(const wl_global* global) const;
 };
 
 #endif

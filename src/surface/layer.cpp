@@ -4,9 +4,11 @@
 #include "popup.hpp"
 #include "server.hpp"
 #include "surface.hpp"
+#include "subsurface.hpp"
 #include "types.hpp"
 
 #include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_scene.h>
@@ -28,33 +30,10 @@ static magpie_scene_layer_t magpie_layer_from_wlr_layer(const zwlr_layer_shell_v
 	}
 }
 
-static void subsurface_map_notify(wl_listener* listener, void*) {
-	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, map);
-
-	wlr_surface_send_enter(subsurface.wlr->surface, &subsurface.parent.output.wlr);
-}
-
-static void subsurface_destroy_notify(wl_listener* listener, void*) {
-	LayerSubsurface& subsurface = magpie_container_of(listener, subsurface, destroy);
-
-	subsurface.parent.subsurfaces.erase(subsurface.shared_from_this());
-}
-
-LayerSubsurface::LayerSubsurface(Layer& parent, wlr_subsurface& subsurface) noexcept
-	: listeners(*this), parent(parent), wlr(&subsurface) {
-	listeners.map.notify = subsurface_map_notify;
-	wl_signal_add(&subsurface.surface->events.map, &listeners.map);
-	listeners.destroy.notify = subsurface_destroy_notify;
-	wl_signal_add(&subsurface.events.destroy, &listeners.destroy);
-}
-
-LayerSubsurface::~LayerSubsurface() noexcept {
-	wl_list_remove(&listeners.map.link);
-	wl_list_remove(&listeners.destroy.link);
-}
-
 /* Called when the surface is mapped, or ready to display on-screen. */
-static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void*) {
+static void wlr_layer_surface_v1_map_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.map(listener=%p, data=%p)", (void*) listener, data);
+
 	Layer& layer = magpie_container_of(listener, layer, map);
 
 	wlr_scene_node_set_enabled(layer.scene_node, true);
@@ -62,37 +41,57 @@ static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void*) {
 }
 
 /* Called when the surface is unmapped, and should no longer be shown. */
-static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, void*) {
+static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.unmap(listener=%p, data=%p)", (void*) listener, data);
+
 	Layer& layer = magpie_container_of(listener, layer, unmap);
 
 	wlr_scene_node_set_enabled(layer.scene_node, false);
 }
 
 /* Called when the surface is destroyed and should never be shown again. */
-static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, void*) {
+static void wlr_layer_surface_v1_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.destroy(listener=%p, data=%p)", (void*) listener, data);
+
 	Layer& layer = magpie_container_of(listener, layer, destroy);
 
 	layer.output.layers.erase(std::dynamic_pointer_cast<Layer>(layer.shared_from_this()));
 }
 
-static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void*) {
+static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.commit(listener=%p, data=%p)", (void*) listener, data);
+
 	Layer& layer = magpie_container_of(listener, layer, commit);
 
-	const Server& server = layer.output.server;
+	Server& server = layer.output.server;
 	const wlr_layer_surface_v1& surface = layer.wlr;
 
 	const uint32_t committed = surface.current.committed;
-	if (committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) {
-		const magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface.current.layer);
-		wlr_scene_node_reparent(layer.scene_node, server.scene_layers[chosen_layer]);
+	if ((committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) != 0) {
+		layer.scene_layer = magpie_layer_from_wlr_layer(surface.current.layer);
+		wlr_scene_node_reparent(layer.scene_node, server.scene_layers[layer.scene_layer]);
 	}
 
-	if (committed) {
+	if ((committed & WLR_LAYER_SURFACE_V1_STATE_KEYBOARD_INTERACTIVITY) != 0) {
+		switch (layer.wlr.current.keyboard_interactive) {
+			case ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_NONE:
+				server.try_focus_next_exclusive_layer();
+				break;
+			case ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_ON_DEMAND:
+			case ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_EXCLUSIVE:
+				server.focus_layer(std::dynamic_pointer_cast<Layer>(layer.shared_from_this()));
+				break;
+		}
+	}
+
+	if (committed != 0) {
 		layer.output.update_layout();
 	}
 }
 
 static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.new_popup(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_layer_surface_v1.events.new_popup");
 		return;
@@ -104,6 +103,8 @@ static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* d
 }
 
 static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.new_subsurface(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_layer_surface_v1.events.new_subsurface");
 		return;
@@ -112,7 +113,7 @@ static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, vo
 	Layer& layer = magpie_container_of(listener, layer, new_subsurface);
 	auto& subsurface = *static_cast<wlr_subsurface*>(data);
 
-	layer.subsurfaces.emplace(std::make_shared<LayerSubsurface>(layer, subsurface));
+	layer.subsurfaces.emplace(std::make_shared<Subsurface>(layer, subsurface));
 }
 
 Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept
@@ -123,6 +124,9 @@ Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept
 
 	scene_node->data = this;
 	surface.surface->data = this;
+
+	wlr_fractional_scale_v1_notify_scale(surface.surface, surface.output->scale);
+	wlr_surface_set_preferred_buffer_scale(surface.surface, std::ceil(surface.output->scale));
 
 	listeners.map.notify = wlr_layer_surface_v1_map_notify;
 	wl_signal_add(&surface.surface->events.map, &listeners.map);

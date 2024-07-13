@@ -1,37 +1,35 @@
-#ifndef MAGPIE_POPUP_HPP
-#define MAGPIE_POPUP_HPP
+#ifndef MAGPIE_SUBSURFACE_HPP
+#define MAGPIE_SUBSURFACE_HPP
 
+#include "server.hpp"
 #include "surface.hpp"
 #include "types.hpp"
 
 #include <functional>
 #include <memory>
+#include <set>
 
 #include "wlr-wrap-start.hpp"
-#include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_subcompositor.h>
 #include "wlr-wrap-end.hpp"
 
-class Popup final : public Surface {
+class Subsurface final : public Surface {
   public:
 	struct Listeners {
-		std::reference_wrapper<Popup> parent;
-		wl_listener map = {};
+		std::reference_wrapper<Subsurface> parent;
 		wl_listener destroy = {};
-		wl_listener new_popup = {};
-		wl_listener new_subsurface = {};
-		explicit Listeners(Popup& parent) noexcept : parent(parent) {}
+		explicit Listeners(Subsurface& parent) noexcept : parent(parent) {}
 	};
 
   private:
 	Listeners listeners;
 
   public:
-	Server& server;
 	Surface& parent;
-	wlr_xdg_popup* wlr;
+	wlr_subsurface& wlr;
 
-	Popup(Surface& parent, wlr_xdg_popup& wlr) noexcept;
-	~Popup() noexcept override;
+	Subsurface(Surface& parent, wlr_subsurface& subsurface) noexcept;
+	~Subsurface() noexcept override;
 
 	[[nodiscard]] wlr_surface* get_wlr_surface() const override;
 	[[nodiscard]] Server& get_server() const override;

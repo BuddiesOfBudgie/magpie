@@ -9,12 +9,14 @@
 #include "wlr-wrap-end.hpp"
 
 static void foreign_toplevel_handle_request_maximize_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_foreign_toplevel_handle_v1.events.request_maximize(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_foreign_toplevel_handle_v1.events.request_maximize");
 		return;
 	}
 
-	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
+	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_maximize);
 	const auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
 
 	const auto placement = event.maximized ? VIEW_PLACEMENT_MAXIMIZED : VIEW_PLACEMENT_STACKING;
@@ -22,12 +24,15 @@ static void foreign_toplevel_handle_request_maximize_notify(wl_listener* listene
 }
 
 static void foreign_toplevel_handle_request_fullscreen_notify(wl_listener* listener, void* data) {
+	wlr_log(
+		WLR_DEBUG, "wlr_foreign_toplevel_handle_v1.events.request_fullscreen(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_foreign_toplevel_handle_v1.events.request_fullscreen");
 		return;
 	}
 
-	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
+	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_fullscreen);
 	const auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_maximized_event*>(data);
 
 	const auto placement = event.maximized ? VIEW_PLACEMENT_FULLSCREEN : VIEW_PLACEMENT_STACKING;
@@ -35,31 +40,39 @@ static void foreign_toplevel_handle_request_fullscreen_notify(wl_listener* liste
 }
 
 static void foreign_toplevel_handle_request_minimize_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_foreign_toplevel_handle_v1.events.request_minimize(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_foreign_toplevel_handle_v1.events.request_minimize");
 		return;
 	}
 
-	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
+	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_minimize);
 	const auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_minimized_event*>(data);
 
 	handle.view.set_minimized(event.minimized);
 }
 
-static void foreign_toplevel_handle_request_activate_notify(wl_listener* listener, void*) {
+static void foreign_toplevel_handle_request_activate_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_foreign_toplevel_handle_v1.events.request_activate(listener=%p, data=%p)", (void*) listener, data);
+
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_activate);
 
 	handle.view.set_minimized(false);
 	handle.view.get_server().focus_view(std::dynamic_pointer_cast<View>(handle.view.shared_from_this()));
 }
 
-static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, void*) {
+static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_foreign_toplevel_handle_v1.events.request_close(listener=%p, data=%p)", (void*) listener, data);
+
 	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, request_close);
 
 	handle.view.close();
 }
 
 static void foreign_toplevel_handle_set_rectangle_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_foreign_toplevel_handle_v1.events.set_rectangle(listener=%p, data=%p)", (void*) listener, data);
+
 	if (data == nullptr) {
 		wlr_log(WLR_ERROR, "No data passed to wlr_foreign_toplevel_handle_v1.events.set_rectangle");
 		return;

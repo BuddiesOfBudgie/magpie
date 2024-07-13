@@ -33,7 +33,7 @@ int32_t run_compositor(const std::vector<std::string>& startup_cmds, std::promis
 		return 1;
 	}
 
-	setenv("WAYLAND_DISPLAY", socket, true);
+	setenv("WAYLAND_DISPLAY", socket, 1);
 	wlr_log(WLR_INFO, "Running Wayland compositor on WAYLAND_DISPLAY=%s", socket);
 
 	for (const auto& cmd : std::as_const(startup_cmds)) {
@@ -52,6 +52,10 @@ int32_t run_compositor(const std::vector<std::string>& startup_cmds, std::promis
 int32_t main(const int32_t argc, char** argv) {
 	auto argparser = argparse::ArgumentParser(argv[0], PROJECT_VERSION);
 
+	auto& logging_group = argparser.add_mutually_exclusive_group();
+	logging_group.add_argument("-d", "--debug").help("enable full logging").nargs(0);
+	logging_group.add_argument("-q", "--quiet").help("suppress informational messages").nargs(0);
+
 	auto& subprocess_group = argparser.add_mutually_exclusive_group();
 	subprocess_group.add_argument("-k", "--kiosk")
 		.help("specify a single executable whose lifecycle will be adopted, such as a login manager")
@@ -68,10 +72,25 @@ int32_t main(const int32_t argc, char** argv) {
 		return 1;
 	}
 
-	const auto kiosk_cmd = argparser.present("--kiosk");
-	const auto startup_cmds = argparser.get<std::vector<std::string>>("--subprocess");
+	std::optional<std::string> kiosk_cmd;
+	std::vector<std::string> startup_cmds;
 
-	wlr_log_init(WLR_INFO, nullptr);
+	try {
+		kiosk_cmd = argparser.present("--kiosk");
+		startup_cmds = argparser.get<std::vector<std::string>>("--subprocess");
+	} catch (const std::exception& err) {
+		std::cerr << err.what() << std::endl;
+		std::cerr << argparser;
+		return 1;
+	}
+
+	if (argparser.is_used("--debug")) {
+		wlr_log_init(WLR_DEBUG, nullptr);
+	} else if (argparser.is_used("--quiet")) {
+		wlr_log_init(WLR_ERROR, nullptr);
+	} else {
+		wlr_log_init(WLR_INFO, nullptr);
+	}
 
 	if (kiosk_cmd.has_value()) {
 		wlr_log(WLR_INFO, "Running in kiosk mode with command '%s'.", kiosk_cmd->c_str());
@@ -79,7 +98,7 @@ int32_t main(const int32_t argc, char** argv) {
 		std::future<const char*> socket_future = socket_promise.get_future();
 		auto display_thread = std::thread(run_compositor, startup_cmds, std::move(socket_promise));
 		display_thread.detach();
-		setenv("WAYLAND_DISPLAY", socket_future.get(), true);
+		setenv("WAYLAND_DISPLAY", socket_future.get(), 1);
 		return system(kiosk_cmd.value().c_str());
 	}
 

@@ -20,7 +20,7 @@ struct View : public Surface {
 	bool is_minimized = false;
 	wlr_box current = {};
 	wlr_box previous = {};
-	std::optional<ForeignToplevelHandle> toplevel_handle = {};
+	std::optional<ForeignToplevelHandle> toplevel_handle;
 
 	~View() noexcept override = default;
 
@@ -80,6 +80,7 @@ class XdgView final : public View {
 		wl_listener set_app_id = {};
 		wl_listener set_parent = {};
 		wl_listener new_popup = {};
+		wl_listener new_subsurface = {};
 		explicit Listeners(XdgView& parent) noexcept : parent(parent) {}
 	};
 
