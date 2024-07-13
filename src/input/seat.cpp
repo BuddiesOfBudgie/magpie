@@ -153,7 +153,8 @@ void Seat::new_input_device(wlr_input_device* device) {
 			keyboards.push_back(std::make_shared<Keyboard>(*this, *wlr_keyboard_from_input_device(device)));
 			break;
 		case WLR_INPUT_DEVICE_POINTER:
-		case WLR_INPUT_DEVICE_TABLET_TOOL:
+		case WLR_INPUT_DEVICE_TABLET:
+		case WLR_INPUT_DEVICE_TABLET_PAD:
 		case WLR_INPUT_DEVICE_TOUCH:
 			cursor.attach_input_device(device);
 			break;

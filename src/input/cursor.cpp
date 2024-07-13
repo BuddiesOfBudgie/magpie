@@ -117,8 +117,8 @@ static void cursor_axis_notify(wl_listener* listener, void* data) {
 	const auto* event = static_cast<wlr_pointer_axis_event*>(data);
 
 	/* Notify the client with pointer focus of the axis event. */
-	wlr_seat_pointer_notify_axis(
-		cursor.seat.wlr, event->time_msec, event->orientation, event->delta, event->delta_discrete, event->source);
+	wlr_seat_pointer_notify_axis(cursor.seat.wlr, event->time_msec, event->orientation, event->delta, event->delta_discrete,
+		event->source, event->relative_direction);
 }
 
 /* This event is forwarded by the cursor when a pointer emits an frame
@@ -188,7 +188,7 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 	wlr_surface* surface = nullptr;
 	auto magpie_surface = server.surface_at(cursor.wlr.x, cursor.wlr.y, &surface, &sx, &sy).lock();
 
-	if (event->state == WLR_BUTTON_RELEASED) {
+	if (event->state == WL_POINTER_BUTTON_STATE_RELEASED) {
 		/* If you released any buttons, we exit interactive move/resize mode. */
 		if (cursor.mode != MAGPIE_CURSOR_PASSTHROUGH) {
 			cursor.reset_mode();

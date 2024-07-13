@@ -31,6 +31,14 @@ static void xdg_toplevel_unmap_notify(wl_listener* listener, [[maybe_unused]] vo
 	view.unmap();
 }
 
+static void xdg_toplevel_commit_notify(wl_listener* listener, void*) {
+	XdgView& view = magpie_container_of(listener, view, commit);
+
+	if (view.wlr.base->initial_commit) {
+		wlr_xdg_toplevel_set_size(&view.wlr, 0, 0);
+	}
+}
+
 /* Called when the surface is destroyed and should never be shown again. */
 static void xdg_toplevel_destroy_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.destroy(listener=%p, data=%p)", (void*) listener, data);
@@ -50,8 +58,10 @@ static void xdg_toplevel_request_move_notify(wl_listener* listener, [[maybe_unus
 
 	XdgView& view = magpie_container_of(listener, view, request_move);
 
-	view.set_placement(VIEW_PLACEMENT_STACKING);
-	view.begin_interactive(MAGPIE_CURSOR_MOVE, 0);
+	if (view.wlr.base->initialized) {
+		view.set_placement(VIEW_PLACEMENT_STACKING);
+		view.begin_interactive(MAGPIE_CURSOR_MOVE, 0);
+	}
 }
 
 /* This event is raised when a client would like to begin an interactive
@@ -70,8 +80,10 @@ static void xdg_toplevel_request_resize_notify(wl_listener* listener, void* data
 	XdgView& view = magpie_container_of(listener, view, request_resize);
 	const auto* event = static_cast<wlr_xdg_toplevel_resize_event*>(data);
 
-	view.set_placement(VIEW_PLACEMENT_STACKING);
-	view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
+	if (view.wlr.base->initialized) {
+		view.set_placement(VIEW_PLACEMENT_STACKING);
+		view.begin_interactive(MAGPIE_CURSOR_RESIZE, event->edges);
+	}
 }
 
 /* This event is raised when a client would like to maximize itself,
@@ -82,8 +94,10 @@ static void xdg_toplevel_request_maximize_notify(wl_listener* listener, [[maybe_
 
 	XdgView& view = magpie_container_of(listener, view, request_maximize);
 
-	view.toggle_maximize();
-	wlr_xdg_surface_schedule_configure(view.wlr.base);
+	if (view.wlr.base->initialized) {
+		view.toggle_maximize();
+		wlr_xdg_surface_schedule_configure(view.wlr.base);
+	}
 }
 
 static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, [[maybe_unused]] void* data) {
@@ -91,8 +105,10 @@ static void xdg_toplevel_request_fullscreen_notify(wl_listener* listener, [[mayb
 
 	XdgView& view = magpie_container_of(listener, view, request_fullscreen);
 
-	view.toggle_fullscreen();
-	wlr_xdg_surface_schedule_configure(view.wlr.base);
+	if (view.wlr.base->initialized) {
+		view.toggle_fullscreen();
+		wlr_xdg_surface_schedule_configure(view.wlr.base);
+	}
 }
 
 static void xdg_toplevel_request_minimize_notify(wl_listener* listener, [[maybe_unused]] void* data) {
@@ -100,8 +116,10 @@ static void xdg_toplevel_request_minimize_notify(wl_listener* listener, [[maybe_
 
 	XdgView& view = magpie_container_of(listener, view, request_minimize);
 
-	view.set_minimized(!view.is_minimized);
-	wlr_xdg_surface_schedule_configure(view.wlr.base);
+	if (view.wlr.base->initialized) {
+		view.set_minimized(!view.is_minimized);
+		wlr_xdg_surface_schedule_configure(view.wlr.base);
+	}
 }
 
 static void xdg_toplevel_set_title_notify(wl_listener* listener, [[maybe_unused]] void* data) {
@@ -187,6 +205,8 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept
 	wl_signal_add(&wlr.base->surface->events.map, &listeners.map);
 	listeners.unmap.notify = xdg_toplevel_unmap_notify;
 	wl_signal_add(&wlr.base->surface->events.unmap, &listeners.unmap);
+	listeners.commit.notify = xdg_toplevel_commit_notify;
+	wl_signal_add(&wlr.base->surface->events.commit, &listeners.commit);
 	listeners.destroy.notify = xdg_toplevel_destroy_notify;
 	wl_signal_add(&wlr.base->events.destroy, &listeners.destroy);
 	listeners.request_move.notify = xdg_toplevel_request_move_notify;
@@ -214,6 +234,7 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept
 XdgView::~XdgView() noexcept {
 	wl_list_remove(&listeners.map.link);
 	wl_list_remove(&listeners.unmap.link);
+	wl_list_remove(&listeners.commit.link);
 	wl_list_remove(&listeners.destroy.link);
 	wl_list_remove(&listeners.request_move.link);
 	wl_list_remove(&listeners.request_resize.link);
