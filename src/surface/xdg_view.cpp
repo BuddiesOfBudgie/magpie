@@ -31,14 +31,20 @@ static void xdg_toplevel_unmap_notify(wl_listener* listener, [[maybe_unused]] vo
 	view.unmap();
 }
 
-static void xdg_toplevel_commit_notify(wl_listener* listener, void*) {
+static void xdg_toplevel_commit_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel.events.commit(listener=%p, data=%p)", (void*) listener, data);
+
 	XdgView& view = magpie_container_of(listener, view, commit);
 
 	if (view.wlr.base->initial_commit) {
 		wlr_xdg_toplevel_set_wm_capabilities(&view.wlr,
 			WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE |
 				WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
-		wlr_xdg_toplevel_set_size(&view.wlr, 0, 0);
+	}
+
+	auto geometry = view.get_geometry();
+	if (view.current.width != geometry.width || view.current.height != geometry.height) {
+		view.set_size(geometry.width, geometry.height);
 	}
 }
 
