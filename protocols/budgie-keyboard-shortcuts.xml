@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="budgie_keyboard_shortcuts">
+
+    <copyright>
+        Copyright Budgie Desktop Developers
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+    </copyright>
+
+    <description summary="Budgie-specific protocol">
+        This is a private Budgie Desktop protocol. Regular Wayland clients must not use it.
+
+        This protocol is currently unversioned and may change without notice.
+    </description>
+
+    <interface name="budgie_keyboard_shortcuts_manager" version="1">
+        <request name="destroy" type="destructor"></request>
+        <request name="subscribe">
+            <description summary="Subscribe to keyboard shortcut events"></description>
+            <arg name="id" type="new_id" interface="budgie_keyboard_shortcuts_subscriber" />
+        </request>
+    </interface>
+
+    <interface name="budgie_keyboard_shortcuts_subscriber" version="1">
+        <request name="destroy" type="destructor"></request>
+        <event name="shortcut_press">
+            <description summary="Shortcut press event">
+                Notification that a registered keyboard shortcut has been pressed.
+
+                The keycode is provided in xkb_v1 format. The modifier field is a bitmask of possible modifiers.
+            </description>
+            <arg name="time_msec" type="uint"/>
+            <arg name="modifiers" type="uint"/>
+            <arg name="keycode" type="uint"/>
+        </event>
+    </interface>
+</protocol>

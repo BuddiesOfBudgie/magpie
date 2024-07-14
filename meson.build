@@ -1,6 +1,6 @@
 project(
     'magpie',
-    ['cpp'],
+    ['c', 'cpp'],
     version: '1.0',
     license: 'Apache-2.0',
     default_options: [
@@ -29,8 +29,10 @@ foreach feature : ['drm_backend', 'libinput_backend', 'session', 'xwayland']
     endif
 endforeach
 
-wayland_protocol_dir = dep_wayland_protocols.get_variable('pkgdatadir')
+wl = import('unstable-wayland')
+budgie_keyboard_shortcuts_protocol = wl.scan_xml(join_paths('protocols', 'budgie-keyboard-shortcuts.xml'), server: true)
 
+wayland_protocol_dir = dep_wayland_protocols.get_variable('pkgdatadir')
 wayland_scanner = find_program(
   	dep_wayland_scanner.get_variable('wayland_scanner'),
   	native: true,
