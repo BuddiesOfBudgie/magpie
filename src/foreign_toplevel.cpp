@@ -70,21 +70,6 @@ static void foreign_toplevel_handle_request_close_notify(wl_listener* listener, 
 	handle.view.close();
 }
 
-static void foreign_toplevel_handle_set_rectangle_notify(wl_listener* listener, void* data) {
-	wlr_log(WLR_DEBUG, "wlr_foreign_toplevel_handle_v1.events.set_rectangle(listener=%p, data=%p)", (void*) listener, data);
-
-	if (data == nullptr) {
-		wlr_log(WLR_ERROR, "No data passed to wlr_foreign_toplevel_handle_v1.events.set_rectangle");
-		return;
-	}
-
-	const ForeignToplevelHandle& handle = magpie_container_of(listener, handle, set_rectangle);
-	const auto& event = *static_cast<wlr_foreign_toplevel_handle_v1_set_rectangle_event*>(data);
-
-	handle.view.set_position(event.x, event.y);
-	handle.view.set_size(event.width, event.height);
-}
-
 ForeignToplevelHandle::ForeignToplevelHandle(View& view) noexcept
 	: listeners(*this), view(view), wlr(*wlr_foreign_toplevel_handle_v1_create(view.get_server().foreign_toplevel_manager)) {
 	wlr.data = this;
@@ -99,8 +84,6 @@ ForeignToplevelHandle::ForeignToplevelHandle(View& view) noexcept
 	wl_signal_add(&wlr.events.request_fullscreen, &listeners.request_fullscreen);
 	listeners.request_close.notify = foreign_toplevel_handle_request_close_notify;
 	wl_signal_add(&wlr.events.request_close, &listeners.request_close);
-	listeners.set_rectangle.notify = foreign_toplevel_handle_set_rectangle_notify;
-	wl_signal_add(&wlr.events.set_rectangle, &listeners.set_rectangle);
 }
 
 ForeignToplevelHandle::~ForeignToplevelHandle() noexcept {
@@ -110,7 +93,6 @@ ForeignToplevelHandle::~ForeignToplevelHandle() noexcept {
 	wl_list_remove(&listeners.request_activate.link);
 	wl_list_remove(&listeners.request_fullscreen.link);
 	wl_list_remove(&listeners.request_close.link);
-	wl_list_remove(&listeners.set_rectangle.link);
 }
 
 void ForeignToplevelHandle::set_title(const char* title) const {

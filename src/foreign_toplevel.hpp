@@ -21,7 +21,6 @@ class ForeignToplevelHandle final : public std::enable_shared_from_this<ForeignT
 		wl_listener request_activate = {};
 		wl_listener request_fullscreen = {};
 		wl_listener request_close = {};
-		wl_listener set_rectangle = {};
 		explicit Listeners(ForeignToplevelHandle& parent) noexcept : parent(parent) {}
 	};
 
