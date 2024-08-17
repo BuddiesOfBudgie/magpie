@@ -634,6 +634,7 @@ bool Server::is_restricted(const wl_global* global) const {
 		global == layer_shell->global ||
 		global == output_manager->global ||
 		global == output_power_manager->global ||
+		global == seat->keyboard_shortcuts_manager->global ||
 		global == seat->virtual_keyboard_mgr->global ||
 		global == seat->virtual_pointer_mgr->global ||
 		global == screencopy_manager->global ||
