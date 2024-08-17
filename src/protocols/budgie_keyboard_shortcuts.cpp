@@ -70,6 +70,11 @@ static void budgie_keyboard_shortcuts_subscriber_destroy(wl_resource* resource) 
 	budgie_keyboard_shortcuts_subscriber_destroy(nullptr, resource);
 }
 
+void budgie_keyboard_shortcuts_manager_send_shortcut_press(
+	budgie_keyboard_shortcuts_subscriber* subscriber, uint32_t time_msec, uint32_t modifiers, uint32_t keycode) {
+	budgie_keyboard_shortcuts_subscriber_send_shortcut_press(subscriber->resource, time_msec, modifiers, keycode);
+}
+
 
 
 static void budgie_keyboard_shortcuts_manager_destroy([[maybe_unused]] wl_client* client, wl_resource* resource) {

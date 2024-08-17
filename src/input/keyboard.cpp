@@ -82,6 +82,18 @@ static void keyboard_handle_key(wl_listener* listener, void* data) {
 				handled = handle_compositor_keybinding(keyboard, modifiers, syms[i]);
 			}
 		}
+
+		if (!handled && modifiers != 0) {
+			for (const auto& subscriber : keyboard.seat.keyboard_shortcuts_subscribers) {
+				for (const auto& item : subscriber->shortcuts) {
+					if (item->modifiers == modifiers && item->keycode == keycode) {
+						handled = true;
+						budgie_keyboard_shortcuts_manager_send_shortcut_press(
+							&subscriber->wlr, event->time_msec, modifiers, keycode);
+					}
+				}
+			}
+		}
 	}
 
 	if (!handled) {
