@@ -12,8 +12,58 @@ static void budgie_keyboard_shortcuts_subscriber_destroy([[maybe_unused]] wl_cli
 	wl_resource_destroy(resource);
 }
 
+static void budgie_keyboard_shortcuts_subscriber_register_shortcut(
+	[[maybe_unused]] wl_client* client, wl_resource* resource, uint32_t modifiers, uint32_t keycode) {
+	auto* subscriber = static_cast<budgie_keyboard_shortcuts_subscriber*>(wl_resource_get_user_data(resource));
+
+	budgie_keyboard_shortcuts_shortcut* it;
+	wl_list_for_each(it, &subscriber->registered_shortcuts, link) {
+		if (it->modifiers == modifiers && it->keycode == keycode) {
+			// already registered, can skip
+			return;
+		}
+	}
+
+	auto* shortcut = static_cast<budgie_keyboard_shortcuts_shortcut*>(calloc(1, sizeof(budgie_keyboard_shortcuts_shortcut)));
+	if (shortcut == nullptr) {
+		wl_client_post_no_memory(client);
+		return;
+	}
+
+	shortcut->modifiers = modifiers;
+	shortcut->keycode = keycode;
+	wl_list_insert(&subscriber->registered_shortcuts, &shortcut->link);
+
+	wl_signal_emit_mutable(&subscriber->events.register_shortcut, shortcut);
+}
+
+static void budgie_keyboard_shortcuts_subscriber_unregister_shortcut(
+	[[maybe_unused]] wl_client* client, wl_resource* resource, uint32_t modifiers, uint32_t keycode) {
+	auto* subscriber = static_cast<budgie_keyboard_shortcuts_subscriber*>(wl_resource_get_user_data(resource));
+
+	budgie_keyboard_shortcuts_shortcut* target = nullptr;
+	budgie_keyboard_shortcuts_shortcut* it;
+	wl_list_for_each(it, &subscriber->registered_shortcuts, link) {
+		if (it->modifiers == modifiers && it->keycode == keycode) {
+			target = it;
+			break;
+		}
+	}
+
+	if (target == nullptr) {
+		// the passed shortcut wasn't registered
+		return;
+	}
+
+	wl_list_remove(&target->link);
+	wl_signal_emit_mutable(&subscriber->events.unregister_shortcut, target);
+	free(target);
+}
+
 static const struct budgie_keyboard_shortcuts_subscriber_interface budgie_keyboard_shortcuts_subscriber_impl = {
 	.destroy = budgie_keyboard_shortcuts_subscriber_destroy,
+	.register_shortcut = budgie_keyboard_shortcuts_subscriber_register_shortcut,
+	.unregister_shortcut = budgie_keyboard_shortcuts_subscriber_unregister_shortcut,
 };
 
 static void budgie_keyboard_shortcuts_subscriber_destroy(wl_resource* resource) {

@@ -33,6 +33,16 @@
 
     <interface name="budgie_keyboard_shortcuts_subscriber" version="1">
         <request name="destroy" type="destructor"></request>
+        <request name="register_shortcut">
+            <description summary="Register a shortcut"></description>
+            <arg name="modifiers" type="uint"/>
+            <arg name="keycode" type="uint"/>
+        </request>
+        <request name="unregister_shortcut">
+            <description summary="Unregister a shortcut"></description>
+            <arg name="modifiers" type="uint"/>
+            <arg name="keycode" type="uint"/>
+        </request>
         <event name="shortcut_press">
             <description summary="Shortcut press event">
                 Notification that a registered keyboard shortcut has been pressed.

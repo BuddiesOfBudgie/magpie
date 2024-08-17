@@ -17,12 +17,22 @@ struct budgie_keyboard_shortcuts_manager {
 
 budgie_keyboard_shortcuts_manager* budgie_keyboard_shortcuts_manager_create(wl_display* display, uint32_t version);
 
+struct budgie_keyboard_shortcuts_shortcut {
+	wl_list link;
+
+	uint32_t modifiers;
+	uint32_t keycode;
+};
+
 struct budgie_keyboard_shortcuts_subscriber {
 	wl_resource* resource;
 	wl_list link;
+	wl_list registered_shortcuts; // budgie_keyboard_shortcuts_shortcut.link
 
 	struct {
-		wl_signal destroy;
+		wl_signal destroy;			   // data: (budgie_keyboard_shortcuts_subscriber*)
+		wl_signal register_shortcut;   // data: (budgie_keyboard_shortcuts_shortcut*)
+		wl_signal unregister_shortcut; // data: (budgie_keyboard_shortcuts_shortcut*)
 	} events;
 
 	void* data;
