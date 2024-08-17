@@ -6,6 +6,7 @@
 #include "surface/view.hpp"
 #include "types.hpp"
 
+#include <algorithm>
 #include <wayland-util.h>
 
 #include "wlr-wrap-start.hpp"
@@ -118,6 +119,20 @@ static void request_set_selection_notify(wl_listener* listener, void* data) {
 	wlr_seat_set_selection(seat.wlr, event->source, event->serial);
 }
 
+static void keyboard_shortcuts_subscribe_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "budgie_keyboard_shortcuts_manager.events.subscribe(listener=%p, data=%p)", (void*) listener, data);
+
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to budgie_keyboard_shortcuts_manager.events.subscribe");
+		return;
+	}
+
+	Seat& seat = magpie_container_of(listener, seat, keyboard_shortcuts_subscribe);
+	auto* subscriber = static_cast<budgie_keyboard_shortcuts_subscriber*>(data);
+
+	seat.keyboard_shortcuts_subscribers.push_back(std::make_shared<KeyboardShortcutsSubscriber>(seat, *subscriber));
+}
+
 /*
  * Configures a seat, which is a single "seat" at which a user sits and
  * operates the computer. This conceptually includes up to one keyboard,
@@ -145,6 +160,10 @@ Seat::Seat(Server& server) noexcept : listeners(*this), server(server), cursor(*
 	pointer_constraints = wlr_pointer_constraints_v1_create(server.display);
 	listeners.new_pointer_constraint.notify = new_pointer_constraint_notify;
 	wl_signal_add(&pointer_constraints->events.new_constraint, &listeners.new_pointer_constraint);
+
+	keyboard_shortcuts_manager = budgie_keyboard_shortcuts_manager_create(server.display, 1);
+	listeners.keyboard_shortcuts_subscribe.notify = keyboard_shortcuts_subscribe_notify;
+	wl_signal_add(&keyboard_shortcuts_manager->events.subscribe, &listeners.keyboard_shortcuts_subscribe);
 }
 
 void Seat::new_input_device(wlr_input_device* device) {

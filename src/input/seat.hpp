@@ -2,6 +2,7 @@
 #define MAGPIE_SEAT_HPP
 
 #include "cursor.hpp"
+#include "keyboard_shortcuts_subscriber.hpp"
 
 #include <memory>
 #include <optional>
@@ -24,6 +25,7 @@ class Seat final : public std::enable_shared_from_this<Seat> {
 		wl_listener new_pointer_constraint = {};
 		wl_listener request_cursor = {};
 		wl_listener request_set_selection = {};
+		wl_listener keyboard_shortcuts_subscribe = {};
 		explicit Listeners(Seat& parent) noexcept : parent(parent) {}
 	};
 
@@ -35,10 +37,14 @@ class Seat final : public std::enable_shared_from_this<Seat> {
 	wlr_seat* wlr;
 	Cursor cursor;
 	std::vector<std::shared_ptr<Keyboard>> keyboards;
+
 	wlr_virtual_pointer_manager_v1* virtual_pointer_mgr;
 	wlr_virtual_keyboard_manager_v1* virtual_keyboard_mgr;
 	wlr_pointer_constraints_v1* pointer_constraints;
 	std::shared_ptr<PointerConstraint> current_constraint;
+
+	budgie_keyboard_shortcuts_manager* keyboard_shortcuts_manager;
+	std::vector<std::shared_ptr<KeyboardShortcutsSubscriber>> keyboard_shortcuts_subscribers;
 
 	explicit Seat(Server& server) noexcept;
 

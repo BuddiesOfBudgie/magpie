@@ -7,6 +7,7 @@ magpie_sources = [
     'input/constraint.cpp',
     'input/cursor.cpp',
     'input/keyboard.cpp',
+    'input/keyboard_shortcuts_subscriber.cpp',
     'input/seat.cpp',
     'protocols/budgie_keyboard_shortcuts.cpp',
     'surface/layer.cpp',
