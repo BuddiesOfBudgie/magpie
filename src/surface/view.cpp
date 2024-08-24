@@ -176,6 +176,9 @@ void View::set_size(const int32_t width, const int32_t height) {
 	current.width = bounded_width;
 	current.height = bounded_height;
 	impl_set_size(current.width, current.height);
+	if (ssd.has_value()) {
+		ssd->update();
+	}
 }
 
 void View::update_outputs(const bool ignore_previous) const {
@@ -249,6 +252,10 @@ void View::set_activated(const bool activated) {
 		wlr_seat_keyboard_notify_clear_focus(seat->wlr);
 		seat->set_constraint(nullptr);
 	}
+
+	if (ssd.has_value()) {
+		ssd->update();
+	}
 }
 
 void View::set_placement(const ViewPlacement new_placement, const bool force) {
@@ -294,6 +301,9 @@ void View::stack() {
 	impl_set_fullscreen(false);
 	set_geometry(previous.x, previous.y, previous.width, previous.height);
 	update_outputs();
+	if (ssd.has_value()) {
+		ssd->update();
+	}
 }
 
 bool View::maximize() {

@@ -1,12 +1,12 @@
 #include "server.hpp"
 
+#include "decorations/xdg_decoration.hpp"
 #include "input/seat.hpp"
 #include "output.hpp"
 #include "surface/layer.hpp"
 #include "surface/popup.hpp"
 #include "surface/surface.hpp"
 #include "surface/view.hpp"
-#include "surface/xdg_decoration.hpp"
 #include "types.hpp"
 #include "xwayland.hpp"
 

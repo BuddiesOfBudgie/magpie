@@ -1,6 +1,7 @@
 #ifndef MAGPIE_VIEW_HPP
 #define MAGPIE_VIEW_HPP
 
+#include "decorations/ssd.hpp"
 #include "foreign_toplevel.hpp"
 #include "input/cursor.hpp"
 #include "surface.hpp"
@@ -21,6 +22,7 @@ struct View : public Surface {
 	wlr_box current = {};
 	wlr_box previous = {};
 	std::optional<ForeignToplevelHandle> toplevel_handle;
+	std::optional<Ssd> ssd;
 
 	~View() noexcept override = default;
 

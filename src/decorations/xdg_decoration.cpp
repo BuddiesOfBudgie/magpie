@@ -1,6 +1,7 @@
 #include "xdg_decoration.hpp"
 
-#include "view.hpp"
+#include "ssd.hpp"
+#include "surface/view.hpp"
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/util/log.h>
@@ -14,10 +15,20 @@ static void xdg_decoration_destroy_notify(wl_listener* listener, [[maybe_unused]
 	deco.view.set_decoration(nullptr);
 }
 
+static void xdg_decoration_request_mode_notify(wl_listener* listener, [[maybe_unused]] void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_toplevel_decoration_v1.events.request_mode(listener=%p, data=%p)", (void*) listener, data);
+
+	XdgDecoration& deco = magpie_container_of(listener, deco, request_mode);
+
+	deco.view.ssd.emplace(deco.view);
+}
+
 XdgDecoration::XdgDecoration(XdgView& view, wlr_xdg_toplevel_decoration_v1& deco) noexcept
 	: listeners(*this), view(view), wlr(deco) {
 	listeners.destroy.notify = xdg_decoration_destroy_notify;
 	wl_signal_add(&deco.events.destroy, &listeners.destroy);
+	listeners.request_mode.notify = xdg_decoration_request_mode_notify;
+	wl_signal_add(&deco.events.request_mode, &listeners.request_mode);
 }
 
 XdgDecoration::~XdgDecoration() noexcept {
