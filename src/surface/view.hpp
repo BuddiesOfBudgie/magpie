@@ -91,6 +91,7 @@ class XdgView final : public View {
   public:
 	Server& server;
 	wlr_xdg_toplevel& wlr;
+	std::shared_ptr<XdgDecoration> deco = nullptr;
 
 	XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept;
 	~XdgView() noexcept override;
@@ -105,6 +106,8 @@ class XdgView final : public View {
 	void map() override;
 	void unmap() override;
 	void close() override;
+
+	void set_decoration(std::shared_ptr<XdgDecoration> deco);
 
   protected:
 	void impl_set_position(int32_t x, int32_t y) override;

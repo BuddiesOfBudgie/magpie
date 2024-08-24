@@ -193,6 +193,7 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept
 	scene_node = &scene_tree->node;
 
 	scene_node->data = this;
+	wlr.base->data = this;
 	wlr.base->surface->data = this;
 
 	toplevel_handle.emplace(*this);
@@ -319,6 +320,10 @@ void XdgView::unmap() {
 
 void XdgView::close() {
 	wlr_xdg_toplevel_send_close(&wlr);
+}
+
+void XdgView::set_decoration(std::shared_ptr<XdgDecoration> new_deco) {
+	this->deco = std::move(new_deco);
 }
 
 void XdgView::impl_set_position(const int32_t x, const int32_t y) {
