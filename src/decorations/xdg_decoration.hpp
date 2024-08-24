@@ -14,6 +14,7 @@ class XdgDecoration : public std::enable_shared_from_this<XdgDecoration> {
 	struct Listeners {
 		std::reference_wrapper<XdgDecoration> parent;
 		wl_listener destroy = {};
+		wl_listener request_mode = {};
 		explicit Listeners(XdgDecoration& parent) noexcept : parent(parent) {}
 	};
 
