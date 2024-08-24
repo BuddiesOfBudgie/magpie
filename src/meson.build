@@ -14,6 +14,7 @@ magpie_sources = [
     'surface/popup.cpp',
     'surface/subsurface.cpp',
     'surface/view.cpp',
+    'surface/xdg_decoration.cpp',
     'surface/xdg_view.cpp',
     'surface/xwayland_view.cpp',
     budgie_keyboard_shortcuts_protocol,

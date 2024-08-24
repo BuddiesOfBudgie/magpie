@@ -26,6 +26,7 @@
 #include <wlr/types/wlr_screencopy_v1.h>
 #include <wlr/types/wlr_security_context_v1.h>
 #include <wlr/types/wlr_xdg_activation_v1.h>
+#include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
 
@@ -43,6 +44,7 @@ class Server final : public std::enable_shared_from_this<Server> {
 	struct Listeners {
 		std::reference_wrapper<Server> parent;
 		wl_listener xdg_shell_new_xdg_toplevel = {};
+		wl_listener xdg_decoration_new_toplevel_decoration = {};
 		wl_listener layer_shell_new_layer_surface = {};
 		wl_listener activation_request_activation = {};
 		wl_listener backend_new_output = {};
@@ -71,6 +73,7 @@ class Server final : public std::enable_shared_from_this<Server> {
 	std::array<wlr_scene_tree*, MAGPIE_SCENE_LAYER_LOCK + 1> scene_layers = {};
 
 	wlr_xdg_shell* xdg_shell;
+	wlr_xdg_decoration_manager_v1* xdg_decoration_manager;
 
 	wlr_xdg_activation_v1* xdg_activation;
 

@@ -6,6 +6,7 @@
 #include "surface/popup.hpp"
 #include "surface/surface.hpp"
 #include "surface/view.hpp"
+#include "surface/xdg_decoration.hpp"
 #include "types.hpp"
 #include "xwayland.hpp"
 
@@ -251,6 +252,25 @@ static void new_xdg_toplevel_notify(wl_listener* listener, void* data) {
 	auto& xdg_toplevel = *static_cast<wlr_xdg_toplevel*>(data);
 
 	server.views.emplace_back(std::make_shared<XdgView>(server, xdg_toplevel));
+}
+
+static void new_toplevel_decoration_notify(wl_listener* listener, void* data) {
+	wlr_log(WLR_DEBUG, "wlr_xdg_decoration_v1.events.new_toplevel_decoration(listener=%p, data=%p)", (void*) listener, data);
+
+	if (data == nullptr) {
+		wlr_log(WLR_ERROR, "No data passed to wlr_xdg_decoration_v1.events.new_toplevel_decoration");
+		return;
+	}
+
+	auto& xdg_toplevel_decoration = *static_cast<wlr_xdg_toplevel_decoration_v1*>(data);
+
+	auto* view = static_cast<XdgView*>(xdg_toplevel_decoration.toplevel->base->data);
+	if (view == nullptr) {
+		wlr_log(WLR_ERROR, "xdg_toplevel_decoration_v1 created for toplevel surface without data ptr set");
+		return;
+	}
+
+	view->set_decoration(std::make_shared<XdgDecoration>(*view, xdg_toplevel_decoration));
 }
 
 static void new_layer_surface_notify(wl_listener* listener, void* data) {
@@ -578,6 +598,10 @@ Server::Server() : listeners(*this) {
 	xdg_shell = wlr_xdg_shell_create(display, 5);
 	listeners.xdg_shell_new_xdg_toplevel.notify = new_xdg_toplevel_notify;
 	wl_signal_add(&xdg_shell->events.new_toplevel, &listeners.xdg_shell_new_xdg_toplevel);
+
+	xdg_decoration_manager = wlr_xdg_decoration_manager_v1_create(display);
+	listeners.xdg_decoration_new_toplevel_decoration.notify = new_toplevel_decoration_notify;
+	wl_signal_add(&xdg_decoration_manager->events.new_toplevel_decoration, &listeners.xdg_decoration_new_toplevel_decoration);
 
 	layer_shell = wlr_layer_shell_v1_create(display, 4);
 	listeners.layer_shell_new_layer_surface.notify = new_layer_surface_notify;

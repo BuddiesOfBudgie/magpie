@@ -13,6 +13,7 @@ class PointerConstraint;
 struct Surface;
 struct View;
 class XdgView;
+class XdgDecoration;
 class XWaylandView;
 class Layer;
 class Subsurface;
