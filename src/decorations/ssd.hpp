@@ -14,6 +14,7 @@ class Ssd final : public std::enable_shared_from_this<Ssd> {
 	View& view;
 	wlr_scene_tree* scene_tree = nullptr;
 	wlr_scene_rect* titlebar_rect = nullptr;
+	wlr_scene_rect* border_rect = nullptr;
 
 	Ssd(View& parent) noexcept;
 	~Ssd();
