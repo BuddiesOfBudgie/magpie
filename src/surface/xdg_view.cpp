@@ -42,8 +42,8 @@ static void xdg_toplevel_commit_notify(wl_listener* listener, [[maybe_unused]] v
 				WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
 	}
 
-	auto geometry = view.get_geometry();
-	if (view.current.width != geometry.width || view.current.height != geometry.height) {
+	auto geometry = view.get_surface_geometry();
+	if (view.surface_current.width != geometry.width || view.surface_current.height != geometry.height) {
 		view.set_size(geometry.width, geometry.height);
 	}
 }
@@ -189,10 +189,12 @@ static void xdg_surface_new_subsurface_notify(wl_listener* listener, void* data)
 
 XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept
 	: listeners(*this), server(server), wlr(xdg_toplevel) {
-	auto* scene_tree = wlr_scene_xdg_surface_create(&server.scene->tree, xdg_toplevel.base);
-	scene_node = &scene_tree->node;
+	scene_tree = wlr_scene_tree_create(&server.scene->tree);
 
-	scene_node->data = this;
+	auto* surface_tree = wlr_scene_xdg_surface_create(scene_tree, xdg_toplevel.base);
+	surface_node = &surface_tree->node;
+	surface_node->data = this;
+
 	wlr.base->data = this;
 	wlr.base->surface->data = this;
 
@@ -261,17 +263,17 @@ Server& XdgView::get_server() const {
 	return server;
 }
 
-wlr_box XdgView::get_geometry() const {
+wlr_box XdgView::get_surface_geometry() const {
 	wlr_box box = {};
 	wlr_xdg_surface_get_geometry(wlr.base, &box);
 	return box;
 }
 
-wlr_box XdgView::get_min_size() const {
+wlr_box XdgView::get_surface_min_size() const {
 	return {.x = 0, .y = 0, .width = wlr.current.min_width, .height = wlr.current.min_height};
 }
 
-wlr_box XdgView::get_max_size() const {
+wlr_box XdgView::get_surface_max_size() const {
 	const int32_t max_width = wlr.current.max_width > 0 ? wlr.current.max_width : INT32_MAX;
 	const int32_t max_height = wlr.current.max_height > 0 ? wlr.current.max_height : INT32_MAX;
 	return {.x = 0, .y = 0, .width = max_width, .height = max_height};
@@ -279,21 +281,21 @@ wlr_box XdgView::get_max_size() const {
 
 void XdgView::map() {
 	if (pending_map) {
-		wlr_xdg_surface_get_geometry(wlr.base, &previous);
-		wlr_xdg_surface_get_geometry(wlr.base, &current);
+		wlr_xdg_surface_get_geometry(wlr.base, &surface_previous);
+		wlr_xdg_surface_get_geometry(wlr.base, &surface_current);
 
 		if (!server.outputs.empty()) {
 			auto* const output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
 			const auto usable_area = output->usable_area;
 			const auto center_x = usable_area.x + (usable_area.width / 2);
 			const auto center_y = usable_area.y + (usable_area.height / 2);
-			set_position(center_x - (current.width / 2), center_y - (current.height / 2));
+			set_position(center_x - (surface_current.width / 2), center_y - (surface_current.height / 2));
 		}
 
 		pending_map = false;
 	}
 
-	wlr_scene_node_set_enabled(scene_node, true);
+	wlr_scene_node_set_enabled(&scene_tree->node, true);
 	if (wlr.current.fullscreen) {
 		set_placement(VIEW_PLACEMENT_FULLSCREEN);
 	} else if (wlr.current.maximized) {
@@ -306,7 +308,7 @@ void XdgView::map() {
 }
 
 void XdgView::unmap() {
-	wlr_scene_node_set_enabled(scene_node, false);
+	wlr_scene_node_set_enabled(&scene_tree->node, false);
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
 	if (this == server.grabbed_view.lock().get()) {

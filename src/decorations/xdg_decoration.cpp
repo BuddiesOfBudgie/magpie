@@ -20,7 +20,13 @@ static void xdg_decoration_request_mode_notify(wl_listener* listener, [[maybe_un
 
 	XdgDecoration& deco = magpie_container_of(listener, deco, request_mode);
 
-	deco.view.ssd.emplace(deco.view);
+	if (deco.wlr.requested_mode == WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE) {
+		deco.view.ssd.emplace(deco.view);
+	} else {
+		deco.view.ssd.reset();
+	}
+
+	deco.view.update_surface_node_position();
 }
 
 XdgDecoration::XdgDecoration(XdgView& view, wlr_xdg_toplevel_decoration_v1& deco) noexcept

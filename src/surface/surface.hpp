@@ -11,7 +11,8 @@
 #include "wlr-wrap-end.hpp"
 
 struct Surface : public virtual std::enable_shared_from_this<Surface> {
-	wlr_scene_node* scene_node = nullptr;
+	wlr_scene_tree* scene_tree = nullptr;
+	wlr_scene_node* surface_node = nullptr;
 	std::set<std::shared_ptr<Popup>> popups;
 	std::set<std::shared_ptr<Subsurface>> subsurfaces;
 

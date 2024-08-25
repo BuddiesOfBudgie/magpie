@@ -19,21 +19,26 @@ struct View : public Surface {
 	ViewPlacement prev_placement = VIEW_PLACEMENT_STACKING;
 	ViewPlacement curr_placement = VIEW_PLACEMENT_STACKING;
 	bool is_minimized = false;
-	wlr_box current = {};
-	wlr_box previous = {};
+	wlr_box surface_current = {};
+	wlr_box surface_previous = {};
 	std::optional<ForeignToplevelHandle> toplevel_handle;
 	std::optional<Ssd> ssd;
 
 	~View() noexcept override = default;
 
-	[[nodiscard]] virtual wlr_box get_geometry() const = 0;
-	[[nodiscard]] virtual wlr_box get_min_size() const = 0;
-	[[nodiscard]] virtual wlr_box get_max_size() const = 0;
+	[[nodiscard]] virtual wlr_box get_surface_geometry() const = 0;
+	[[nodiscard]] virtual wlr_box get_surface_min_size() const = 0;
+	[[nodiscard]] virtual wlr_box get_surface_max_size() const = 0;
+
+	[[nodiscard]] wlr_box get_geometry_with_decorations() const;
+	[[nodiscard]] wlr_box get_min_size_with_decorations() const;
+	[[nodiscard]] wlr_box get_max_size_with_decorations() const;
+	void update_surface_node_position() const;
 
 	virtual void map() = 0;
 	virtual void unmap() = 0;
-	virtual void close() = 0;
 
+	virtual void close() = 0;
 	[[nodiscard]] bool is_view() const override {
 		return true;
 	}
@@ -50,7 +55,7 @@ struct View : public Surface {
 
   private:
 	[[nodiscard]] std::optional<std::reference_wrapper<Output>> find_output_for_maximize() const;
-	[[nodiscard]] int32_t find_min_y() const;
+	[[nodiscard]] int32_t find_surface_min_y() const;
 	void stack();
 	bool maximize();
 	bool fullscreen();
@@ -101,9 +106,9 @@ class XdgView final : public View {
 	[[nodiscard]] wlr_surface* get_wlr_surface() const override;
 	[[nodiscard]] Server& get_server() const override;
 
-	[[nodiscard]] wlr_box get_geometry() const override;
-	[[nodiscard]] wlr_box get_min_size() const override;
-	[[nodiscard]] wlr_box get_max_size() const override;
+	[[nodiscard]] wlr_box get_surface_geometry() const override;
+	[[nodiscard]] wlr_box get_surface_min_size() const override;
+	[[nodiscard]] wlr_box get_surface_max_size() const override;
 
 	void map() override;
 	void unmap() override;
@@ -152,9 +157,9 @@ class XWaylandView final : public View {
 	[[nodiscard]] wlr_surface* get_wlr_surface() const override;
 	[[nodiscard]] Server& get_server() const override;
 
-	[[nodiscard]] wlr_box get_geometry() const override;
-	[[nodiscard]] wlr_box get_min_size() const override;
-	[[nodiscard]] wlr_box get_max_size() const override;
+	[[nodiscard]] wlr_box get_surface_geometry() const override;
+	[[nodiscard]] wlr_box get_surface_min_size() const override;
+	[[nodiscard]] wlr_box get_surface_max_size() const override;
 
 	void map() override;
 	void unmap() override;

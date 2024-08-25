@@ -220,8 +220,8 @@ void Seat::apply_constraint(const wlr_pointer* pointer, double* dx, double* dy) 
 	double x = cursor.wlr.x;
 	double y = cursor.wlr.y;
 
-	x -= focused_view->current.x;
-	y -= focused_view->current.y;
+	x -= focused_view->surface_current.x;
+	y -= focused_view->surface_current.y;
 
 	double confined_x = 0;
 	double confined_y = 0;

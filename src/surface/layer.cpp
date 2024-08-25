@@ -36,7 +36,7 @@ static void wlr_layer_surface_v1_map_notify(wl_listener* listener, [[maybe_unuse
 
 	Layer& layer = magpie_container_of(listener, layer, map);
 
-	wlr_scene_node_set_enabled(layer.scene_node, true);
+	wlr_scene_node_set_enabled(&layer.scene_tree->node, true);
 	wlr_surface_send_enter(layer.get_wlr_surface(), &layer.output.wlr);
 }
 
@@ -46,7 +46,7 @@ static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, [[maybe_unu
 
 	Layer& layer = magpie_container_of(listener, layer, unmap);
 
-	wlr_scene_node_set_enabled(layer.scene_node, false);
+	wlr_scene_node_set_enabled(&layer.scene_tree->node, false);
 }
 
 /* Called when the surface is destroyed and should never be shown again. */
@@ -69,7 +69,7 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, [[maybe_un
 	const uint32_t committed = surface.current.committed;
 	if ((committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) != 0) {
 		layer.scene_layer = magpie_layer_from_wlr_layer(surface.current.layer);
-		wlr_scene_node_reparent(layer.scene_node, server.scene_layers[layer.scene_layer]);
+		wlr_scene_node_reparent(&layer.scene_tree->node, server.scene_layers[layer.scene_layer]);
 	}
 
 	if ((committed & WLR_LAYER_SURFACE_V1_STATE_KEYBOARD_INTERACTIVITY) != 0) {
@@ -119,10 +119,12 @@ static void wlr_layer_surface_v1_new_subsurface_notify(wl_listener* listener, vo
 Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept
 	: listeners(*this), server(output.server), output(output), wlr(surface) {
 	const magpie_scene_layer_t chosen_layer = magpie_layer_from_wlr_layer(surface.current.layer);
-	scene_surface = wlr_scene_layer_surface_v1_create(output.server.scene_layers[chosen_layer], &surface);
-	scene_node = &scene_surface->tree->node;
 
-	scene_node->data = this;
+	scene_tree = wlr_scene_tree_create(output.server.scene_layers[chosen_layer]);
+	scene_surface = wlr_scene_layer_surface_v1_create(scene_tree, &surface);
+	surface_node = &scene_surface->tree->node;
+
+	surface_node->data = this;
 	surface.surface->data = this;
 
 	wlr_fractional_scale_v1_notify_scale(surface.surface, surface.output->scale);

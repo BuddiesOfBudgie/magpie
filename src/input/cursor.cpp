@@ -41,8 +41,8 @@ void Cursor::process_resize(const uint32_t time) const {
 		return;
 	}
 
-	const wlr_box min_size = view->get_min_size();
-	const wlr_box max_size = view->get_max_size();
+	const wlr_box min_size = view->get_min_size_with_decorations();
+	const wlr_box max_size = view->get_max_size_with_decorations();
 	const double border_x = wlr.x - seat.server.grab_x;
 	const double border_y = wlr.y - seat.server.grab_y;
 	int32_t new_left = seat.server.grab_geobox.x;
@@ -73,11 +73,11 @@ void Cursor::process_resize(const uint32_t time) const {
 		}
 	}
 
-	const wlr_box geo_box = view->get_geometry();
+	const wlr_box geo_box = view->get_surface_geometry();
 	const int32_t new_width = std::clamp(new_right - new_left, min_size.width, max_size.width);
 	const int32_t new_height = std::clamp(new_bottom - new_top, min_size.height, max_size.height);
-	const int32_t new_x = new_width == view->current.width ? view->current.x : new_left - geo_box.x;
-	const int32_t new_y = new_height == view->current.height ? view->current.y : new_top - geo_box.y;
+	const int32_t new_x = new_width == view->surface_current.width ? view->surface_current.x : new_left - geo_box.x;
+	const int32_t new_y = new_height == view->surface_current.height ? view->surface_current.y : new_top - geo_box.y;
 	view->set_geometry(new_x, new_y, new_width, new_height);
 
 	view->update_outputs();
@@ -489,7 +489,7 @@ void Cursor::warp_to_constraint(const PointerConstraint& constraint) const {
 		const double x = constraint.wlr.current.cursor_hint.x;
 		const double y = constraint.wlr.current.cursor_hint.y;
 
-		wlr_cursor_warp(&wlr, nullptr, focused_view->current.x + x, focused_view->current.y + y);
+		wlr_cursor_warp(&wlr, nullptr, focused_view->surface_current.x + x, focused_view->surface_current.y + y);
 		wlr_seat_pointer_warp(seat.wlr, x, y);
 	}
 }
