@@ -98,7 +98,7 @@ int32_t View::find_surface_min_y() const {
 
 	min_y = min_y == INT32_MAX ? 0 : min_y;
 	if (ssd.has_value()) {
-		return min_y + ssd->get_titlebar_height();
+		return min_y + ssd->get_vertical_offset();
 	} else {
 		return min_y;
 	}
@@ -151,8 +151,8 @@ void View::set_geometry(const int32_t x, const int32_t y, const int32_t width, c
 
 	if (scene_tree != nullptr) {
 		if (ssd.has_value()) {
-			wlr_scene_node_set_position(
-				&scene_tree->node, surface_current.x - ssd->get_border_width(), surface_current.y - ssd->get_titlebar_height());
+			wlr_scene_node_set_position(&scene_tree->node, surface_current.x - ssd->get_horizontal_offset(),
+				surface_current.y - ssd->get_vertical_offset());
 		} else {
 			wlr_scene_node_set_position(&scene_tree->node, surface_current.x, surface_current.y);
 		}
@@ -172,8 +172,8 @@ void View::set_position(const int32_t x, const int32_t y) {
 
 	if (scene_tree != nullptr) {
 		if (ssd.has_value()) {
-			wlr_scene_node_set_position(
-				&scene_tree->node, surface_current.x - ssd->get_border_width(), surface_current.y - ssd->get_titlebar_height());
+			wlr_scene_node_set_position(&scene_tree->node, surface_current.x - ssd->get_horizontal_offset(),
+				surface_current.y - ssd->get_vertical_offset());
 		} else {
 			wlr_scene_node_set_position(&scene_tree->node, surface_current.x, surface_current.y);
 		}
@@ -439,7 +439,7 @@ wlr_box View::get_max_size_with_decorations() const {
 
 void View::update_surface_node_position() const {
 	if (ssd.has_value()) {
-		wlr_scene_node_set_position(surface_node, ssd->get_border_width(), ssd->get_titlebar_height());
+		wlr_scene_node_set_position(surface_node, ssd->get_horizontal_offset(), ssd->get_vertical_offset());
 	} else {
 		wlr_scene_node_set_position(surface_node, 0, 0);
 	}
