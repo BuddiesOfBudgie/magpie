@@ -29,14 +29,14 @@ std::optional<std::reference_wrapper<Output>> View::find_output_for_maximize() c
 	int64_t best_area = 0;
 
 	for (const auto& output : server.outputs) {
-		if (!wlr_output_layout_intersects(server.output_layout, &output->wlr, &previous)) {
+		if (!wlr_output_layout_intersects(server.output_layout, &output->wlr, &surface_previous)) {
 			continue;
 		}
 
 		wlr_box output_box = {};
 		wlr_output_layout_get_box(server.output_layout, &output->wlr, &output_box);
 		wlr_box intersection = {};
-		wlr_box_intersection(&intersection, &previous, &output_box);
+		wlr_box_intersection(&intersection, &surface_previous, &output_box);
 
 		auto intersection_width = static_cast<int64_t>(intersection.width);
 		auto intersection_height = static_cast<int64_t>(intersection.height);
@@ -72,14 +72,14 @@ std::optional<std::reference_wrapper<Output>> View::find_output_for_maximize() c
 	return std::ref(*best_output);
 }
 
-int32_t View::find_min_y() const {
+int32_t View::find_surface_min_y() const {
 	const Server& server = get_server();
 
 	if (server.outputs.empty()) {
 		return 0;
 	}
 
-	wlr_box current_copy = {.x = current.x, .y = 0, .width = current.width, .height = current.height + current.y};
+	wlr_box current_copy = surface_current;
 	current_copy.height += current_copy.y;
 	current_copy.y = 0;
 
@@ -89,14 +89,19 @@ int32_t View::find_min_y() const {
 		wlr_box output_box = {};
 		wlr_output_layout_get_box(server.output_layout, &output->wlr, &output_box);
 		wlr_box intersection = {};
-		wlr_box_intersection(&intersection, &previous, &output_box);
+		wlr_box_intersection(&intersection, &current_copy, &output_box);
 
 		if (!wlr_box_empty(&intersection)) {
-			min_y = std::min(min_y, output_box.y);
+			min_y = std::max(min_y, output_box.y);
 		}
 	}
 
-	return min_y == INT32_MAX ? 0 : min_y;
+	min_y = min_y == INT32_MAX ? 0 : min_y;
+	if (ssd.has_value()) {
+		return min_y + ssd->get_titlebar_height();
+	} else {
+		return min_y;
+	}
 }
 
 void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
@@ -114,68 +119,82 @@ void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	cursor.mode = mode;
 
 	if (mode == MAGPIE_CURSOR_MOVE) {
-		server.grab_x = cursor.wlr.x - current.x;
-		server.grab_y = cursor.wlr.y - current.y;
+		server.grab_x = cursor.wlr.x - surface_current.x;
+		server.grab_y = cursor.wlr.y - surface_current.y;
 	} else {
-		const wlr_box geo_box = get_geometry();
+		const wlr_box geo_box = get_surface_geometry();
 
-		const double border_x = current.x + geo_box.x + (((edges & WLR_EDGE_RIGHT) != 0) ? geo_box.width : 0);
-		const double border_y = current.y + geo_box.y + (((edges & WLR_EDGE_BOTTOM) != 0) ? geo_box.height : 0);
+		const double border_x = surface_current.x + geo_box.x + (((edges & WLR_EDGE_RIGHT) != 0) ? geo_box.width : 0);
+		const double border_y = surface_current.y + geo_box.y + (((edges & WLR_EDGE_BOTTOM) != 0) ? geo_box.height : 0);
 		server.grab_x = cursor.wlr.x - border_x;
 		server.grab_y = cursor.wlr.y - border_y;
 
 		server.grab_geobox = geo_box;
-		server.grab_geobox.x += current.x;
-		server.grab_geobox.y += current.y;
+		server.grab_geobox.x += surface_current.x;
+		server.grab_geobox.y += surface_current.y;
 
 		server.resize_edges = edges;
 	}
 }
 
 void View::set_geometry(const int32_t x, const int32_t y, const int32_t width, const int32_t height) {
-	const wlr_box min_size = get_min_size();
-	const wlr_box max_size = get_max_size();
+	const wlr_box min_size = get_surface_min_size();
+	const wlr_box max_size = get_surface_max_size();
 	const int32_t bounded_width = std::clamp(width, min_size.width, max_size.width);
 	const int32_t bounded_height = std::clamp(height, min_size.height, max_size.height);
 
 	if (curr_placement == VIEW_PLACEMENT_STACKING) {
-		previous = current;
+		surface_previous = surface_current;
 	}
-	current = {.x = x, .y = y, .width = bounded_width, .height = bounded_height};
-	current.y = std::max(y, find_min_y());
-	if (scene_node != nullptr) {
-		wlr_scene_node_set_position(scene_node, current.x, current.y);
+	surface_current = {.x = x, .y = y, .width = bounded_width, .height = bounded_height};
+	surface_current.y = std::max(y, find_surface_min_y());
+
+	if (scene_tree != nullptr) {
+		if (ssd.has_value()) {
+			wlr_scene_node_set_position(
+				&scene_tree->node, surface_current.x - ssd->get_border_width(), surface_current.y - ssd->get_titlebar_height());
+		} else {
+			wlr_scene_node_set_position(&scene_tree->node, surface_current.x, surface_current.y);
+		}
 	}
-	impl_set_geometry(current.x, current.y, current.width, current.height);
+
+	impl_set_geometry(surface_current.x, surface_current.y, surface_current.width, surface_current.height);
 }
 
 void View::set_position(const int32_t x, const int32_t y) {
 	if (curr_placement == VIEW_PLACEMENT_STACKING) {
-		previous.x = current.x;
-		previous.y = current.y;
+		surface_previous.x = surface_current.x;
+		surface_previous.y = surface_current.y;
 	}
-	current.x = x;
-	current.y = y;
-	current.y = std::max(y, find_min_y());
-	if (scene_node != nullptr) {
-		wlr_scene_node_set_position(scene_node, current.x, current.y);
+	surface_current.x = x;
+	surface_current.y = y;
+	surface_current.y = std::max(y, find_surface_min_y());
+
+	if (scene_tree != nullptr) {
+		if (ssd.has_value()) {
+			wlr_scene_node_set_position(
+				&scene_tree->node, surface_current.x - ssd->get_border_width(), surface_current.y - ssd->get_titlebar_height());
+		} else {
+			wlr_scene_node_set_position(&scene_tree->node, surface_current.x, surface_current.y);
+		}
 	}
-	impl_set_position(current.x, current.y);
+
+	impl_set_position(surface_current.x, surface_current.y);
 }
 
 void View::set_size(const int32_t width, const int32_t height) {
-	const wlr_box min_size = get_min_size();
-	const wlr_box max_size = get_max_size();
+	const wlr_box min_size = get_surface_min_size();
+	const wlr_box max_size = get_surface_max_size();
 	const int32_t bounded_width = std::clamp(width, min_size.width, max_size.width);
 	const int32_t bounded_height = std::clamp(height, min_size.height, max_size.height);
 
 	if (curr_placement == VIEW_PLACEMENT_STACKING) {
-		previous.width = current.width;
-		previous.height = current.height;
+		surface_previous.width = surface_current.width;
+		surface_previous.height = surface_current.height;
 	}
-	current.width = bounded_width;
-	current.height = bounded_height;
-	impl_set_size(current.width, current.height);
+	surface_current.width = bounded_width;
+	surface_current.height = bounded_height;
+	impl_set_size(surface_current.width, surface_current.height);
 	if (ssd.has_value()) {
 		ssd->update();
 	}
@@ -189,10 +208,10 @@ void View::update_outputs(const bool ignore_previous) const {
 		wlr_box output_area = output->full_area;
 
 		wlr_box prev_intersect = {};
-		wlr_box_intersection(&prev_intersect, &previous, &output_area);
+		wlr_box_intersection(&prev_intersect, &surface_previous, &output_area);
 
 		wlr_box curr_intersect = {};
-		wlr_box_intersection(&curr_intersect, &current, &output_area);
+		wlr_box_intersection(&curr_intersect, &surface_current, &output_area);
 
 		if (curr_intersect.width * curr_intersect.height > largest_intersection.width * largest_intersection.height) {
 			largest_intersection = curr_intersect;
@@ -232,7 +251,7 @@ void View::set_activated(const bool activated) {
 
 	const auto seat = get_server().seat;
 	if (activated) {
-		wlr_scene_node_raise_to_top(scene_node);
+		wlr_scene_node_raise_to_top(&scene_tree->node);
 
 		/*
 		 * Tell the seat to have the keyboard enter this surface. wlroots will keep
@@ -299,7 +318,7 @@ void View::set_placement(const ViewPlacement new_placement, const bool force) {
 void View::stack() {
 	impl_set_maximized(false);
 	impl_set_fullscreen(false);
-	set_geometry(previous.x, previous.y, previous.width, previous.height);
+	set_geometry(surface_previous.x, surface_previous.y, surface_previous.width, surface_previous.height);
 	update_outputs();
 	if (ssd.has_value()) {
 		ssd->update();
@@ -314,12 +333,12 @@ bool View::maximize() {
 
 	const wlr_box output_box = best_output->get().usable_area;
 
-	const wlr_box min_size = get_min_size();
+	const wlr_box min_size = get_surface_min_size();
 	if (output_box.width < min_size.width || output_box.height < min_size.height) {
 		return false;
 	}
 
-	const wlr_box max_size = get_max_size();
+	const wlr_box max_size = get_surface_max_size();
 	if (output_box.width > max_size.width || output_box.height > max_size.height) {
 		return false;
 	}
@@ -340,12 +359,12 @@ bool View::fullscreen() {
 
 	const wlr_box output_box = best_output->get().full_area;
 
-	const wlr_box min_size = get_min_size();
+	const wlr_box min_size = get_surface_min_size();
 	if (output_box.width < min_size.width || output_box.height < min_size.height) {
 		return false;
 	}
 
-	const wlr_box max_size = get_max_size();
+	const wlr_box max_size = get_surface_max_size();
 	if (output_box.width > max_size.width || output_box.height > max_size.height) {
 		return false;
 	}
@@ -369,10 +388,10 @@ void View::set_minimized(const bool minimized) {
 	this->is_minimized = minimized;
 
 	if (minimized) {
-		wlr_scene_node_set_enabled(scene_node, false);
+		wlr_scene_node_set_enabled(&scene_tree->node, false);
 		set_activated(false);
 	} else {
-		wlr_scene_node_set_enabled(scene_node, true);
+		wlr_scene_node_set_enabled(&scene_tree->node, true);
 	}
 }
 
@@ -387,5 +406,41 @@ void View::toggle_fullscreen() {
 		set_placement(prev_placement);
 	} else {
 		set_placement(VIEW_PLACEMENT_FULLSCREEN);
+	}
+}
+
+wlr_box View::get_geometry_with_decorations() const {
+	return ssd.has_value() ? ssd->get_geometry() : get_surface_geometry();
+}
+
+wlr_box View::get_min_size_with_decorations() const {
+	auto surface_min_size = get_surface_min_size();
+	if (ssd.has_value()) {
+		return {.x = 0,
+			.y = 0,
+			.width = (surface_min_size.width + ssd->get_extra_width()),
+			.height = (surface_min_size.height + ssd->get_extra_height())};
+	}
+
+	return surface_min_size;
+}
+
+wlr_box View::get_max_size_with_decorations() const {
+	auto surface_max_size = get_surface_max_size();
+	if (ssd.has_value()) {
+		return {.x = 0,
+			.y = 0,
+			.width = (surface_max_size.width + ssd->get_extra_width()),
+			.height = (surface_max_size.height + ssd->get_extra_height())};
+	}
+
+	return surface_max_size;
+}
+
+void View::update_surface_node_position() const {
+	if (ssd.has_value()) {
+		wlr_scene_node_set_position(surface_node, ssd->get_border_width(), ssd->get_titlebar_height());
+	} else {
+		wlr_scene_node_set_position(surface_node, 0, 0);
 	}
 }

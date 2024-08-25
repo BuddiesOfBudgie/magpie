@@ -87,9 +87,9 @@ static void xwayland_surface_set_geometry_notify(wl_listener* listener, [[maybe_
 	if (grabbed_view == nullptr || grabbed_view->get_wlr_surface() != view.get_wlr_surface()) {
 		const wlr_xwayland_surface& surface = view.wlr;
 		if (view.curr_placement == VIEW_PLACEMENT_STACKING) {
-			view.previous = view.current;
+			view.surface_previous = view.surface_current;
 		}
-		view.current = {.x = surface.x, .y = surface.y, .width = surface.width, .height = surface.height};
+		view.surface_current = {.x = surface.x, .y = surface.y, .width = surface.width, .height = surface.height};
 	}
 }
 
@@ -170,10 +170,10 @@ static void xwayland_surface_set_parent_notify(wl_listener* listener, [[maybe_un
 
 	if (view.wlr.parent != nullptr) {
 		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(view.wlr.parent->data));
-		if (m_view != nullptr && view.scene_node != nullptr) {
-			wlr_scene_node_reparent(view.scene_node, m_view->scene_node->parent);
+		if (m_view != nullptr && view.scene_tree != nullptr) {
+			wlr_scene_node_reparent(&view.scene_tree->node, m_view->scene_tree->node.parent);
 			if (view.toplevel_handle.has_value() && m_view->toplevel_handle.has_value()) {
-				view.toplevel_handle->set_parent(m_view->toplevel_handle.value());
+				view.toplevel_handle->set_parent(m_view->toplevel_handle);
 			}
 			return;
 		}
@@ -232,11 +232,11 @@ Server& XWaylandView::get_server() const {
 	return server;
 }
 
-wlr_box XWaylandView::get_geometry() const {
+wlr_box XWaylandView::get_surface_geometry() const {
 	return {.x = wlr.x, .y = wlr.y, .width = wlr.width, .height = wlr.height};
 }
 
-wlr_box XWaylandView::get_min_size() const {
+wlr_box XWaylandView::get_surface_min_size() const {
 	wlr_box min = {.x = 0, .y = 0, .width = 0, .height = 0};
 	if (wlr.size_hints != nullptr) {
 		const auto& hints = *wlr.size_hints;
@@ -246,7 +246,7 @@ wlr_box XWaylandView::get_min_size() const {
 	return min;
 }
 
-wlr_box XWaylandView::get_max_size() const {
+wlr_box XWaylandView::get_surface_max_size() const {
 	wlr_box max = {.x = 0, .y = 0, .width = UINT16_MAX, .height = UINT16_MAX};
 	if (wlr.size_hints != nullptr) {
 		const auto& hints = *wlr.size_hints;
@@ -264,20 +264,22 @@ void XWaylandView::map() {
 	toplevel_handle->set_title(wlr.title);
 	toplevel_handle->set_app_id(wlr._class);
 
-	wlr_scene_tree* scene_tree = wlr_scene_subsurface_tree_create(&server.scene->tree, wlr.surface);
-	scene_node = &scene_tree->node;
-	scene_node->data = this;
+	scene_tree = wlr_scene_tree_create(&server.scene->tree);
+
+	wlr_scene_tree* surface_tree = wlr_scene_subsurface_tree_create(scene_tree, wlr.surface);
+	surface_node = &surface_tree->node;
+	surface_node->data = this;
 
 	if (wlr.parent != nullptr) {
 		const auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(wlr.parent->data));
 		if (m_view != nullptr) {
-			wlr_scene_node_reparent(scene_node, m_view->scene_node->parent);
+			wlr_scene_node_reparent(&scene_tree->node, m_view->scene_tree->node.parent);
 			toplevel_handle->set_parent(m_view->toplevel_handle);
 		}
 	}
 
-	wlr_scene_node_set_enabled(scene_node, true);
-	wlr_scene_node_set_position(scene_node, current.x, current.y);
+	wlr_scene_node_set_enabled(&scene_tree->node, true);
+	wlr_scene_node_set_position(&scene_tree->node, surface_current.x, surface_current.y);
 
 	if (wlr.fullscreen) {
 		set_placement(VIEW_PLACEMENT_FULLSCREEN);
@@ -293,9 +295,9 @@ void XWaylandView::map() {
 }
 
 void XWaylandView::unmap() {
-	wlr_scene_node_set_enabled(scene_node, false);
-	wlr_scene_node_destroy(scene_node);
-	scene_node = nullptr;
+	wlr_scene_node_set_enabled(&scene_tree->node, false);
+	wlr_scene_node_destroy(&scene_tree->node);
+	scene_tree = nullptr;
 	Cursor& cursor = server.seat->cursor;
 
 	/* Reset the cursor mode if the grabbed view was unmapped. */
@@ -327,11 +329,11 @@ static int16_t trunc(const int32_t int32) {
 }
 
 void XWaylandView::impl_set_position(const int32_t x, const int32_t y) {
-	wlr_xwayland_surface_configure(&wlr, trunc(x), trunc(y), current.width, current.height);
+	wlr_xwayland_surface_configure(&wlr, trunc(x), trunc(y), surface_current.width, surface_current.height);
 }
 
 void XWaylandView::impl_set_size(const int32_t width, const int32_t height) {
-	wlr_xwayland_surface_configure(&wlr, trunc(current.x), trunc(current.y), width, height);
+	wlr_xwayland_surface_configure(&wlr, trunc(surface_current.x), trunc(surface_current.y), width, height);
 }
 
 void XWaylandView::impl_set_geometry(const int32_t x, const int32_t y, const int32_t width, const int32_t height) {

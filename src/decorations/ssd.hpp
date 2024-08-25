@@ -20,6 +20,12 @@ class Ssd final : public std::enable_shared_from_this<Ssd> {
 	~Ssd();
 
 	void update() const;
+	wlr_box get_geometry() const;
+
+	uint8_t get_titlebar_height() const;
+	uint8_t get_border_width() const;
+	int32_t get_extra_width() const;
+	int32_t get_extra_height() const;
 };
 
 #endif
