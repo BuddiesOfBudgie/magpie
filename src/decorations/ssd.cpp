@@ -4,11 +4,13 @@
 #include "server.hpp"
 
 constexpr uint8_t TITLEBAR_HEIGHT = 24;
-constexpr uint32_t TITLEBAR_COLOR = 0x303030;
+constexpr uint32_t TITLEBAR_ACTIVE_COLOR = 0x303030;
+constexpr uint32_t TITLEBAR_INACTIVE_COLOR = 0x202020;
 constexpr uint8_t BORDER_WIDTH = 1;
-constexpr uint32_t BORDER_COLOR = 0x505050;
+constexpr uint32_t BORDER_ACTIVE_COLOR = 0x505050;
+constexpr uint32_t BORDER_INACTIVE_COLOR = 0x404040;
 
-static consteval std::array<float, 4> rrggbb_to_floats(uint32_t rrggbb) {
+static constexpr std::array<float, 4> rrggbb_to_floats(uint32_t rrggbb) {
 	return std::array<float, 4>(
 		{(float) (rrggbb >> 16 & 0xff) / 255.0f, (float) (rrggbb >> 8 & 0xff) / 255.0f, (float) (rrggbb & 0xff) / 255.0f, 1.0});
 }
@@ -19,7 +21,7 @@ Ssd::Ssd(View& parent) noexcept : view(parent) {
 	wlr_scene_node_set_position(&scene_tree->node, 0, 0);
 	wlr_scene_node_set_enabled(&scene_tree->node, true);
 
-	auto titlebar_color = rrggbb_to_floats(TITLEBAR_COLOR);
+	auto titlebar_color = rrggbb_to_floats(TITLEBAR_INACTIVE_COLOR);
 	auto view_geo = view.get_surface_geometry();
 	titlebar_rect = wlr_scene_rect_create(scene_tree, view_geo.width, TITLEBAR_HEIGHT, titlebar_color.data());
 	titlebar_rect->node.data = &parent;
@@ -27,7 +29,7 @@ Ssd::Ssd(View& parent) noexcept : view(parent) {
 	wlr_scene_node_lower_to_bottom(&titlebar_rect->node);
 	wlr_scene_node_set_enabled(&titlebar_rect->node, true);
 
-	auto border_color = rrggbb_to_floats(BORDER_COLOR);
+	auto border_color = rrggbb_to_floats(BORDER_INACTIVE_COLOR);
 	border_rect = wlr_scene_rect_create(
 		scene_tree, view_geo.width + get_extra_width(), view_geo.height + get_extra_height(), border_color.data());
 	wlr_scene_node_set_position(&border_rect->node, 0, 0);
@@ -43,6 +45,14 @@ void Ssd::update() const {
 	auto view_geo = view.get_surface_geometry();
 	wlr_scene_rect_set_size(titlebar_rect, view_geo.width, TITLEBAR_HEIGHT);
 	wlr_scene_rect_set_size(border_rect, view_geo.width + get_extra_width(), view_geo.height + get_extra_height());
+}
+
+void Ssd::set_activated(const bool activated) const {
+	auto titlebar_color = rrggbb_to_floats(activated ? TITLEBAR_ACTIVE_COLOR : TITLEBAR_INACTIVE_COLOR);
+	wlr_scene_rect_set_color(titlebar_rect, titlebar_color.data());
+
+	auto border_color = rrggbb_to_floats(activated ? BORDER_ACTIVE_COLOR : BORDER_INACTIVE_COLOR);
+	wlr_scene_rect_set_color(border_rect, border_color.data());
 }
 
 wlr_box Ssd::get_geometry() const {

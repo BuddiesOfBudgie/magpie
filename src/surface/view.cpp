@@ -249,6 +249,10 @@ void View::set_activated(const bool activated) {
 		toplevel_handle->set_activated(activated);
 	}
 
+	if (ssd.has_value()) {
+		ssd->set_activated(activated);
+	}
+
 	const auto seat = get_server().seat;
 	if (activated) {
 		wlr_scene_node_raise_to_top(&scene_tree->node);
