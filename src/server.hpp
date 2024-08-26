@@ -29,6 +29,7 @@
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include "wlr-wrap-end.hpp"
+#include "decorations/ssd.hpp"
 
 using magpie_scene_layer_t = enum magpie_scene_layer {
 	MAGPIE_SCENE_LAYER_BACKGROUND = 0,
@@ -111,6 +112,7 @@ class Server final : public std::enable_shared_from_this<Server> {
 	Server();
 
 	std::weak_ptr<Surface> surface_at(double lx, double ly, wlr_surface** wlr, double* sx, double* sy) const;
+	bool ssd_at(double lx, double ly) const;
 	void focus_view(std::shared_ptr<View>&& view);
 	void focus_layer(std::shared_ptr<Layer> layer);
 	void try_focus_next_exclusive_layer();

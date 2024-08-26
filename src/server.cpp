@@ -133,21 +133,45 @@ void Server::focus_layer(std::shared_ptr<Layer> layer) {
 	}
 }
 
+bool Server::ssd_at(const double lx, const double ly) const {
+	double sx;
+	double sy;
+	wlr_scene_node* node = wlr_scene_node_at(&scene->tree.node, lx, ly, &sx, &sy);
+	if (node == nullptr) {
+		return false;
+	}
+
+	if (node->type == WLR_SCENE_NODE_RECT && node->data != nullptr) {
+		return true;
+	}
+
+	return false;
+}
+
 std::weak_ptr<Surface> Server::surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy) const {
 	/* This returns the topmost node in the scene at the given layout coords.
 	 * we only care about surface nodes as we are specifically looking for a
 	 * surface in the surface tree of a magpie_view. */
 	wlr_scene_node* node = wlr_scene_node_at(&scene->tree.node, lx, ly, sx, sy);
-	if (node == nullptr || node->type != WLR_SCENE_NODE_BUFFER) {
-		return {};
-	}
-	wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
-	const wlr_scene_surface* scene_surface = wlr_scene_surface_try_from_buffer(scene_buffer);
-	if (scene_surface == nullptr) {
+	if (node == nullptr) {
 		return {};
 	}
 
-	*wlr = scene_surface->surface;
+	if (node->type == WLR_SCENE_NODE_RECT && node->data != nullptr) {
+		auto* view = static_cast<View*>(node->data);
+		*wlr = view->get_wlr_surface();
+	} else if (node->type == WLR_SCENE_NODE_BUFFER) {
+		wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
+		const wlr_scene_surface* scene_surface = wlr_scene_surface_try_from_buffer(scene_buffer);
+		if (scene_surface == nullptr) {
+			return {};
+		}
+
+		*wlr = scene_surface->surface;
+	} else {
+		return {};
+	}
+
 	/* Find the node corresponding to the magpie_view at the root of this
 	 * surface tree, it is the only one for which we set the data field. */
 	const wlr_scene_tree* tree = node->parent;

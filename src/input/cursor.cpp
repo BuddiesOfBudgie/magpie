@@ -436,14 +436,15 @@ void Cursor::process_motion(const uint32_t time) {
 	double sy;
 	wlr_surface* surface = nullptr;
 	auto magpie_surface = seat.server.surface_at(wlr.x, wlr.y, &surface, &sx, &sy).lock();
-	if (magpie_surface == nullptr) {
+	bool ssd_at_cursor = seat.server.ssd_at(wlr.x, wlr.y);
+	if (ssd_at_cursor || magpie_surface == nullptr) {
 		/* If there's no view under the cursor, set the cursor image to a
 		 * default. This is what makes the cursor image appear when you move it
 		 * around the screen, not over any views. */
 		set_image("left_ptr");
 	}
 
-	if (surface != nullptr) {
+	if (!ssd_at_cursor && surface != nullptr) {
 		/*
 		 * Send pointer enter and motion events.
 		 *

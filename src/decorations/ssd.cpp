@@ -22,6 +22,7 @@ Ssd::Ssd(View& parent) noexcept : view(parent) {
 	auto titlebar_color = rrggbb_to_floats(TITLEBAR_COLOR);
 	auto view_geo = view.get_surface_geometry();
 	titlebar_rect = wlr_scene_rect_create(scene_tree, view_geo.width, TITLEBAR_HEIGHT, titlebar_color.data());
+	titlebar_rect->node.data = &parent;
 	wlr_scene_node_set_position(&titlebar_rect->node, BORDER_WIDTH, BORDER_WIDTH);
 	wlr_scene_node_lower_to_bottom(&titlebar_rect->node);
 	wlr_scene_node_set_enabled(&titlebar_rect->node, true);

@@ -190,6 +190,7 @@ static void xdg_surface_new_subsurface_notify(wl_listener* listener, void* data)
 XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept
 	: listeners(*this), server(server), wlr(xdg_toplevel) {
 	scene_tree = wlr_scene_tree_create(&server.scene->tree);
+	scene_tree->node.data = this;
 
 	auto* surface_tree = wlr_scene_xdg_surface_create(scene_tree, xdg_toplevel.base);
 	surface_node = &surface_tree->node;
