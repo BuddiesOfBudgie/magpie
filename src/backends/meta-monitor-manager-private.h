@@ -180,9 +180,6 @@ struct _MetaMonitorManager
  *
  * @set_power_save_mode: Sets the #MetaPowerSave mode (for all displays).
  *
- * @change_backlight: Changes the backlight intensity to the given value (in
- *   percent).
- *
  * @tiled_monitor_added: Should be called by a #MetaMonitor when it is created.
  *
  * @tiled_monitor_removed: Should be called by a #MetaMonitor when it is
