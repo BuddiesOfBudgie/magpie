@@ -309,4 +309,16 @@ size_t meta_monitor_get_gamma_lut_size (MetaMonitor *monitor);
 void meta_monitor_set_gamma_lut (MetaMonitor        *monitor,
                                  const MetaGammaLut *lut);
 
+META_EXPORT_TEST
+gboolean meta_monitor_get_backlight_info (MetaMonitor *monitor,
+                                          int         *backlight_min,
+                                          int         *backlight_max);
+
+void meta_monitor_set_backlight (MetaMonitor *monitor,
+                                 int          value);
+
+META_EXPORT_TEST
+gboolean meta_monitor_get_backlight (MetaMonitor *monitor,
+                                     int         *value);
+
 #endif /* META_MONITOR_H */

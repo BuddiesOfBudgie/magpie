@@ -35,6 +35,15 @@ enum
   N_PROPS
 };
 
+enum
+{
+  BACKLIGHT_CHANGED,
+
+  N_SIGNALS
+};
+
+static guint signals[N_SIGNALS];
+
 static GParamSpec *obj_props[N_PROPS];
 
 typedef struct _MetaOutputPrivate
@@ -200,7 +209,12 @@ meta_output_set_backlight (MetaOutput *output,
 {
   MetaOutputPrivate *priv = meta_output_get_instance_private (output);
 
+  g_return_if_fail (backlight >= priv->info->backlight_min);
+  g_return_if_fail (backlight <= priv->info->backlight_max);
+
   priv->backlight = backlight;
+
+  g_signal_emit (output, signals[BACKLIGHT_CHANGED], 0);
 }
 
 int
@@ -532,6 +546,15 @@ meta_output_class_init (MetaOutputClass *klass)
                         G_PARAM_CONSTRUCT_ONLY |
                         G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, N_PROPS, obj_props);
+
+  signals[BACKLIGHT_CHANGED] =
+    g_signal_new ("backlight-changed",
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL, NULL,
+                  G_TYPE_NONE, 0);
+
 }
 
 gboolean
