@@ -71,7 +71,7 @@
 #include "wayland/meta-xwayland-private.h"
 #endif
 
-G_DEFINE_TYPE (MetaX11Display, meta_x11_display, G_TYPE_OBJECT)
+#include "meta-dbus-x11.h"
 
 static GQuark quark_x11_display_logical_monitor_data = 0;
 
@@ -79,6 +79,14 @@ typedef struct _MetaX11DisplayLogicalMonitorData
 {
   int xinerama_index;
 } MetaX11DisplayLogicalMonitorData;
+
+typedef struct _MetaX11DisplayPrivate
+{
+  MetaDBusX11 *dbus_api;
+  guint dbus_name_id;
+} MetaX11DisplayPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (MetaX11Display, meta_x11_display, G_TYPE_OBJECT)
 
 static char *get_screen_name (Display *xdisplay,
                               int      number);
@@ -91,6 +99,15 @@ static void unset_wm_check_hint (MetaX11Display *x11_display);
 
 static void prefs_changed_callback (MetaPreference pref,
                                     void          *data);
+
+static MetaBackend *
+backend_from_x11_display (MetaX11Display *x11_display)
+{
+  MetaDisplay *display = meta_x11_display_get_display (x11_display);
+  MetaContext *context = meta_display_get_context (display);
+
+  return meta_context_get_backend (context);
+}
 
 static void
 meta_x11_display_unmanage_windows (MetaX11Display *x11_display)
@@ -114,11 +131,70 @@ meta_x11_display_unmanage_windows (MetaX11Display *x11_display)
 }
 
 static void
+on_bus_acquired (GDBusConnection *connection,
+                 const char      *name,
+                 gpointer         user_data)
+{
+  g_warning("on_bus_acquired start");
+  MetaX11Display *x11_display = user_data;
+  MetaX11DisplayPrivate *priv =
+    meta_x11_display_get_instance_private (x11_display);
+
+  g_dbus_interface_skeleton_export (G_DBUS_INTERFACE_SKELETON (priv->dbus_api),
+                                    connection,
+                                    "/org/gnome/Mutter/X11",
+                                    NULL);
+  g_warning("on_bus_acquired end");
+}
+
+static void
+update_ui_scaling_factor (MetaX11Display *x11_display)
+{
+  g_warning("update_ui_scaling_factor start");
+  MetaX11DisplayPrivate *priv =
+    meta_x11_display_get_instance_private (x11_display);
+  MetaBackend *backend = backend_from_x11_display (x11_display);
+  MetaContext *context = meta_backend_get_context (backend);
+  int ui_scaling_factor = 1;
+
+  switch (meta_context_get_compositor_type (context))
+    {
+    case META_COMPOSITOR_TYPE_WAYLAND:
+      {
+#ifdef HAVE_XWAYLAND
+        MetaWaylandCompositor *wayland_compositor =
+          meta_context_get_wayland_compositor (context);
+        MetaXWaylandManager *xwayland_manager =
+          &wayland_compositor->xwayland_manager;
+
+        ui_scaling_factor = meta_xwayland_get_effective_scale (xwayland_manager);
+#endif
+        break;
+      }
+    case META_COMPOSITOR_TYPE_X11:
+      {
+        MetaSettings *settings = meta_backend_get_settings (backend);
+
+        ui_scaling_factor = meta_settings_get_ui_scaling_factor (settings);
+        break;
+      }
+    }
+
+  meta_dbus_x11_set_ui_scaling_factor (priv->dbus_api, ui_scaling_factor);
+  g_warning("update_ui_scaling_factor emd");
+}
+
+static void
 meta_x11_display_dispose (GObject *object)
 {
   MetaX11Display *x11_display = META_X11_DISPLAY (object);
+  MetaX11DisplayPrivate *priv =
+    meta_x11_display_get_instance_private (x11_display);
 
   x11_display->closing = TRUE;
+
+  g_clear_handle_id (&priv->dbus_name_id, g_bus_unown_name);
+  g_clear_object (&priv->dbus_api);
 
   g_clear_pointer (&x11_display->alarm_filters, g_ptr_array_unref);
 
@@ -1112,6 +1188,25 @@ on_window_visibility_updated (MetaDisplay    *display,
     meta_x11_display_increment_focus_sentinel (x11_display);
 }
 
+static void
+initialize_dbus_interface (MetaX11Display *x11_display)
+{
+  g_warning("initialize_dbus_interface start");
+  MetaX11DisplayPrivate *priv =
+    meta_x11_display_get_instance_private (x11_display);
+
+  priv->dbus_api = meta_dbus_x11_skeleton_new ();
+  priv->dbus_name_id =
+    g_bus_own_name (G_BUS_TYPE_SESSION,
+                    "org.gnome.Mutter.X11",
+                    G_BUS_NAME_OWNER_FLAGS_NONE,
+                    on_bus_acquired,
+                    NULL, NULL,
+                    x11_display, NULL);
+  update_ui_scaling_factor (x11_display);
+  g_warning("initialize_dbus_interface end");
+}
+
 /**
  * meta_x11_display_new:
  *
@@ -1144,7 +1239,9 @@ meta_x11_display_new (MetaDisplay  *display,
   MetaBackend *backend = meta_get_backend ();
   MetaMonitorManager *monitor_manager =
     meta_backend_get_monitor_manager (backend);
-
+  g_warning("aaaaa");
+  MetaSettings *settings = meta_backend_get_settings (backend);
+  g_warning("bbbb");
   /* A list of all atom names, so that we can intern them in one go. */
   const char *atom_names[] = {
 #define item(x) #x,
@@ -1213,6 +1310,9 @@ meta_x11_display_new (MetaDisplay  *display,
   x11_display = g_object_new (META_TYPE_X11_DISPLAY, NULL);
   x11_display->gdk_display = gdk_display;
   x11_display->display = display;
+  g_warning("1");
+  initialize_dbus_interface (x11_display);
+  g_warning("2");
 
   /* here we use XDisplayName which is what the user
    * probably put in, vs. DisplayString(display) which is
