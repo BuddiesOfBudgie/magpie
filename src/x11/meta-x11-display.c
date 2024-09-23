@@ -1382,7 +1382,7 @@ meta_x11_display_new (MetaDisplay  *display,
                            "monitors-changed-internal",
                            G_CALLBACK (on_monitors_changed_internal),
                            x11_display,
-                           0);
+                           G_CONNECT_AFTER);
 
   init_leader_window (x11_display, &timestamp);
   x11_display->timestamp = timestamp;
@@ -1914,6 +1914,8 @@ on_monitors_changed_internal (MetaMonitorManager *monitor_manager,
     }
 
   x11_display->has_xinerama_indices = FALSE;
+
+  update_ui_scaling_factor (x11_display);
 }
 
 void
