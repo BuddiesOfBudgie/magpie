@@ -135,7 +135,6 @@ on_bus_acquired (GDBusConnection *connection,
                  const char      *name,
                  gpointer         user_data)
 {
-  g_warning("on_bus_acquired start");
   MetaX11Display *x11_display = user_data;
   MetaX11DisplayPrivate *priv =
     meta_x11_display_get_instance_private (x11_display);
@@ -144,13 +143,11 @@ on_bus_acquired (GDBusConnection *connection,
                                     connection,
                                     "/org/gnome/Mutter/X11",
                                     NULL);
-  g_warning("on_bus_acquired end");
 }
 
 static void
 update_ui_scaling_factor (MetaX11Display *x11_display)
 {
-  g_warning("update_ui_scaling_factor start");
   MetaX11DisplayPrivate *priv =
     meta_x11_display_get_instance_private (x11_display);
   MetaBackend *backend = backend_from_x11_display (x11_display);
@@ -181,7 +178,6 @@ update_ui_scaling_factor (MetaX11Display *x11_display)
     }
 
   meta_dbus_x11_set_ui_scaling_factor (priv->dbus_api, ui_scaling_factor);
-  g_warning("update_ui_scaling_factor emd");
 }
 
 static void
@@ -1191,7 +1187,6 @@ on_window_visibility_updated (MetaDisplay    *display,
 static void
 initialize_dbus_interface (MetaX11Display *x11_display)
 {
-  g_warning("initialize_dbus_interface start");
   MetaX11DisplayPrivate *priv =
     meta_x11_display_get_instance_private (x11_display);
 
@@ -1204,7 +1199,6 @@ initialize_dbus_interface (MetaX11Display *x11_display)
                     NULL, NULL,
                     x11_display, NULL);
   update_ui_scaling_factor (x11_display);
-  g_warning("initialize_dbus_interface end");
 }
 
 /**
@@ -1239,9 +1233,7 @@ meta_x11_display_new (MetaDisplay  *display,
   MetaBackend *backend = meta_get_backend ();
   MetaMonitorManager *monitor_manager =
     meta_backend_get_monitor_manager (backend);
-  g_warning("aaaaa");
   MetaSettings *settings = meta_backend_get_settings (backend);
-  g_warning("bbbb");
   /* A list of all atom names, so that we can intern them in one go. */
   const char *atom_names[] = {
 #define item(x) #x,
@@ -1310,9 +1302,7 @@ meta_x11_display_new (MetaDisplay  *display,
   x11_display = g_object_new (META_TYPE_X11_DISPLAY, NULL);
   x11_display->gdk_display = gdk_display;
   x11_display->display = display;
-  g_warning("1");
   initialize_dbus_interface (x11_display);
-  g_warning("2");
 
   /* here we use XDisplayName which is what the user
    * probably put in, vs. DisplayString(display) which is
