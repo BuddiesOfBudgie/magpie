@@ -875,6 +875,13 @@ dbus_input_mapping_built_sources = gnome.gdbus_codegen('meta-dbus-input-mapping'
   )
 mutter_built_sources += dbus_input_mapping_built_sources
 
+dbus_x11_built_sources = gnome.gdbus_codegen('meta-dbus-x11',
+    join_paths(dbus_interfaces_dir, 'org.gnome.Mutter.X11.xml'),
+    interface_prefix: 'org.gnome.Mutter.',
+    namespace: 'MetaDBus',
+  )
+mutter_built_sources += dbus_x11_built_sources
+
 if have_profiler
   mutter_sources += [
     'core/meta-profiler.c',
