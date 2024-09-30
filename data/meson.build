@@ -9,12 +9,6 @@ keybinding_xml_files = [
   '50-mutter-windows.xml',
 ]
 
-if have_wayland
-  keybinding_xml_files += [
-    '50-mutter-wayland.xml',
-  ]
-endif
-
 if have_shared_components
   install_data(keybinding_xml_files,
     install_dir: gnome_keybindings_keysdir,

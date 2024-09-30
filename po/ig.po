@@ -1367,20 +1367,8 @@ msgid "_Only on This Workspace"
 msgstr "_Sọsọ na wọ́kspéèsì a"
 
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:95
-msgid "Move to Workspace _Left"
-msgstr "Kpụga na wọ́kspéèsì _akaekpe"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:97
-msgid "Move to Workspace R_ight"
-msgstr "Kpụga na wọ́kspéèsì a_kanri"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:99
-msgid "Move to Workspace _Up"
-msgstr "Kpụga na wọ́kspéèsì _elu"
-
 #. Translators: Translate this string the same way as you do in libwnck!
 #: ../src/ui/menu.c:101
 msgid "Move to Workspace _Down"

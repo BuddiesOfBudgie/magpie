@@ -1407,20 +1407,8 @@ msgid "_Only on This Workspace"
 msgstr "_Tolki na hetym rabočym abšary"
 
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:95
-msgid "Move to Workspace _Left"
-msgstr "Pieraniasi na _levy rabočy abšar"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:97
-msgid "Move to Workspace R_ight"
-msgstr "Pieran_iasi na pravy rabočy abšar"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:99
-msgid "Move to Workspace _Up"
-msgstr "Pieraniasi na _vierchni rabočy abšar"
-
 #. Translators: Translate this string the same way as you do in libwnck!
 #: ../src/ui/menu.c:101
 msgid "Move to Workspace _Down"

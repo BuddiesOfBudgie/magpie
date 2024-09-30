@@ -24,18 +24,6 @@ msgstr ""
 msgid "Navigation"
 msgstr ""
 
-#: ../src/50-mutter-navigation.xml.in.h:2
-msgid "Move window to workspace 1"
-msgstr "Bog fuinneog go spás oibre 1"
-
-#: ../src/50-mutter-navigation.xml.in.h:3
-msgid "Move window to workspace 2"
-msgstr "Bog fuinneog go spás oibre 2"
-
-#: ../src/50-mutter-navigation.xml.in.h:4
-msgid "Move window to workspace 3"
-msgstr "Bog fuinneog go spás oibre 3"
-
 #: ../src/50-mutter-navigation.xml.in.h:5
 msgid "Move window to workspace 4"
 msgstr "Bog fuinneog go spás oibre 4"
@@ -95,30 +83,6 @@ msgstr "Athraigh go spás oibre 1"
 #: ../src/50-mutter-navigation.xml.in.h:19
 msgid "Switch to workspace 2"
 msgstr "Athraigh go spás oibre 2"
-
-#: ../src/50-mutter-navigation.xml.in.h:20
-msgid "Switch to workspace 3"
-msgstr "Athraigh go spás oibre 3"
-
-#: ../src/50-mutter-navigation.xml.in.h:21
-msgid "Switch to workspace 4"
-msgstr "Athraigh go spás oibre 4"
-
-#: ../src/50-mutter-navigation.xml.in.h:22
-msgid "Move to workspace left"
-msgstr "Bog go spás oibre ar chlé"
-
-#: ../src/50-mutter-navigation.xml.in.h:23
-msgid "Move to workspace right"
-msgstr "Bog go spás oibre ar dheis"
-
-#: ../src/50-mutter-navigation.xml.in.h:24
-msgid "Move to workspace above"
-msgstr "Bog go spás oibre os cionn"
-
-#: ../src/50-mutter-navigation.xml.in.h:25
-msgid "Move to workspace below"
-msgstr "Bog go spás oibre faoi bhun"
 
 #: ../src/50-mutter-system.xml.in.h:1
 msgid "System"
@@ -715,10 +679,6 @@ msgid "_Only on This Workspace"
 msgstr "Ar an Spás _Oibre Seo Amháin"
 
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:92
-msgid "Move to Workspace _Left"
-msgstr "Bog go Spás Oibre ar _Chlé"
-
 #. Translators: Translate this string the same way as you do in libwnck!
 #: ../src/ui/menu.c:94
 msgid "Move to Workspace R_ight"

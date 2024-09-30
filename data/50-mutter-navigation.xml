@@ -5,35 +5,6 @@
                 wm_name="Mutter"
                 package="mutter">
 
-	<KeyListEntry name="move-to-workspace-1"
-	              description="Move window to workspace 1" />
-
-	<KeyListEntry name="move-to-workspace-2"
-	              description="Move window to workspace 2" />
-
-	<KeyListEntry name="move-to-workspace-3"
-	              description="Move window to workspace 3" />
-
-	<KeyListEntry name="move-to-workspace-4"
-	              description="Move window to workspace 4" />
-
-        <KeyListEntry name="move-to-workspace-last"
-                      description="Move window to last workspace" />
-
-	<KeyListEntry name="move-to-workspace-left"
-	              description="Move window one workspace to the left" />
-
-	<KeyListEntry name="move-to-workspace-right"
-	              description="Move window one workspace to the right" />
-
-        <KeyListEntry name="move-to-workspace-up"
-                      description="Move window one workspace up"
-                      hidden="true" />
-
-        <KeyListEntry name="move-to-workspace-down"
-                      description="Move window one workspace down"
-                      hidden="true" />
-
 	<KeyListEntry name="move-to-monitor-left"
 	              description="Move window one monitor to the left" />
 

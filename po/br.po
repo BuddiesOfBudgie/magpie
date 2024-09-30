@@ -889,20 +889,8 @@ msgid "_Only on This Workspace"
 msgstr "War an dachenn-labour-mañ _hepken"
 
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:95
-msgid "Move to Workspace _Left"
-msgstr "Kas d'an dachenn-labour kleiz"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:97
-msgid "Move to Workspace R_ight"
-msgstr "Kas d'an dachenn-labour dehou"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:99
-msgid "Move to Workspace _Up"
-msgstr "Kas d'an dachenn-labour _a us"
-
 #. Translators: Translate this string the same way as you do in libwnck!
 #: ../src/ui/menu.c:101
 msgid "Move to Workspace _Down"

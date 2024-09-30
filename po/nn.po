@@ -2273,20 +2273,8 @@ msgid "_Only on This Workspace"
 msgstr "Berre på de_nne arbeidsflata"
 
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:95
-msgid "Move to Workspace _Left"
-msgstr "F_lytt ei arbeidsflate til venstre"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:97
-msgid "Move to Workspace R_ight"
-msgstr "Flytt ei arbeidsflate til høg_re"
-
 #. Translators: Translate this string the same way as you do in libwnck!
-#: ../src/ui/menu.c:99
-msgid "Move to Workspace _Up"
-msgstr "Flytt ei arbeidsflate _opp"
-
 #. Translators: Translate this string the same way as you do in libwnck!
 #: ../src/ui/menu.c:101
 msgid "Move to Workspace _Down"
