@@ -159,6 +159,10 @@ void View::set_geometry(const int32_t x, const int32_t y, const int32_t width, c
 	}
 
 	impl_set_geometry(surface_current.x, surface_current.y, surface_current.width, surface_current.height);
+
+	if (ssd.has_value()) {
+		ssd->update();
+	}
 }
 
 void View::set_position(const int32_t x, const int32_t y) {

@@ -41,8 +41,8 @@ void Cursor::process_resize(const uint32_t time) const {
 		return;
 	}
 
-	const wlr_box min_size = view->get_min_size_with_decorations();
-	const wlr_box max_size = view->get_max_size_with_decorations();
+	const wlr_box min_size = view->get_surface_min_size();
+	const wlr_box max_size = view->get_surface_max_size();
 	const double border_x = wlr.x - seat.server.grab_x;
 	const double border_y = wlr.y - seat.server.grab_y;
 	int32_t new_left = seat.server.grab_geobox.x;
@@ -199,8 +199,27 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 		/* Focus that client if the button was _pressed_ */
 		server.focus_view(std::dynamic_pointer_cast<View>(magpie_surface));
 
-		if (server.ssd_at(cursor.wlr.x, cursor.wlr.y) == SceneRectType::TITLEBAR) {
+		auto ssd_at_cursor = server.ssd_at(cursor.wlr.x, cursor.wlr.y);
+		if (ssd_at_cursor == SceneRectType::TITLEBAR) {
 			view->begin_interactive(MAGPIE_CURSOR_MOVE, 0);
+		} else if (ssd_at_cursor == SceneRectType::BORDER || ssd_at_cursor == SceneRectType::EXTENTS) {
+			auto surface_geo = view->surface_current;
+
+			uint8_t edges = WLR_EDGE_NONE;
+			if (cursor.wlr.x < surface_geo.x) {
+				edges |= WLR_EDGE_LEFT;
+			}
+			if (cursor.wlr.y < surface_geo.y) {
+				edges |= WLR_EDGE_TOP;
+			}
+			if (cursor.wlr.x > surface_geo.x + surface_geo.width) {
+				edges |= WLR_EDGE_RIGHT;
+			}
+			if (cursor.wlr.y > surface_geo.y + surface_geo.height) {
+				edges |= WLR_EDGE_BOTTOM;
+			}
+
+			view->begin_interactive(MAGPIE_CURSOR_RESIZE, edges);
 		}
 	} else {
 		server.focus_view(nullptr);
