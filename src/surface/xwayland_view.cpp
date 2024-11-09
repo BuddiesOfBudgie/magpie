@@ -236,12 +236,14 @@ wlr_box XWaylandView::get_surface_geometry() const {
 	return {.x = wlr.x, .y = wlr.y, .width = wlr.width, .height = wlr.height};
 }
 
+constexpr int32_t XWAYLAND_SURFACE_MIN_SIZE = 32;
+
 wlr_box XWaylandView::get_surface_min_size() const {
 	wlr_box min = {.x = 0, .y = 0, .width = 0, .height = 0};
 	if (wlr.size_hints != nullptr) {
 		const auto& hints = *wlr.size_hints;
-		min.width = std::max(hints.min_width, hints.base_width);
-		min.height = std::max(hints.min_height, hints.base_height);
+		min.width = std::max({XWAYLAND_SURFACE_MIN_SIZE, hints.min_width, hints.base_width});
+		min.height = std::max({XWAYLAND_SURFACE_MIN_SIZE, hints.min_height, hints.base_height});
 	}
 	return min;
 }

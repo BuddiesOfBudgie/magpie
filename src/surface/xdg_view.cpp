@@ -270,8 +270,13 @@ wlr_box XdgView::get_surface_geometry() const {
 	return box;
 }
 
+constexpr int32_t XDG_SURFACE_MIN_SIZE = 32;
+
 wlr_box XdgView::get_surface_min_size() const {
-	return {.x = 0, .y = 0, .width = wlr.current.min_width, .height = wlr.current.min_height};
+	return {.x = 0,
+		.y = 0,
+		.width = std::max(XDG_SURFACE_MIN_SIZE, wlr.current.min_width),
+		.height = std::max(XDG_SURFACE_MIN_SIZE, wlr.current.min_height)};
 }
 
 wlr_box XdgView::get_surface_max_size() const {
