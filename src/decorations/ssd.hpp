@@ -16,7 +16,7 @@ class Ssd final : public std::enable_shared_from_this<Ssd> {
 	wlr_scene_rect* titlebar_rect = nullptr;
 	wlr_scene_rect* border_rect = nullptr;
 
-	Ssd(View& parent) noexcept;
+	explicit Ssd(View& parent) noexcept;
 	~Ssd();
 
 	void update() const;
@@ -27,6 +27,18 @@ class Ssd final : public std::enable_shared_from_this<Ssd> {
 	uint8_t get_horizontal_offset() const;
 	int32_t get_extra_width() const;
 	int32_t get_extra_height() const;
+};
+
+enum SceneRectType {
+	TITLEBAR,
+	BORDER,
+	EXTENTS,
+	NONE,
+};
+
+struct SceneRectData {
+	SceneRectType type;
+	View* parent;
 };
 
 #endif

@@ -24,7 +24,7 @@ Ssd::Ssd(View& parent) noexcept : view(parent) {
 	auto titlebar_color = rrggbb_to_floats(TITLEBAR_INACTIVE_COLOR);
 	auto view_geo = view.get_surface_geometry();
 	titlebar_rect = wlr_scene_rect_create(scene_tree, view_geo.width, TITLEBAR_HEIGHT, titlebar_color.data());
-	titlebar_rect->node.data = &parent;
+	titlebar_rect->node.data = new SceneRectData{.type = SceneRectType::TITLEBAR, .parent = &parent};
 	wlr_scene_node_set_position(&titlebar_rect->node, BORDER_WIDTH, BORDER_WIDTH);
 	wlr_scene_node_lower_to_bottom(&titlebar_rect->node);
 	wlr_scene_node_set_enabled(&titlebar_rect->node, true);
@@ -32,12 +32,15 @@ Ssd::Ssd(View& parent) noexcept : view(parent) {
 	auto border_color = rrggbb_to_floats(BORDER_INACTIVE_COLOR);
 	border_rect = wlr_scene_rect_create(
 		scene_tree, view_geo.width + get_extra_width(), view_geo.height + get_extra_height(), border_color.data());
+	border_rect->node.data = new SceneRectData{.type = SceneRectType::BORDER, .parent = &parent};
 	wlr_scene_node_set_position(&border_rect->node, 0, 0);
 	wlr_scene_node_lower_to_bottom(&border_rect->node);
 	wlr_scene_node_set_enabled(&border_rect->node, true);
 }
 
 Ssd::~Ssd() {
+	delete static_cast<SceneRectData*>(titlebar_rect->node.data);
+	delete static_cast<SceneRectData*>(border_rect->node.data);
 	wlr_scene_node_destroy(&scene_tree->node);
 }
 

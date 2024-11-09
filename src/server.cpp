@@ -133,19 +133,16 @@ void Server::focus_layer(const std::shared_ptr<Layer>& layer) {
 	}
 }
 
-bool Server::ssd_at(const double lx, const double ly) const {
+SceneRectType Server::ssd_at(const double lx, const double ly) const {
 	double sx;
 	double sy;
 	wlr_scene_node* node = wlr_scene_node_at(&scene->tree.node, lx, ly, &sx, &sy);
-	if (node == nullptr) {
-		return false;
+
+	if (node != nullptr && node->type == WLR_SCENE_NODE_RECT && node->data != nullptr) {
+		return static_cast<SceneRectData*>(node->data)->type;
 	}
 
-	if (node->type == WLR_SCENE_NODE_RECT && node->data != nullptr) {
-		return true;
-	}
-
-	return false;
+	return SceneRectType::NONE;
 }
 
 std::weak_ptr<Surface> Server::surface_at(const double lx, const double ly, wlr_surface** wlr, double* sx, double* sy) const {
@@ -158,8 +155,8 @@ std::weak_ptr<Surface> Server::surface_at(const double lx, const double ly, wlr_
 	}
 
 	if (node->type == WLR_SCENE_NODE_RECT && node->data != nullptr) {
-		auto* view = static_cast<View*>(node->data);
-		*wlr = view->get_wlr_surface();
+		auto* data = static_cast<SceneRectData*>(node->data);
+		*wlr = data->parent->get_wlr_surface();
 	} else if (node->type == WLR_SCENE_NODE_BUFFER) {
 		wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
 		const wlr_scene_surface* scene_surface = wlr_scene_surface_try_from_buffer(scene_buffer);
