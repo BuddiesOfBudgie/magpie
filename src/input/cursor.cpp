@@ -4,7 +4,6 @@
 #include "output.hpp"
 #include "seat.hpp"
 #include "server.hpp"
-#include "surface/surface.hpp"
 #include "surface/view.hpp"
 
 #include <algorithm>
@@ -468,7 +467,51 @@ void Cursor::process_motion(const uint32_t time) {
 		 * around the screen, not over any views. */
 		set_image("left_ptr");
 	} else if (ssd_at_cursor == SceneRectType::BORDER || ssd_at_cursor == SceneRectType::EXTENTS) {
-		set_image("fleur");
+		auto view = std::dynamic_pointer_cast<View>(magpie_surface);
+		auto surface_geo = view->ssd.has_value() ? view->ssd->get_extentless_geometry() : view->surface_current;
+
+		uint8_t edges = WLR_EDGE_NONE;
+		if (wlr.x < surface_geo.x) {
+			edges |= WLR_EDGE_LEFT;
+		}
+		if (wlr.y < surface_geo.y) {
+			edges |= WLR_EDGE_TOP;
+		}
+		if (wlr.x > surface_geo.x + surface_geo.width) {
+			edges |= WLR_EDGE_RIGHT;
+		}
+		if (wlr.y > surface_geo.y + surface_geo.height) {
+			edges |= WLR_EDGE_BOTTOM;
+		}
+
+		switch (edges) {
+			case WLR_EDGE_LEFT:
+				set_image("left_side");
+				break;
+			case WLR_EDGE_LEFT | WLR_EDGE_TOP:
+				set_image("top_left_corner");
+				break;
+			case WLR_EDGE_TOP:
+				set_image("top_side");
+				break;
+			case WLR_EDGE_TOP | WLR_EDGE_RIGHT:
+				set_image("top_right_corner");
+				break;
+			case WLR_EDGE_RIGHT:
+				set_image("right_side");
+				break;
+			case WLR_EDGE_RIGHT | WLR_EDGE_BOTTOM:
+				set_image("bottom_right_corner");
+				break;
+			case WLR_EDGE_BOTTOM:
+				set_image("bottom_side");
+				break;
+			case WLR_EDGE_BOTTOM | WLR_EDGE_LEFT:
+				set_image("bottom_left_corner");
+				break;
+			default:
+				break;
+		}
 	}
 
 	if (ssd_at_cursor == SceneRectType::NONE && surface != nullptr) {

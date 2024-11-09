@@ -7,7 +7,7 @@ constexpr uint8_t TITLEBAR_HEIGHT = 24;
 constexpr uint32_t TITLEBAR_ACTIVE_COLOR = 0x303030;
 constexpr uint32_t TITLEBAR_INACTIVE_COLOR = 0x202020;
 constexpr uint8_t BORDER_WIDTH = 1;
-constexpr uint8_t EXTENTS_WIDTH = 8;
+constexpr uint8_t EXTENTS_WIDTH = 12;
 constexpr uint32_t BORDER_ACTIVE_COLOR = 0x505050;
 constexpr uint32_t BORDER_INACTIVE_COLOR = 0x404040;
 
@@ -73,7 +73,7 @@ Ssd::~Ssd() {
 }
 
 void Ssd::update() const {
-	auto view_geo = view.get_surface_geometry();
+	auto view_geo = view.surface_current;
 	wlr_scene_rect_set_size(titlebar_rect, view_geo.width, TITLEBAR_HEIGHT);
 
 	auto border_box = border_dimensions(view_geo);
@@ -92,11 +92,19 @@ void Ssd::set_activated(const bool activated) const {
 }
 
 wlr_box Ssd::get_geometry() const {
-	auto view_geo = view.get_surface_geometry();
+	auto view_geo = view.surface_current;
 	return {.x = view_geo.x - get_horizontal_offset(),
 		.y = view_geo.y - get_vertical_offset(),
 		.width = view_geo.width + get_extra_width(),
 		.height = view_geo.height + get_extra_height()};
+}
+
+wlr_box Ssd::get_extentless_geometry() const {
+	auto view_geo = view.surface_current;
+	return {.x = view_geo.x,
+		.y = view_geo.y - TITLEBAR_HEIGHT,
+		.width = view_geo.width,
+		.height = view_geo.height + TITLEBAR_HEIGHT};
 }
 
 uint8_t Ssd::get_vertical_offset() const {

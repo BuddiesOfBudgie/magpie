@@ -24,6 +24,7 @@ class Ssd final : public std::enable_shared_from_this<Ssd> {
 	void set_activated(bool activated) const;
 
 	wlr_box get_geometry() const;
+	wlr_box get_extentless_geometry() const;
 	uint8_t get_vertical_offset() const;
 	uint8_t get_visual_vertical_offset() const;
 	uint8_t get_horizontal_offset() const;
