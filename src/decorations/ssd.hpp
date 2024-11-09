@@ -15,6 +15,7 @@ class Ssd final : public std::enable_shared_from_this<Ssd> {
 	wlr_scene_tree* scene_tree = nullptr;
 	wlr_scene_rect* titlebar_rect = nullptr;
 	wlr_scene_rect* border_rect = nullptr;
+	wlr_scene_rect* extents_rect = nullptr;
 
 	explicit Ssd(View& parent) noexcept;
 	~Ssd();
@@ -24,6 +25,7 @@ class Ssd final : public std::enable_shared_from_this<Ssd> {
 
 	wlr_box get_geometry() const;
 	uint8_t get_vertical_offset() const;
+	uint8_t get_visual_vertical_offset() const;
 	uint8_t get_horizontal_offset() const;
 	int32_t get_extra_width() const;
 	int32_t get_extra_height() const;

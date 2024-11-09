@@ -98,7 +98,7 @@ int32_t View::find_surface_min_y() const {
 
 	min_y = min_y == INT32_MAX ? 0 : min_y;
 	if (ssd.has_value()) {
-		return min_y + ssd->get_vertical_offset();
+		return min_y + ssd->get_visual_vertical_offset();
 	} else {
 		return min_y;
 	}
