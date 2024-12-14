@@ -44,7 +44,7 @@ static void wlr_layer_surface_v1_map_notify(wl_listener* listener, [[maybe_unuse
 static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, [[maybe_unused]] void* data) {
 	wlr_log(WLR_DEBUG, "wlr_layer_surface_v1.events.unmap(listener=%p, data=%p)", (void*) listener, data);
 
-	Layer& layer = magpie_container_of(listener, layer, unmap);
+	const Layer& layer = magpie_container_of(listener, layer, unmap);
 
 	wlr_scene_node_set_enabled(layer.scene_node, false);
 }
@@ -97,7 +97,7 @@ static void wlr_layer_surface_v1_new_popup_notify(wl_listener* listener, void* d
 		return;
 	}
 
-	Layer& layer = magpie_container_of(listener, layer, new_popup);
+	const Layer& layer = magpie_container_of(listener, layer, new_popup);
 	auto* surface = static_cast<Surface*>(layer.wlr.surface->data);
 	surface->popups.emplace(std::make_shared<Popup>(*surface, *static_cast<wlr_xdg_popup*>(data)));
 }

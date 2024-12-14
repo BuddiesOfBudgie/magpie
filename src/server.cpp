@@ -101,7 +101,7 @@ void Server::try_focus_next_exclusive_layer() {
 	focus_layer(topmost_exclusive_layer);
 }
 
-void Server::focus_layer(std::shared_ptr<Layer> layer) {
+void Server::focus_layer(const std::shared_ptr<Layer>& layer) {
 	if (layer == nullptr) {
 		focused_layer.reset();
 		if (focused_view.lock() != nullptr) {

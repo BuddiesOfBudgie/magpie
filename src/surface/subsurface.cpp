@@ -5,7 +5,6 @@
 #include <utility>
 
 #include "wlr-wrap-start.hpp"
-#include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/util/log.h>

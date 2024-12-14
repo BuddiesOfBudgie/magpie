@@ -60,7 +60,7 @@ static void budgie_keyboard_shortcuts_subscriber_unregister_shortcut(
 	free(target);
 }
 
-static const struct budgie_keyboard_shortcuts_subscriber_interface budgie_keyboard_shortcuts_subscriber_impl = {
+static constexpr struct budgie_keyboard_shortcuts_subscriber_interface budgie_keyboard_shortcuts_subscriber_impl = {
 	.destroy = budgie_keyboard_shortcuts_subscriber_destroy,
 	.register_shortcut = budgie_keyboard_shortcuts_subscriber_register_shortcut,
 	.unregister_shortcut = budgie_keyboard_shortcuts_subscriber_unregister_shortcut,
@@ -111,7 +111,7 @@ static void budgie_keyboard_shortcuts_manager_subscribe(wl_client* client, wl_re
 	wl_signal_emit_mutable(&manager->events.subscribe, subscriber);
 }
 
-static const struct budgie_keyboard_shortcuts_manager_interface budgie_keyboard_shortcuts_manager_impl = {
+static constexpr struct budgie_keyboard_shortcuts_manager_interface budgie_keyboard_shortcuts_manager_impl = {
 	.destroy = budgie_keyboard_shortcuts_manager_destroy,
 	.subscribe = budgie_keyboard_shortcuts_manager_subscribe,
 };

@@ -210,7 +210,7 @@ void Seat::apply_constraint(const wlr_pointer* pointer, double* dx, double* dy) 
 		return;
 	}
 
-	auto focused_view = server.focused_view.lock();
+	const auto focused_view = server.focused_view.lock();
 
 	if (focused_view == nullptr) {
 		wlr_log(WLR_DEBUG, "Attempted to apply a pointer constraint without a focused view");

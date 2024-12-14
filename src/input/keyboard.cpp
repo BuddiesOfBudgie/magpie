@@ -28,7 +28,7 @@ static void keyboard_handle_destroy(wl_listener* listener, [[maybe_unused]] void
 }
 
 static bool handle_compositor_keybinding(const Keyboard& keyboard, const uint32_t modifiers, const xkb_keysym_t sym) {
-	Server& server = keyboard.seat.server;
+	const Server& server = keyboard.seat.server;
 
 	if (modifiers == WLR_MODIFIER_ALT) {
 		switch (sym) {

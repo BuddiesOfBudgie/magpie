@@ -200,7 +200,7 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& xdg_toplevel) noexcept
 	toplevel_handle->set_app_id(xdg_toplevel.app_id);
 
 	if (xdg_toplevel.parent != nullptr) {
-		auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(xdg_toplevel.parent->base->data));
+		const auto* m_view = dynamic_cast<View*>(static_cast<Surface*>(xdg_toplevel.parent->base->data));
 		if (m_view != nullptr) {
 			toplevel_handle->set_parent(m_view->toplevel_handle);
 		}
@@ -282,7 +282,7 @@ void XdgView::map() {
 		wlr_xdg_surface_get_geometry(wlr.base, &current);
 
 		if (!server.outputs.empty()) {
-			auto* const output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
+			const auto* const output = static_cast<Output*>(wlr_output_layout_get_center_output(server.output_layout)->data);
 			const auto usable_area = output->usable_area;
 			const auto center_x = usable_area.x + (usable_area.width / 2);
 			const auto center_y = usable_area.y + (usable_area.height / 2);

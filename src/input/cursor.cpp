@@ -34,7 +34,7 @@ void Cursor::process_resize(const uint32_t time) const {
 	 * you'd wait for the client to prepare a buffer at the new size, then
 	 * commit any movement that was prepared.
 	 */
-	std::shared_ptr<View> view = seat.server.grabbed_view.lock();
+	const std::shared_ptr<View> view = seat.server.grabbed_view.lock();
 
 	if (view == nullptr) {
 		wlr_log(WLR_ERROR, "Attempted to process_resize without a grabbed view");
@@ -186,7 +186,7 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 	double sy;
 
 	wlr_surface* surface = nullptr;
-	auto magpie_surface = server.surface_at(cursor.wlr.x, cursor.wlr.y, &surface, &sx, &sy).lock();
+	const auto magpie_surface = server.surface_at(cursor.wlr.x, cursor.wlr.y, &surface, &sx, &sy).lock();
 
 	if (event->state == WL_POINTER_BUTTON_STATE_RELEASED) {
 		/* If you released any buttons, we exit interactive move/resize mode. */
@@ -474,7 +474,7 @@ void Cursor::reset_mode() {
 }
 
 void Cursor::warp_to_constraint(const PointerConstraint& constraint) const {
-	auto focused_view = seat.server.focused_view.lock();
+	const auto focused_view = seat.server.focused_view.lock();
 
 	if (focused_view == nullptr) {
 		// only warp to constraints tied to views...
