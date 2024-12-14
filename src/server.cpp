@@ -136,7 +136,7 @@ void Server::focus_layer(const std::shared_ptr<Layer>& layer) {
 SceneRectType Server::ssd_at(const double lx, const double ly) const {
 	double sx;
 	double sy;
-	wlr_scene_node* node = wlr_scene_node_at(&scene->tree.node, lx, ly, &sx, &sy);
+	const wlr_scene_node* node = wlr_scene_node_at(&scene->tree.node, lx, ly, &sx, &sy);
 
 	if (node != nullptr && node->type == WLR_SCENE_NODE_RECT && node->data != nullptr) {
 		return static_cast<SceneRectData*>(node->data)->type;

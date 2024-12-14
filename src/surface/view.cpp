@@ -99,16 +99,16 @@ int32_t View::find_surface_min_y() const {
 	min_y = min_y == INT32_MAX ? 0 : min_y;
 	if (ssd.has_value()) {
 		return min_y + ssd->get_visual_vertical_offset();
-	} else {
-		return min_y;
 	}
+
+	return min_y;
 }
 
 void View::begin_interactive(const CursorMode mode, const uint32_t edges) {
 	Server& server = get_server();
 
 	Cursor& cursor = server.seat->cursor;
-	auto focused_view = server.focused_view.lock();
+	const auto focused_view = server.focused_view.lock();
 
 	if (focused_view == nullptr || get_wlr_surface() != wlr_surface_get_root_surface(focused_view->get_wlr_surface())) {
 		/* Deny move/resize requests from unfocused clients. */
@@ -422,7 +422,7 @@ wlr_box View::get_geometry_with_decorations() const {
 }
 
 wlr_box View::get_min_size_with_decorations() const {
-	auto surface_min_size = get_surface_min_size();
+	const auto surface_min_size = get_surface_min_size();
 	if (ssd.has_value()) {
 		return {.x = 0,
 			.y = 0,
@@ -434,7 +434,7 @@ wlr_box View::get_min_size_with_decorations() const {
 }
 
 wlr_box View::get_max_size_with_decorations() const {
-	auto surface_max_size = get_surface_max_size();
+	const auto surface_max_size = get_surface_max_size();
 	if (ssd.has_value()) {
 		return {.x = 0,
 			.y = 0,

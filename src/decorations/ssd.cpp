@@ -3,6 +3,10 @@
 #include "surface/view.hpp"
 #include "server.hpp"
 
+#include "wlr-wrap-start.hpp"
+#include <wlr/util/log.h>
+#include "wlr-wrap-end.hpp"
+
 constexpr uint8_t TITLEBAR_HEIGHT = 24;
 constexpr uint32_t TITLEBAR_ACTIVE_COLOR = 0x303030;
 constexpr uint32_t TITLEBAR_INACTIVE_COLOR = 0x202020;
@@ -11,7 +15,7 @@ constexpr uint8_t EXTENTS_WIDTH = 12;
 constexpr uint32_t BORDER_ACTIVE_COLOR = 0x505050;
 constexpr uint32_t BORDER_INACTIVE_COLOR = 0x404040;
 
-static wlr_box border_dimensions(wlr_box& view_dimensions) {
+static wlr_box border_dimensions(const wlr_box& view_dimensions) {
 	return {
 		.x = EXTENTS_WIDTH,
 		.y = EXTENTS_WIDTH,
@@ -20,7 +24,7 @@ static wlr_box border_dimensions(wlr_box& view_dimensions) {
 	};
 }
 
-static wlr_box extents_dimensions(wlr_box& view_dimensions) {
+static wlr_box extents_dimensions(const wlr_box& view_dimensions) {
 	return {
 		.x = 0,
 		.y = 0,
@@ -29,7 +33,7 @@ static wlr_box extents_dimensions(wlr_box& view_dimensions) {
 	};
 }
 
-static constexpr std::array<float, 4> rrggbb_to_floats(uint32_t rrggbb) {
+static constexpr std::array<float, 4> rrggbb_to_floats(const uint32_t rrggbb) {
 	return std::array<float, 4>(
 		{(float) (rrggbb >> 16 & 0xff) / 255.0f, (float) (rrggbb >> 8 & 0xff) / 255.0f, (float) (rrggbb & 0xff) / 255.0f, 1.0});
 }
@@ -40,26 +44,41 @@ Ssd::Ssd(View& parent) noexcept : view(parent) {
 	wlr_scene_node_set_position(&scene_tree->node, 0, 0);
 	wlr_scene_node_set_enabled(&scene_tree->node, true);
 
-	auto titlebar_color = rrggbb_to_floats(TITLEBAR_INACTIVE_COLOR);
+	constexpr auto titlebar_color = rrggbb_to_floats(TITLEBAR_INACTIVE_COLOR);
 	auto view_geo = view.get_surface_geometry();
 	titlebar_rect = wlr_scene_rect_create(scene_tree, view_geo.width, TITLEBAR_HEIGHT, titlebar_color.data());
-	titlebar_rect->node.data = new SceneRectData{.type = SceneRectType::TITLEBAR, .parent = &parent};
+	try {
+		titlebar_rect->node.data = new SceneRectData{.type = SceneRectType::TITLEBAR, .parent = &parent};
+	} catch ([[maybe_unused]] std::bad_alloc& ex) {
+		wlr_log(WLR_ERROR, "Failed to allocate memory for window decoration titlebar");
+		exit(EXIT_FAILURE);
+	}
 	wlr_scene_node_set_position(&titlebar_rect->node, BORDER_WIDTH + EXTENTS_WIDTH, BORDER_WIDTH + EXTENTS_WIDTH);
 	wlr_scene_node_lower_to_bottom(&titlebar_rect->node);
 	wlr_scene_node_set_enabled(&titlebar_rect->node, true);
 
-	auto extents_color = std::array<float, 4>({0.0f, 0.0f, 0.0f, 0.0f});
+	constexpr auto extents_color = std::array<float, 4>({0.0f, 0.0f, 0.0f, 0.0f});
 	auto extents_box = extents_dimensions(view_geo);
 	extents_rect = wlr_scene_rect_create(scene_tree, extents_box.width, extents_box.height, extents_color.data());
-	extents_rect->node.data = new SceneRectData{.type = SceneRectType::EXTENTS, .parent = &parent};
+	try {
+		extents_rect->node.data = new SceneRectData{.type = SceneRectType::EXTENTS, .parent = &parent};
+	} catch ([[maybe_unused]] std::bad_alloc& ex) {
+		wlr_log(WLR_ERROR, "Failed to allocate memory for window decoration extents");
+		exit(EXIT_FAILURE);
+	}
 	wlr_scene_node_set_position(&extents_rect->node, extents_box.x, extents_box.y);
 	wlr_scene_node_lower_to_bottom(&extents_rect->node);
 	wlr_scene_node_set_enabled(&extents_rect->node, true);
 
-	auto border_color = rrggbb_to_floats(BORDER_INACTIVE_COLOR);
+	constexpr auto border_color = rrggbb_to_floats(BORDER_INACTIVE_COLOR);
 	auto border_box = border_dimensions(view_geo);
 	border_rect = wlr_scene_rect_create(scene_tree, border_box.width, border_box.height, border_color.data());
-	border_rect->node.data = new SceneRectData{.type = SceneRectType::BORDER, .parent = &parent};
+	try {
+		border_rect->node.data = new SceneRectData{.type = SceneRectType::BORDER, .parent = &parent};
+	} catch ([[maybe_unused]] std::bad_alloc& ex) {
+		wlr_log(WLR_ERROR, "Failed to allocate memory for window decoration border");
+		exit(EXIT_FAILURE);
+	}
 	wlr_scene_node_set_position(&border_rect->node, border_box.x, border_box.y);
 	wlr_scene_node_lower_to_bottom(&border_rect->node);
 	wlr_scene_node_set_enabled(&border_rect->node, true);
@@ -76,10 +95,10 @@ void Ssd::update() const {
 	auto view_geo = view.surface_current;
 	wlr_scene_rect_set_size(titlebar_rect, view_geo.width, TITLEBAR_HEIGHT);
 
-	auto border_box = border_dimensions(view_geo);
+	const auto border_box = border_dimensions(view_geo);
 	wlr_scene_rect_set_size(border_rect, border_box.width, border_box.height);
 
-	auto extents_box = extents_dimensions(view_geo);
+	const auto extents_box = extents_dimensions(view_geo);
 	wlr_scene_rect_set_size(extents_rect, extents_box.width, extents_box.height);
 }
 

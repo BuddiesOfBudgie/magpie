@@ -193,16 +193,16 @@ static void cursor_button_notify(wl_listener* listener, void* data) {
 			cursor.reset_mode();
 		}
 	} else if (magpie_surface != nullptr && magpie_surface->is_view()) {
-		auto view = std::dynamic_pointer_cast<View>(magpie_surface);
+		const auto view = std::dynamic_pointer_cast<View>(magpie_surface);
 
 		/* Focus that client if the button was _pressed_ */
 		server.focus_view(std::dynamic_pointer_cast<View>(magpie_surface));
 
-		auto ssd_at_cursor = server.ssd_at(cursor.wlr.x, cursor.wlr.y);
+		const auto ssd_at_cursor = server.ssd_at(cursor.wlr.x, cursor.wlr.y);
 		if (ssd_at_cursor == SceneRectType::TITLEBAR) {
 			view->begin_interactive(MAGPIE_CURSOR_MOVE, 0);
 		} else if (ssd_at_cursor == SceneRectType::BORDER || ssd_at_cursor == SceneRectType::EXTENTS) {
-			auto surface_geo = view->surface_current;
+			const auto surface_geo = view->surface_current;
 
 			uint8_t edges = WLR_EDGE_NONE;
 			if (cursor.wlr.x < surface_geo.x) {
