@@ -7,6 +7,7 @@ project(
         'cpp_std=c++20',
         'warning_level=3'
     ],
+    meson_version: '>= 0.62.0',
 )
 
 prefix = get_option('prefix')
@@ -72,7 +73,7 @@ wlr_pointer_constraints_protocol = custom_target(
 
 wlr_output_power_management_protocol = custom_target(
     'wlr_output_power_management_unstable_v1_protocol_h',
-    input: join_paths(meson.source_root(), 'protocols', 'wlr-output-power-management-unstable-v1.xml'),
+    input: join_paths(meson.project_source_root(), 'protocols', 'wlr-output-power-management-unstable-v1.xml'),
     output: 'wlr-output-power-management-unstable-v1-protocol.h',
     command: [wayland_scanner, 'server-header', '@INPUT@', '@OUTPUT@'],
     build_by_default: false,
@@ -80,7 +81,7 @@ wlr_output_power_management_protocol = custom_target(
 
 wlr_layer_shell_protocol = custom_target(
     'wlr_layer_shell_unstable_v1_protocol_h',
-    input: join_paths(meson.source_root(), 'protocols', 'wlr-layer-shell-unstable-v1.xml'),
+    input: join_paths(meson.project_source_root(), 'protocols', 'wlr-layer-shell-unstable-v1.xml'),
     output: 'wlr-layer-shell-unstable-v1-protocol.h',
     command: [wayland_scanner, 'server-header', '@INPUT@', '@OUTPUT@'],
     build_by_default: false,
